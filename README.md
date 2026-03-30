@@ -41,6 +41,8 @@ npm run wp:download
 cp .env.example .env
 ```
 
+`.env` をテキストエディタで開き、ご利用の環境に合わせて下記を設定してください。
+
 **Windows + Laragon:**
 ```env
 SERVER_TYPE=laragon
@@ -95,6 +97,240 @@ npm run link
    - Linux: `http://localhost/my-project`
 4. WordPressのインストールウィザードに従い、DB名・ユーザー名・パスワードを入力します。
 5. インストール完了後、管理画面 → 外観 → テーマ から、プロジェクト名に該当するテーマを有効化します。
+
+---
+
+### macOS 初回セットアップ詳細ガイド
+
+#### A. 前提ソフトのインストール
+
+```bash
+# 1. Homebrew がまだない場合はインストール
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 2. Node.js と Git をインストール
+brew install node git
+
+# 3. バージョン確認
+node -v   # v18 以上であること
+npm -v    # v9 以上であること
+git --version
+```
+
+#### B. MAMP を使う場合
+
+**B-1. MAMP をインストール**
+- https://www.mamp.info/ からダウンロードし、インストールします。
+- MAMP を起動 → 「Start Servers」をクリックします。
+- デフォルトのポートは Apache: `8888`, MySQL: `8889` です。
+
+**B-2. テンプレートのセットアップ**
+```bash
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+`.env` を編集:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/Applications/MAMP/htdocs
+PROXY_URL=http://localhost:8888/my-project
+```
+
+```bash
+npm run link
+```
+
+**B-3. データベースの作成**
+- ブラウザで `http://localhost:8888/phpMyAdmin` を開きます。
+- 上部メニュー「データベース」をクリックします。
+- データベース名（例: `my_project_db`）を入力し、照合順序を `utf8mb4_general_ci` に設定して「作成」をクリックします。
+
+**B-4. WordPressのインストール**
+1. ブラウザで `http://localhost:8888/my-project` を開きます。
+2. 言語「日本語」を選択します。
+3. データベース情報を入力:
+   - データベース名: `my_project_db`
+   - ユーザー名: `root`
+   - パスワード: `root`
+   - ホスト: `localhost:8889` (MAMP のMySQL ポート)
+4. インストールウィザードに従い設定を完了。
+5. WP Admin にログイン → 外観 → テーマ → プロジェクト名のテーマを有効化。
+
+**B-5. 開発開始**
+```bash
+npm start
+# → http://localhost:3000 が自動で開きます
+```
+
+#### C. Laravel Valet を使う場合
+
+```bash
+# 1. PHP と Composer をインストール
+brew install php composer
+
+# 2. Valet をインストール
+composer global require laravel/valet
+valet install
+
+# 3. MySQL をインストールして起動
+brew install mysql
+brew services start mysql
+
+# 4. テンプレートのセットアップ
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+`.env` を編集:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/Users/[ユーザー名]/.valet/Sites
+PROXY_URL=http://my-project.test
+```
+
+```bash
+npm run link
+
+# Valet にプロジェクトを登録
+cd public && valet link my-project && cd ..
+```
+
+データベース作成とWordPressインストール:
+```bash
+mysql -u root -e "CREATE DATABASE my_project_db"
+```
+
+- ブラウザで `http://my-project.test` を開く →  DB名: `my_project_db`, ユーザー: `root`, パスワード: 空, ホスト: `localhost`。
+
+```bash
+npm start
+```
+
+---
+
+### Linux 初回セットアップ詳細ガイド (Ubuntu/Debian)
+
+#### A. 前提ソフトのインストール
+
+```bash
+# 1. パッケージリスト更新
+sudo apt update
+
+# 2. Apache, PHP, MySQL, Git をインストール
+sudo apt install -y apache2 php php-mysql php-xml php-mbstring php-curl php-gd mysql-server git
+
+# 3. Node.js をインストール (NodeSource 経由で最新LTS)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# 4. バージョン確認
+node -v   # v18 以上
+npm -v    # v9 以上
+git --version
+php -v
+apache2 -v
+```
+
+> **Fedora/RHEL の場合:** `apt` の代わりに `sudo dnf install httpd php php-mysqlnd mysql-server nodejs git` を使用。
+
+#### B. Apache の設定
+
+```bash
+# 1. mod_rewrite を有効化 (WordPress のパーマリンク用)
+sudo a2enmod rewrite
+
+# 2. AllowOverride を設定 (.htaccess を有効にする)
+sudo nano /etc/apache2/apache2.conf
+```
+
+以下のブロックを探し、`AllowOverride None` → `AllowOverride All` に変更:
+```apache
+<Directory /var/www/>
+    Options Indexes FollowSymLinks
+    AllowOverride All    ← ← ← ここを変更
+    Require all granted
+</Directory>
+```
+
+```bash
+# 3. Apache を再起動
+sudo systemctl restart apache2
+
+# 4. Apache の起動時自動起動を設定
+sudo systemctl enable apache2
+```
+
+#### C. MySQL の設定
+
+```bash
+# 1. MySQL を起動
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# 2. MySQL にセキュリティ設定 (初回のみ)
+sudo mysql_secure_installation
+# → パスワード設定 → 匿名ユーザー削除: Y → リモートroot禁止: Y → テストDB削除: Y
+
+# 3. データベースとユーザーを作成
+sudo mysql
+```
+
+MySQL プロンプト内で実行:
+```sql
+CREATE DATABASE my_project_db;
+CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON my_project_db.* TO 'wpuser'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+#### D. テンプレートのセットアップ
+
+```bash
+cd ~
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+`.env` を編集:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/var/www/html
+PROXY_URL=http://localhost/my-project
+```
+
+Symlink を作成:
+```bash
+sudo npm run link
+```
+
+#### E. WordPress のインストール
+
+1. ブラウザで `http://localhost/my-project` を開きます。
+2. 言語を選択して次へ。
+3. データベース情報を入力:
+   - データベース名: `my_project_db`
+   - ユーザー名: `wpuser`
+   - パスワード: `your_password` (ステップCで設定したもの)
+   - ホスト: `localhost`
+4. インストールを完了 → WP Admin でテーマを有効化。
+
+#### F. 開発開始
+
+```bash
+npm start
+# → http://localhost:3000 が自動で開きます
+```
 
 #### ステップ 6: 開発開始
 
@@ -388,6 +624,239 @@ Trình duyệt tự mở `http://localhost:3000`, proxy tới local server. Mọ
 
 ---
 
+### Hướng Dẫn Chi Tiết Cho macOS (Dành cho người mới)
+
+#### A. Cài đặt phần mềm cần thiết
+
+```bash
+# 1. Cài Homebrew (nếu chưa có)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 2. Cài Node.js và Git
+brew install node git
+
+# 3. Kiểm tra version
+node -v   # phải >= 18
+npm -v    # phải >= 9
+git --version
+```
+
+#### B. Cách 1: Dùng MAMP (Đơn giản nhất)
+
+**B-1. Cài đặt MAMP**
+- Tải MAMP miễn phí từ https://www.mamp.info/ → cài đặt bình thường.
+- Mở ứng dụng MAMP → bấm **Start Servers**.
+- Port mặc định: Apache `8888`, MySQL `8889`.
+
+**B-2. Setup template**
+```bash
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+Mở file `.env` bằng text editor, sửa thành:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/Applications/MAMP/htdocs
+PROXY_URL=http://localhost:8888/my-project
+```
+
+```bash
+npm run link
+```
+
+**B-3. Tạo Database**
+- Mở trình duyệt → vào `http://localhost:8888/phpMyAdmin`.
+- Bấm tab **"Cơ sở dữ liệu"** (Databases) phía trên.
+- Nhập tên database (ví dụ: `my_project_db`), chọn `utf8mb4_general_ci` → bấm **Tạo** (Create).
+
+**B-4. Cài đặt WordPress**
+1. Mở trình duyệt → vào `http://localhost:8888/my-project`.
+2. Chọn ngôn ngữ → bấm Tiếp tục.
+3. Nhập thông tin database:
+   - Tên database: `my_project_db`
+   - Tên người dùng: `root`
+   - Mật khẩu: `root`
+   - Database Host: `localhost:8889` ← (port MySQL của MAMP, KHÔNG phải `localhost`)
+4. Hoàn thành wizard cài đặt (nhập tên site, tạo tài khoản admin).
+5. Đăng nhập WP Admin → Giao diện → Themes → Kích hoạt theme tên `my-project`.
+
+**B-5. Bắt đầu lập trình**
+```bash
+npm start
+# → Trình duyệt tự mở http://localhost:3000
+```
+
+#### C. Cách 2: Dùng Laravel Valet (Nâng cao)
+
+```bash
+# 1. Cài PHP và Composer
+brew install php composer
+
+# 2. Cài Valet
+composer global require laravel/valet
+valet install
+
+# 3. Cài MySQL
+brew install mysql
+brew services start mysql
+
+# 4. Setup template
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+Sửa file `.env`:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/Users/[tên_user_mac]/.valet/Sites
+PROXY_URL=http://my-project.test
+```
+
+```bash
+npm run link
+
+# Đăng ký project với Valet
+cd public && valet link my-project && cd ..
+```
+
+Tạo database và cài WordPress:
+```bash
+mysql -u root -e "CREATE DATABASE my_project_db"
+```
+
+- Mở `http://my-project.test` → Nhập: DB name = `my_project_db`, User = `root`, Password = để trống, Host = `localhost`.
+- Hoàn thành wizard → kích hoạt theme.
+
+```bash
+npm start
+```
+
+---
+
+### Hướng Dẫn Chi Tiết Cho Linux Ubuntu/Debian (Dành cho người mới)
+
+#### A. Cài đặt phần mềm cần thiết
+
+```bash
+# 1. Cập nhật package list
+sudo apt update
+
+# 2. Cài Apache, PHP, MySQL, Git
+sudo apt install -y apache2 php php-mysql php-xml php-mbstring php-curl php-gd mysql-server git
+
+# 3. Cài Node.js (bản LTS mới nhất qua NodeSource)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# 4. Kiểm tra tất cả đã cài thành công
+node -v      # phải >= 18
+npm -v       # phải >= 9
+git --version
+php -v
+apache2 -v
+```
+
+> **Fedora/RHEL:** Thay `apt` bằng `sudo dnf install httpd php php-mysqlnd mysql-server nodejs git`.
+
+#### B. Cấu hình Apache
+
+```bash
+# 1. Bật mod_rewrite (WordPress cần dùng để tạo permalink)
+sudo a2enmod rewrite
+
+# 2. Mở file cấu hình Apache
+sudo nano /etc/apache2/apache2.conf
+```
+
+Tìm block `<Directory /var/www/>` và đổi `AllowOverride None` thành `AllowOverride All`:
+```apache
+<Directory /var/www/>
+    Options Indexes FollowSymLinks
+    AllowOverride All    ← ← ← SỬA DÒNG NÀY
+    Require all granted
+</Directory>
+```
+
+Lưu file (Ctrl+O → Enter → Ctrl+X) rồi khởi động lại Apache:
+```bash
+sudo systemctl restart apache2
+sudo systemctl enable apache2   # tự khởi động cùng máy
+```
+
+#### C. Cấu hình MySQL
+
+```bash
+# 1. Khởi động MySQL
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# 2. Chạy bảo mật lần đầu (chỉ cần làm 1 lần)
+sudo mysql_secure_installation
+# → Đặt mật khẩu root → Xoá anonymous user: Y → Chặn root remote: Y → Xoá test DB: Y
+
+# 3. Đăng nhập MySQL để tạo database
+sudo mysql
+```
+
+Gõ các lệnh SQL sau trong MySQL prompt:
+```sql
+CREATE DATABASE my_project_db;
+CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'mat_khau_manh';
+GRANT ALL PRIVILEGES ON my_project_db.* TO 'wpuser'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+#### D. Setup template
+
+```bash
+cd ~
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+Mở file `.env` bằng nano hoặc text editor, sửa thành:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/var/www/html
+PROXY_URL=http://localhost/my-project
+```
+
+Tạo symlink (cần quyền root vì `/var/www/html` thuộc quyền root):
+```bash
+sudo npm run link
+```
+
+#### E. Cài đặt WordPress
+
+1. Mở trình duyệt → vào `http://localhost/my-project`.
+2. Chọn ngôn ngữ → tiếp tục.
+3. Nhập thông tin database:
+   - Tên database: `my_project_db`
+   - Tên người dùng: `wpuser`
+   - Mật khẩu: `mat_khau_manh` (đã tạo ở bước C)
+   - Database Host: `localhost`
+4. Hoàn thành wizard → đăng nhập WP Admin → Giao diện → Themes → kích hoạt theme.
+
+#### F. Bắt đầu lập trình
+
+```bash
+npm start
+# → Trình duyệt tự mở http://localhost:3000
+```
+
+---
+
 ### Cấu Trúc Thư Mục `src/`
 
 Toàn bộ source code nằm trong `src/`. Kết quả build sẽ tự động xuất ra `public/wp-content/themes/[tên_project]/`.
@@ -667,6 +1136,239 @@ npm start
 ```
 
 The browser will automatically open `http://localhost:3000`, proxying to your local server. Any file changes will be reflected in the browser automatically.
+
+---
+
+### Detailed macOS Setup Guide (For Beginners)
+
+#### A. Install Prerequisites
+
+```bash
+# 1. Install Homebrew (if not already installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 2. Install Node.js and Git
+brew install node git
+
+# 3. Verify installation
+node -v   # must be >= 18
+npm -v    # must be >= 9
+git --version
+```
+
+#### B. Option 1: Using MAMP (Easiest)
+
+**B-1. Install MAMP**
+- Download MAMP (free) from https://www.mamp.info/ → install normally.
+- Open MAMP → click **Start Servers**.
+- Default ports: Apache `8888`, MySQL `8889`.
+
+**B-2. Set up the template**
+```bash
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+Edit `.env`:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/Applications/MAMP/htdocs
+PROXY_URL=http://localhost:8888/my-project
+```
+
+```bash
+npm run link
+```
+
+**B-3. Create a Database**
+- Open your browser → go to `http://localhost:8888/phpMyAdmin`.
+- Click the **"Databases"** tab at the top.
+- Enter a database name (e.g. `my_project_db`), select `utf8mb4_general_ci` → click **Create**.
+
+**B-4. Install WordPress**
+1. Open your browser → go to `http://localhost:8888/my-project`.
+2. Select your language → click Continue.
+3. Enter the database details:
+   - Database Name: `my_project_db`
+   - Username: `root`
+   - Password: `root`
+   - Database Host: `localhost:8889` ← (MAMP's MySQL port, NOT just `localhost`)
+4. Complete the installation wizard (set site title, create admin account).
+5. Log into WP Admin → Appearance → Themes → Activate the `my-project` theme.
+
+**B-5. Start developing**
+```bash
+npm start
+# → Browser opens http://localhost:3000 automatically
+```
+
+#### C. Option 2: Using Laravel Valet (Advanced)
+
+```bash
+# 1. Install PHP and Composer
+brew install php composer
+
+# 2. Install Valet
+composer global require laravel/valet
+valet install
+
+# 3. Install and start MySQL
+brew install mysql
+brew services start mysql
+
+# 4. Set up the template
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+Edit `.env`:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/Users/[your_username]/.valet/Sites
+PROXY_URL=http://my-project.test
+```
+
+```bash
+npm run link
+
+# Register the project with Valet
+cd public && valet link my-project && cd ..
+```
+
+Create the database and install WordPress:
+```bash
+mysql -u root -e "CREATE DATABASE my_project_db"
+```
+
+- Open `http://my-project.test` → Enter: DB name = `my_project_db`, User = `root`, Password = empty, Host = `localhost`.
+- Complete the wizard → activate the theme.
+
+```bash
+npm start
+```
+
+---
+
+### Detailed Linux Setup Guide — Ubuntu/Debian (For Beginners)
+
+#### A. Install Prerequisites
+
+```bash
+# 1. Update the package list
+sudo apt update
+
+# 2. Install Apache, PHP, MySQL, and Git
+sudo apt install -y apache2 php php-mysql php-xml php-mbstring php-curl php-gd mysql-server git
+
+# 3. Install Node.js (latest LTS via NodeSource)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# 4. Verify all installations
+node -v      # must be >= 18
+npm -v       # must be >= 9
+git --version
+php -v
+apache2 -v
+```
+
+> **Fedora/RHEL:** Replace `apt` with `sudo dnf install httpd php php-mysqlnd mysql-server nodejs git`.
+
+#### B. Configure Apache
+
+```bash
+# 1. Enable mod_rewrite (required for WordPress permalinks)
+sudo a2enmod rewrite
+
+# 2. Edit the Apache configuration file
+sudo nano /etc/apache2/apache2.conf
+```
+
+Find the `<Directory /var/www/>` block and change `AllowOverride None` to `AllowOverride All`:
+```apache
+<Directory /var/www/>
+    Options Indexes FollowSymLinks
+    AllowOverride All    ← ← ← CHANGE THIS LINE
+    Require all granted
+</Directory>
+```
+
+Save the file (Ctrl+O → Enter → Ctrl+X) and restart Apache:
+```bash
+sudo systemctl restart apache2
+sudo systemctl enable apache2   # auto-start on boot
+```
+
+#### C. Configure MySQL
+
+```bash
+# 1. Start MySQL
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# 2. Run the initial security setup (one-time only)
+sudo mysql_secure_installation
+# → Set root password → Remove anonymous users: Y → Disallow root login remotely: Y → Remove test DB: Y
+
+# 3. Log into MySQL to create a database
+sudo mysql
+```
+
+Run the following SQL commands in the MySQL prompt:
+```sql
+CREATE DATABASE my_project_db;
+CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'your_strong_password';
+GRANT ALL PRIVILEGES ON my_project_db.* TO 'wpuser'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+#### D. Set up the template
+
+```bash
+cd ~
+git clone https://github.com/jline-coding/TEMPLATE_WP my-project
+cd my-project
+npm install
+npm run wp:download
+cp .env.example .env
+```
+
+Edit `.env` using nano or your preferred text editor:
+```env
+SERVER_TYPE=laragon
+LARAGON_WWW=/var/www/html
+PROXY_URL=http://localhost/my-project
+```
+
+Create the symlink (requires root because `/var/www/html` is owned by root):
+```bash
+sudo npm run link
+```
+
+#### E. Install WordPress
+
+1. Open your browser → go to `http://localhost/my-project`.
+2. Select your language → continue.
+3. Enter the database details:
+   - Database Name: `my_project_db`
+   - Username: `wpuser`
+   - Password: `your_strong_password` (the one you set in step C)
+   - Database Host: `localhost`
+4. Complete the wizard → log into WP Admin → Appearance → Themes → activate the theme.
+
+#### F. Start developing
+
+```bash
+npm start
+# → Browser opens http://localhost:3000 automatically
+```
 
 ---
 
