@@ -34,28 +34,27 @@ function detectServerWww() {
   const wwwArg = process.argv.find(arg => arg.startsWith('--www='));
   if (wwwArg) return wwwArg.split('=')[1];
 
-  // Từ .env
-  if (serverType === 'xampp' && process.env.XAMPP_HTDOCS) {
-    return process.env.XAMPP_HTDOCS;
-  }
-  if (process.env.LARAGON_WWW) {
-    return process.env.LARAGON_WWW;
-  }
+  // WEB_ROOT (ưu tiên) → fallback LARAGON_WWW / XAMPP_HTDOCS (backward compat)
+  if (process.env.WEB_ROOT) return process.env.WEB_ROOT;
+  if (serverType === 'xampp' && process.env.XAMPP_HTDOCS) return process.env.XAMPP_HTDOCS;
+  if (process.env.LARAGON_WWW) return process.env.LARAGON_WWW;
 
-  // Auto-detect defaults theo OS
+  // Auto-detect defaults theo OS + server type
   if (IS_WIN) {
     if (serverType === 'xampp') return 'C:\\xampp\\htdocs';
-    return 'D:\\laragon\\www';
+    return 'D:\\laragon\\www'; // laragon default
   }
 
   // macOS
   if (platform() === 'darwin') {
-    // MAMP
+    if (serverType === 'mamp') return '/Applications/MAMP/htdocs';
+    if (serverType === 'valet') {
+      return resolve(process.env.HOME || '~', '.valet', 'Sites');
+    }
+    // Auto-detect nếu SERVER_TYPE chưa set rõ
     if (existsSync('/Applications/MAMP/htdocs')) return '/Applications/MAMP/htdocs';
-    // Laravel Valet
     const valetPath = resolve(process.env.HOME || '~', '.valet', 'Sites');
     if (existsSync(valetPath)) return valetPath;
-    // Fallback
     return '/var/www/html';
   }
 
@@ -67,13 +66,16 @@ function detectProjectDomain() {
   // Nếu có PROXY_URL trong .env → dùng luôn làm domain hiển thị
   if (process.env.PROXY_URL) return process.env.PROXY_URL;
 
-  if (IS_WIN) {
-    if (serverType === 'xampp') return `http://localhost/${PROJECT_NAME}`;
-    return `http://${PROJECT_NAME}.test`; // Laragon auto domain
+  switch (serverType) {
+    case 'xampp':   return `http://localhost/${PROJECT_NAME}`;
+    case 'mamp':    return `http://localhost:8888/${PROJECT_NAME}`;
+    case 'valet':   return `http://${PROJECT_NAME}.test`;
+    case 'laragon': return `http://${PROJECT_NAME}.test`;
+    default:
+      // Fallback theo OS
+      if (IS_WIN) return `http://${PROJECT_NAME}.test`;
+      return `http://localhost/${PROJECT_NAME}`;
   }
-
-  // macOS/Linux: không có auto .test domain → dùng localhost
-  return `http://localhost/${PROJECT_NAME}`;
 }
 
 const SERVER_WWW = detectServerWww();

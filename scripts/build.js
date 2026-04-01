@@ -66,8 +66,12 @@ function resolveProxyTarget() {
 
   if (process.env.PROXY_URL) return process.env.PROXY_URL;
 
-  if (serverType === 'xampp') return `http://localhost/${PROJECT_NAME}`;
-  return `http://${PROJECT_NAME}.test`;
+  switch (serverType) {
+    case 'xampp': return `http://localhost/${PROJECT_NAME}`;
+    case 'mamp':  return `http://localhost:8888/${PROJECT_NAME}`;
+    case 'valet': return `http://${PROJECT_NAME}.test`;
+    default:      return `http://${PROJECT_NAME}.test`; // laragon, etc.
+  }
 }
 const PROXY_TARGET = resolveProxyTarget();
 
