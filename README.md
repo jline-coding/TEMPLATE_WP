@@ -36,7 +36,7 @@ cp .env.example .env
 `.env` を編集:
 ```env
 SERVER_TYPE=laragon
-LARAGON_WWW=D:\laragon\www
+WEB_ROOT=D:\laragon\www
 ```
 
 ```bash
@@ -69,7 +69,7 @@ cp .env.example .env
 `.env` を編集:
 ```env
 SERVER_TYPE=xampp
-XAMPP_HTDOCS=C:\xampp\htdocs
+WEB_ROOT=C:\xampp\htdocs
 ```
 
 ```bash
@@ -116,9 +116,8 @@ cp .env.example .env
 
 `.env` を編集:
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Applications/MAMP/htdocs
-PROXY_URL=http://localhost:8888/my-project
+SERVER_TYPE=mamp
+WEB_ROOT=/Applications/MAMP/htdocs
 ```
 
 ```bash
@@ -173,9 +172,8 @@ cp .env.example .env
 
 `.env` を編集:
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Users/[ユーザー名]/.valet/Sites
-PROXY_URL=http://my-project.test
+SERVER_TYPE=valet
+WEB_ROOT=/Users/[ユーザー名]/.valet/Sites
 ```
 
 ```bash
@@ -275,7 +273,7 @@ cp .env.example .env
 `.env` を編集:
 ```env
 SERVER_TYPE=laragon
-LARAGON_WWW=/var/www/html
+WEB_ROOT=/var/www/html
 PROXY_URL=http://localhost/my-project
 ```
 
@@ -514,33 +512,31 @@ cp .env.example .env
 **Windows + Laragon:**
 ```env
 SERVER_TYPE=laragon
-LARAGON_WWW=D:\laragon\www
+WEB_ROOT=D:\laragon\www
 ```
 
 **Windows + XAMPP:**
 ```env
 SERVER_TYPE=xampp
-XAMPP_HTDOCS=C:\xampp\htdocs
+WEB_ROOT=C:\xampp\htdocs
 ```
 
 **macOS + MAMP:**
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Applications/MAMP/htdocs
-PROXY_URL=http://localhost:8888/my-project
+SERVER_TYPE=mamp
+WEB_ROOT=/Applications/MAMP/htdocs
 ```
 
 **macOS + Laravel Valet:**
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Users/[tên_user]/.valet/Sites
-PROXY_URL=http://my-project.test
+SERVER_TYPE=valet
+WEB_ROOT=/Users/[tên_user]/.valet/Sites
 ```
 
 **Linux + Apache:**
 ```env
 SERVER_TYPE=laragon
-LARAGON_WWW=/var/www/html
+WEB_ROOT=/var/www/html
 PROXY_URL=http://localhost/my-project
 ```
 
@@ -611,9 +607,8 @@ cp .env.example .env
 
 Mở file `.env` bằng text editor, sửa thành:
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Applications/MAMP/htdocs
-PROXY_URL=http://localhost:8888/my-project
+SERVER_TYPE=mamp
+WEB_ROOT=/Applications/MAMP/htdocs
 ```
 
 ```bash
@@ -666,9 +661,8 @@ cp .env.example .env
 
 Sửa file `.env`:
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Users/[tên_user_mac]/.valet/Sites
-PROXY_URL=http://my-project.test
+SERVER_TYPE=valet
+WEB_ROOT=/Users/[tên_user_mac]/.valet/Sites
 ```
 
 ```bash
@@ -780,7 +774,7 @@ cp .env.example .env
 Mở file `.env` bằng nano hoặc text editor, sửa thành:
 ```env
 SERVER_TYPE=laragon
-LARAGON_WWW=/var/www/html
+WEB_ROOT=/var/www/html
 PROXY_URL=http://localhost/my-project
 ```
 
@@ -1029,33 +1023,31 @@ cp .env.example .env
 **Windows + Laragon:**
 ```env
 SERVER_TYPE=laragon
-LARAGON_WWW=D:\laragon\www
+WEB_ROOT=D:\laragon\www
 ```
 
 **Windows + XAMPP:**
 ```env
 SERVER_TYPE=xampp
-XAMPP_HTDOCS=C:\xampp\htdocs
+WEB_ROOT=C:\xampp\htdocs
 ```
 
 **macOS + MAMP:**
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Applications/MAMP/htdocs
-PROXY_URL=http://localhost:8888/my-project
+SERVER_TYPE=mamp
+WEB_ROOT=/Applications/MAMP/htdocs
 ```
 
 **macOS + Laravel Valet:**
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Users/[username]/.valet/Sites
-PROXY_URL=http://my-project.test
+SERVER_TYPE=valet
+WEB_ROOT=/Users/[username]/.valet/Sites
 ```
 
 **Linux + Apache:**
 ```env
 SERVER_TYPE=laragon
-LARAGON_WWW=/var/www/html
+WEB_ROOT=/var/www/html
 PROXY_URL=http://localhost/my-project
 ```
 
@@ -1126,9 +1118,8 @@ cp .env.example .env
 
 Edit `.env`:
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Applications/MAMP/htdocs
-PROXY_URL=http://localhost:8888/my-project
+SERVER_TYPE=mamp
+WEB_ROOT=/Applications/MAMP/htdocs
 ```
 
 ```bash
@@ -1181,9 +1172,8 @@ cp .env.example .env
 
 Edit `.env`:
 ```env
-SERVER_TYPE=laragon
-LARAGON_WWW=/Users/[your_username]/.valet/Sites
-PROXY_URL=http://my-project.test
+SERVER_TYPE=valet
+WEB_ROOT=/Users/[your_username]/.valet/Sites
 ```
 
 ```bash
@@ -1295,7 +1285,7 @@ cp .env.example .env
 Edit `.env` using nano or your preferred text editor:
 ```env
 SERVER_TYPE=laragon
-LARAGON_WWW=/var/www/html
+WEB_ROOT=/var/www/html
 PROXY_URL=http://localhost/my-project
 ```
 
