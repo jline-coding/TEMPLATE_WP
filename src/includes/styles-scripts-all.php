@@ -6,7 +6,6 @@ add_action( 'wp_enqueue_scripts', function() {
 
     // css files
     wp_enqueue_style( 'scrollable-css', $themeUrl . '/assets/vendor/scrollable/scrollable.css', array(), '1.0.1' );
-    wp_enqueue_style( 'aos-css', $themeUrl . '/assets/vendor/aos/aos.css', array(), '1.0.1' );
     wp_enqueue_style( 'style-css', $themeUrl . '/assets/css/common.css', array(), filemtime($themeDir . '/assets/css/common.css') );
 
     if(is_front_page()){
@@ -20,7 +19,7 @@ add_action( 'wp_enqueue_scripts', function() {
 
     wp_enqueue_script( 'jquery-js', $themeUrl . '/assets/vendor/jquery/jquery-3.5.1.min.js', array(), '1.0', true );    
     wp_enqueue_script( 'scrollable-js', $themeUrl . '/assets/vendor/scrollable/scrollable.js', array(), '1.0', true );
-    wp_enqueue_script( 'aos-js', $themeUrl . '/assets/vendor/aos/aos.js', array(), '1.0', true );
+    wp_enqueue_script( 'inview-js', $themeUrl . '/assets/js/inview.js', array(), '1.0', true );
     wp_enqueue_script( 'cookie-js', $themeUrl . '/assets/js/cookie.js', array(), filemtime($themeDir . '/assets/js/cookie.js'), true );
     wp_enqueue_script( 'common-js', $themeUrl . '/assets/js/common.js', array(), filemtime($themeDir . '/assets/js/common.js'), true );
     
