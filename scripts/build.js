@@ -503,7 +503,9 @@ async function buildImages(changedFile) {
     const webpRel = rel.replace(/\.(jpg|jpeg|png)$/i, '.webp');
     const dest = resolve(destDir, webpRel);
     ensureDir(dirname(dest));
-    await sharp(changedFile).webp({ quality: 90 }).toFile(dest);
+    // Read into buffer first to avoid sharp holding a file handle (Windows lock issue)
+    const buffer = readFileSync(changedFile);
+    await sharp(buffer).webp({ quality: 90 }).toFile(dest);
     console.log(`[images] webp: ${norm(rel)} → ${norm(webpRel)}`);
     return;
   }
@@ -529,7 +531,9 @@ async function buildImages(changedFile) {
     const webpRel = rel.replace(/\.(jpg|jpeg|png)$/i, '.webp');
     const dest = resolve(destDir, webpRel);
     ensureDir(dirname(dest));
-    await sharp(file).webp({ quality: 90 }).toFile(dest);
+    // Read into buffer first to avoid sharp holding a file handle (Windows lock issue)
+    const buffer = readFileSync(file);
+    await sharp(buffer).webp({ quality: 90 }).toFile(dest);
     console.log(`[images] webp: ${norm(rel)} → ${norm(webpRel)}`);
   });
 
@@ -597,11 +601,17 @@ async function startWatch() {
     ui: false,
   });
 
-  function debounce(fn, wait = 200) {
-    let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn(...args), wait);
+  // Per-file debounce: each filepath gets its own timer,
+  // so multiple files added simultaneously are all processed.
+  function debouncePerFile(fn, wait = 200) {
+    const timers = new Map();
+    return (filepath, ...rest) => {
+      const key = filepath;
+      if (timers.has(key)) clearTimeout(timers.get(key));
+      timers.set(key, setTimeout(() => {
+        timers.delete(key);
+        fn(filepath, ...rest);
+      }, wait));
     };
   }
 
@@ -679,15 +689,15 @@ async function startWatch() {
     removeEmptyDirs(OUT_THEME);
   }
 
-  watcher.on('change', debounce(async (filepath) => {
+  watcher.on('change', debouncePerFile(async (filepath) => {
     await handleChange(filepath, 'changed');
   }));
 
-  watcher.on('add', debounce(async (filepath) => {
+  watcher.on('add', debouncePerFile(async (filepath) => {
     await handleChange(filepath, 'added');
   }));
 
-  watcher.on('unlink', debounce((filepath) => {
+  watcher.on('unlink', debouncePerFile((filepath) => {
     handleUnlink(filepath);
   }));
 }
