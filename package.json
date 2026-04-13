@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node scripts/build.js --watch",
+    "dev": "node scripts/build.js --watch",
     "build": "node scripts/build.js",
     "wp:download": "node scripts/download-wp.js",
     "link": "node scripts/link.js",

@@ -1,17 +1,33 @@
-name: Deploy To FTP Server
+# ═══════════════════════════════════════════════════════════════
+#  Deploy Workflow — FTP Deploy
+#
+#  Triggers:
+#    push master  → production config → FTP deploy
+#    push staging → test config       → FTP deploy
+#    workflow_dispatch → chọn environment thủ công
+# ═══════════════════════════════════════════════════════════════
+
+name: Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [master, staging]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Chọn môi trường deploy'
+        type: choice
+        options:
+          - production
+          - test
+        default: test
 
 concurrency:
-  group: deploy-${{ github.repository }}
+  group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Kéo Source Code
@@ -19,43 +35,89 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 🔍 Đọc cấu hình Deploy
-        id: config
+      # ─────────────────────────────────────────────
+      # Xác định môi trường
+      # ─────────────────────────────────────────────
+      - name: 🔍 Xác định môi trường
         run: |
-          SERVER_NAME=$(jq -r '.server' deploy-config.json | tr 'a-z' 'A-Z')
-          HAS_BUILD=$(jq -r '.has_build_step // false' deploy-config.json)
+          ENVIRONMENT=""
+
+          if [[ "$GITHUB_REF" == refs/heads/master ]]; then
+            ENVIRONMENT="production"
+          elif [[ "$GITHUB_REF" == refs/heads/staging ]]; then
+            ENVIRONMENT="test"
+          fi
+
+          # workflow_dispatch override
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENVIRONMENT="${{ inputs.environment }}"
+          fi
+
+          if [[ -z "$ENVIRONMENT" ]]; then
+            echo "⚠️ Không xác định được môi trường — bỏ qua."
+            exit 0
+          fi
+
+          # Đọc config từ deploy-config.json
+          DEPLOY_METHOD=$(jq -r ".${ENVIRONMENT}.deploy_method // \"ftp\"" deploy-config.json)
+
+          if [[ "$DEPLOY_METHOD" != "ftp" ]]; then
+            echo "ℹ️ deploy_method = '$DEPLOY_METHOD' (không phải ftp) — bỏ qua."
+            echo "SHOULD_FTP=false" >> $GITHUB_ENV
+            echo "BUILD_CMD=echo 'Skipped'" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          SERVER_NAME=$(jq -r ".${ENVIRONMENT}.server // empty" deploy-config.json | tr 'a-z' 'A-Z')
           BUILD_CMD=$(jq -r '.build_command // "npm run build"' deploy-config.json)
+
+          echo "SHOULD_FTP=true" >> $GITHUB_ENV
+          echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
           echo "SERVER_NAME=$SERVER_NAME" >> $GITHUB_ENV
-          echo "HAS_BUILD=$HAS_BUILD" >> $GITHUB_ENV
           echo "BUILD_CMD=$BUILD_CMD" >> $GITHUB_ENV
 
+          echo ""
+          echo "╔══════════════════════════════════════════════╗"
+          printf "║   🚀 FTP Deploy [%-26s] ║\n" "$ENVIRONMENT"
+          printf "║   Server: %-34s ║\n" "$SERVER_NAME"
+          echo "╚══════════════════════════════════════════════╝"
+
+      # ─────────────────────────────────────────────
+      # Build
+      # ─────────────────────────────────────────────
       - name: ⚙️ Cài đặt Node.js
+        if: env.SHOULD_FTP == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: 📦 Cài đặt dependencies dự án (nếu cần build)
-        if: env.HAS_BUILD == 'true'
+      - name: 📦 Cài đặt dependencies
+        if: env.SHOULD_FTP == 'true'
         run: npm ci
 
-      # Cache WordPress download để tránh lỗi 429 (rate limit)
       - name: 💾 Cache WordPress download
-        if: env.HAS_BUILD == 'true'
+        if: env.SHOULD_FTP == 'true'
         uses: actions/cache@v4
         with:
           path: public
           key: wp-public-${{ hashFiles('scripts/download-wp.js') }}
 
       - name: 🔨 Build dự án
-        if: env.HAS_BUILD == 'true'
+        if: env.SHOULD_FTP == 'true'
         run: ${{ env.BUILD_CMD }}
 
+      # ─────────────────────────────────────────────
+      # FTP Deploy
+      # ─────────────────────────────────────────────
       - name: 📦 Cài đặt thư viện deploy
+        if: env.SHOULD_FTP == 'true'
         run: npm install --no-save basic-ftp apache-crypt
 
-      - name: 🚀 Chạy Script Deploy
+      - name: 🚀 FTP Deploy
+        if: env.SHOULD_FTP == 'true'
         run: node .github/scripts/deploy.cjs
         env:
+          DEPLOY_ENV: ${{ env.ENVIRONMENT }}
           GITHUB_REPO: ${{ github.repository }}
           SERVER_SECRET_JSON: ${{ secrets[format('{0}_CONFIG', env.SERVER_NAME)] }}

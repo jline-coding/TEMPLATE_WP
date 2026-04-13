@@ -57,21 +57,19 @@ const isWatch = process.argv.includes('--watch');
 
 // --- ENV & PROXY ---
 dotenv.config({ path: resolve(ROOT, '.env') });
-const serverType = process.env.SERVER_TYPE || 'laragon';
 
-// Proxy URL priority: --proxy= arg > PROXY_URL env > auto-detect from server type
+// Proxy URL priority: --proxy= arg > PROXY_URL env > fallback to project_name.test
 function resolveProxyTarget() {
   const customProxyArg = process.argv.find(arg => arg.startsWith('--proxy='));
   if (customProxyArg) return customProxyArg.split('=')[1];
 
-  if (process.env.PROXY_URL) return process.env.PROXY_URL;
-
-  switch (serverType) {
-    case 'xampp': return `http://localhost/${PROJECT_NAME}`;
-    case 'mamp':  return `http://localhost:8888/${PROJECT_NAME}`;
-    case 'valet': return `http://${PROJECT_NAME}.test`;
-    default:      return `http://${PROJECT_NAME}.test`; // laragon, etc.
+  if (process.env.PROXY_URL) {
+    const url = process.env.PROXY_URL;
+    return url.startsWith('http') ? url : `http://${url}`;
   }
+
+  // Fallback: project_name.test (Laragon-style)
+  return `http://${PROJECT_NAME}.test`;
 }
 const PROXY_TARGET = resolveProxyTarget();
 
@@ -321,8 +319,10 @@ function cleanStaleCopiedFiles() {
 const postcssPlugins = [
   sortMediaQueries({ sort: 'mobile-first' }),
   autoprefixer({ cascade: false }),
-  cssnano(),
 ];
+if (!isWatch) {
+  postcssPlugins.push(cssnano());
+}
 
 // Cache for parsed SCSS imports — cleared on each full build
 const importsCache = new Map();
@@ -366,7 +366,8 @@ async function compileScssFile(filePath) {
 
     const processed = await postcss(postcssPlugins).process(result.css, {
       from: filePath,
-      map: isWatch ? { inline: false } : false,
+      to: filePath.replace(/\.scss$/, '.css'),
+      map: isWatch ? { inline: false, prev: result.sourceMap, annotation: true } : false,
     });
 
     const rel = relative(SCSS_DIR, filePath);
@@ -375,8 +376,13 @@ async function compileScssFile(filePath) {
     ensureDir(dirname(cssPath));
 
     writeFileSync(cssPath, processed.css, 'utf8');
-    if (processed.map) {
+    if (isWatch && processed.map) {
       writeFileSync(mapPath, processed.map.toString(), 'utf8');
+    } else {
+      // Khi build production (không có map), xóa file map thừa nếu còn tồn tại
+      if (existsSync(mapPath)) {
+        try { unlinkSync(mapPath); } catch {}
+      }
     }
     console.log(`[scss] ${norm(rel)} → ${basename(cssPath)}`);
   } catch (err) {
@@ -588,14 +594,35 @@ async function startWatch() {
 
   const { watch: chokidarWatch } = await import('chokidar');
   const browserSync = (await import('browser-sync')).default.create();
+  const net = await import('net');
+
+  // Kiểm tra port có đang sử dụng không
+  function isPortInUse(port) {
+    return new Promise((resolve) => {
+      const server = net.createServer();
+      server.once('error', () => resolve(true));
+      server.once('listening', () => { server.close(); resolve(false); });
+      server.listen(port, '127.0.0.1');
+    });
+  }
+
+  // Tìm port trống bắt đầu từ DEFAULT_PORT
+  const DEFAULT_PORT = 6868;
+  let port = DEFAULT_PORT;
+  for (let i = 0; i < 20; i++) {
+    if (!(await isPortInUse(port))) break;
+    console.log(`⚠️ Port ${port} đang được sử dụng, thử port ${port + 1}...`);
+    port++;
+  }
 
   console.log('\n╔══════════════════════════════════════════════╗');
-  console.log(`║ Starting BrowserSync Proxy -> ${PROXY_TARGET}`.padEnd(47) + '║');
+  console.log(`║ BrowserSync → ${PROXY_TARGET}`.padEnd(47) + '║');
+  console.log(`║ Local: http://localhost:${port}`.padEnd(47) + '║');
   console.log('╚══════════════════════════════════════════════╝\n');
 
   browserSync.init({
     proxy: PROXY_TARGET,
-    port: 3000,
+    port,
     open: true,
     notify: false,
     ui: false,
@@ -603,7 +630,7 @@ async function startWatch() {
 
   // Per-file debounce: each filepath gets its own timer,
   // so multiple files added simultaneously are all processed.
-  function debouncePerFile(fn, wait = 200) {
+  function debouncePerFile(fn, wait = 50) {
     const timers = new Map();
     return (filepath, ...rest) => {
       const key = filepath;

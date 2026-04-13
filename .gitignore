@@ -3,4 +3,8 @@ public
 latest-ja.zip
 .wp_temp
 .env
-.repo_lock
+.deploy/
+.create-link.bat
+*.log
+.DS_Store
+Thumbs.db

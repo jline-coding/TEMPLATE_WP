@@ -1,8 +1,8 @@
 <?php
-include_once('includes/editor-block-theme.php');
-include_once('includes/styles-scripts-all.php');
-include_once('includes/contactform.php');
-// ================ DEFAULT SETTING ===================
+require_once( get_template_directory() . '/includes/editor-block-theme.php' );
+require_once( get_template_directory() . '/includes/styles-scripts-all.php' );
+require_once( get_template_directory() . '/includes/contactform.php' );
+require_once( get_template_directory() . '/includes/shortcode.php' );
 //add Featured Image
 add_theme_support( 'post-thumbnails' );
 
@@ -52,7 +52,6 @@ if ( function_exists( 'register_nav_menu' ) ) {
 //EXCERPT
 add_post_type_support( 'page', 'excerpt' );
 
-require_once( dirname( __FILE__ ) . '/includes/shortcode.php' );
 // ================ END DEFAULT SETTING ===================
 
 

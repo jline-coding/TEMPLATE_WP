@@ -4,6 +4,8 @@
 /////////////////////////////////
 
 function written_enqueue_block_variations() {
+    $script_path = get_template_directory() . '/assets/js/blockeditor-variations.js';
+    if ( ! file_exists( $script_path ) ) return;
 
 	wp_enqueue_script(
 		'written-enqueue-block-variations',
@@ -24,10 +26,16 @@ add_action( 'enqueue_block_editor_assets', 'written_enqueue_block_variations' );
 
 add_action( 'after_setup_theme', function () {
 	add_theme_support( 'editor-styles' );
-	add_editor_style( 'assets/css/blockeditor.css' );
+    $editor_css = get_template_directory() . '/assets/css/blockeditor.css';
+    if ( file_exists( $editor_css ) ) {
+        add_editor_style( 'assets/css/blockeditor.css' );
+    }
 });
 
 add_action( 'wp_enqueue_scripts', function () {
+    $css_path = get_parent_theme_file_path( '/assets/css/blockeditor.css' );
+    if ( ! file_exists( $css_path ) ) return;
+
 	wp_enqueue_style(
 		'mytheme-style',
 		get_parent_theme_file_uri( '/assets/css/blockeditor.css' ),

@@ -3,10 +3,31 @@ const path = require('path');
 const ftp = require('basic-ftp');
 const { execSync } = require('child_process');
 const crypt = require('apache-crypt');
+const crypto = require('crypto');
 
 // ─────────────────────────────────────────────
 // Utilities
 // ─────────────────────────────────────────────
+
+/**
+ * HTTP GET with redirect support (http→https)
+ */
+function httpGet(url, maxRedirects = 5) {
+    return new Promise((resolve, reject) => {
+        const mod = require(url.startsWith('https') ? 'https' : 'http');
+        const req = mod.get(url, { timeout: 120000, rejectUnauthorized: false }, (res) => {
+            if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location && maxRedirects > 0) {
+                console.log(`   ↪️ Redirect → ${res.headers.location.split('?')[0]}`);
+                return httpGet(res.headers.location, maxRedirects - 1).then(resolve).catch(reject);
+            }
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve({ status: res.statusCode, body: data.trim() }));
+        });
+        req.on('error', reject);
+        req.on('timeout', () => { req.destroy(); reject(new Error('Timeout (120s)')); });
+    });
+}
 
 function walkDir(dir, baseDir = dir) {
     const results = [];
@@ -34,9 +55,7 @@ function validateConfig(config) {
     if (!config.source_folder || typeof config.source_folder !== 'string') {
         errors.push('Thiếu trường "source_folder" (string)');
     }
-    if (!config.basic_auth || !config.basic_auth.username || !config.basic_auth.password) {
-        errors.push('Thiếu trường "basic_auth" với "username" và "password"');
-    }
+    // basic_auth là tuỳ chọn — không validate bắt buộc
     return errors;
 }
 
@@ -98,7 +117,7 @@ async function connectWithRetry(client, serverInfo, maxRetries = 3) {
                 host: serverInfo.host,
                 user: serverInfo.user,
                 password: serverInfo.pass,
-                secure: false,
+                secure: serverInfo.secure !== undefined ? serverInfo.secure : false,
             });
             console.log(`✅ Kết nối FTP thành công: ${serverInfo.host}`);
             return;
@@ -115,49 +134,6 @@ async function connectWithRetry(client, serverInfo, maxRetries = 3) {
 // ─────────────────────────────────────────────
 // WordPress-specific helpers
 // ─────────────────────────────────────────────
-
-/**
- * File/folder được bảo vệ — KHÔNG BAO GIỜ xoá hoặc ghi đè trên server.
- * Áp dụng cho incremental deploy (lần 2+).
- */
-const WP_PROTECTED_PATTERNS = [
-    'wp-config.php',
-    'wp-config-sample.php',
-    '.htaccess',
-    '.htpasswd',
-    '.repo_lock',
-    '.last_deploy_sha',
-];
-
-/**
- * Kiểm tra path có thuộc thư mục uploads không (media files).
- */
-function isUploadDir(relativePath) {
-    return relativePath.startsWith('wp-content/uploads/') ||
-           relativePath === 'wp-content/uploads';
-}
-
-/**
- * Kiểm tra path có phải WP core (ngoài wp-content/themes/[name]/) không.
- */
-function isWpCore(relativePath, themeName) {
-    const themePrefix = `wp-content/themes/${themeName}/`;
-
-    // Cho phép thay đổi trong theme
-    if (relativePath.startsWith(themePrefix)) return false;
-
-    // Mọi thứ khác = WP core (wp-admin, wp-includes, root files, plugins, uploads, etc.)
-    return true;
-}
-
-/**
- * Kiểm tra file có được bảo vệ không.
- */
-function isProtected(relativePath) {
-    if (WP_PROTECTED_PATTERNS.some(p => relativePath === p)) return true;
-    if (isUploadDir(relativePath)) return true;
-    return false;
-}
 
 /**
  * Map file thay đổi trong src/ sang đường dẫn tương ứng trong public/.
@@ -246,9 +222,12 @@ function mapSrcChangesToTheme(diffLines, sourceFolder, themeName) {
 // ─────────────────────────────────────────────
 
 async function runDeploy() {
+    // ─── Xác định môi trường ───
+    const envName = process.env.DEPLOY_ENV || 'test';
+
     console.log('');
     console.log('╔══════════════════════════════════════════════╗');
-    console.log('║   🚀 WP DEPLOY AN TOÀN — KHỞI ĐỘNG         ║');
+    console.log(`║   🚀 WP DEPLOY [${envName.toUpperCase()}]`.padEnd(47) + '║');
     console.log('╚══════════════════════════════════════════════╝');
     console.log('');
 
@@ -258,11 +237,26 @@ async function runDeploy() {
         process.exit(1);
     }
 
-    const config = JSON.parse(fs.readFileSync('deploy-config.json', 'utf8'));
+    const fullConfig = JSON.parse(fs.readFileSync('deploy-config.json', 'utf8'));
+
+    if (!fullConfig[envName]) {
+        console.error(`❌ LỖI: Không tìm thấy cấu hình cho môi trường "${envName}" trong deploy-config.json!`);
+        console.error(`   Đảm bảo có khối "${envName}" với: server, project_dir, deploy_method`);
+        process.exit(1);
+    }
+
+    const envConfig = fullConfig[envName];
+    const config = {
+        source_folder: fullConfig.source_folder,
+        project_dir: envConfig.project_dir,
+        server: envConfig.server,
+        deploy_method: envConfig.deploy_method || 'ftp',
+        basic_auth: envConfig.basic_auth || null,
+    };
 
     const configErrors = validateConfig(config);
     if (configErrors.length > 0) {
-        console.error('❌ LỖI CẤU HÌNH deploy-config.json:');
+        console.error(`❌ LỖI CẤU HÌNH [${envName}]:`);
         configErrors.forEach((e) => console.error(`   • ${e}`));
         process.exit(1);
     }
@@ -306,11 +300,12 @@ async function runDeploy() {
     const themeRemoteDir = `${targetDir}/wp-content/themes/${themeName}`;
 
     console.log('');
-    console.log(`📋 Cấu hình:`);
+    console.log(`📋 Cấu hình [${envName.toUpperCase()}]:`);
     console.log(`   • Server: ${serverInfo.host}`);
     console.log(`   • Thư mục FTP: ${targetDir}`);
     console.log(`   • Theme: ${themeName}`);
     console.log(`   • Theme remote: ${themeRemoteDir}`);
+    console.log(`   • Basic Auth: ${config.basic_auth ? '✅ Có' : '❌ Không'}`);
     console.log('');
 
     // ─── Kết nối FTP ───
@@ -322,18 +317,20 @@ async function runDeploy() {
 
         const ftpRoot = await client.pwd();
 
-        // 🛡️ LỚP 2: REPO LOCK (CHỐNG GHI ĐÈ NHẦM)
+        // 🛡️ LỚP 2: REPO LOCK (CHỐNG GHI ĐÈ NHẦM MÔI TRƯỜNG/PROJECT)
         let isFirstDeploy = false;
         try {
             await client.cd(targetDir);
             const lockFileLocal = '/tmp/.repo_lock';
-            await client.downloadTo(lockFileLocal, '.repo_lock');
+            await client.downloadTo(lockFileLocal, '.deploy/.repo_lock');
             const lockOwner = fs.readFileSync(lockFileLocal, 'utf8').trim();
+            const expectedLock = `${process.env.GITHUB_REPO}:${envName}`;
 
-            if (lockOwner !== process.env.GITHUB_REPO) {
+            // Tương thích ngược: nếu file cũ chỉ chứa "user/repo", vẫn cho phép
+            if (lockOwner !== expectedLock && lockOwner !== process.env.GITHUB_REPO) {
                 throw new Error(
-                    `❌ CẢNH BÁO BẢO MẬT: Thư mục [${config.project_dir}] đang thuộc về dự án [${lockOwner}]. ` +
-                    `Repo hiện tại: [${process.env.GITHUB_REPO}]. HỦY DEPLOY ĐỂ TRÁNH GHI ĐÈ!`
+                    `❌ CẢNH BÁO BẢO MẬT: Thư mục [${config.project_dir}] đang thuộc về [${lockOwner}]. ` +
+                    `Hiện tại: [${expectedLock}]. HỦY DEPLOY ĐỂ TRÁNH GHI ĐÈ!`
                 );
             }
             console.log('✅ Khớp mã chủ quyền (.repo_lock) — an toàn.');
@@ -344,14 +341,19 @@ async function runDeploy() {
         }
 
         // ════════════════════════════════════════
-        // LUÔN CẬP NHẬT: .htpasswd (mỗi lần deploy)
+        // .htpasswd (chỉ tạo khi có basic_auth)
         // ════════════════════════════════════════
-        console.log('🔐 Cập nhật .htpasswd...');
-        const hashedPass = crypt(config.basic_auth.password);
-        fs.writeFileSync('/tmp/.htpasswd', `${config.basic_auth.username}:${hashedPass}`);
-        if (!isFirstDeploy) {
-            await client.cd(ftpRoot);
-            await client.uploadFrom('/tmp/.htpasswd', `${targetDir}/.htpasswd`);
+        const hasBasicAuth = !!(config.basic_auth && config.basic_auth.username && config.basic_auth.password);
+        if (hasBasicAuth) {
+            console.log('🔐 Cập nhật .htpasswd...');
+            const hashedPass = crypt(config.basic_auth.password);
+            fs.writeFileSync('/tmp/.htpasswd', `${config.basic_auth.username}:${hashedPass}`);
+            if (!isFirstDeploy) {
+                await client.cd(ftpRoot);
+                await client.uploadFrom('/tmp/.htpasswd', `${targetDir}/.htpasswd`);
+            }
+        } else {
+            console.log('ℹ️ Không có basic_auth — bỏ qua .htpasswd.');
         }
 
         // ════════════════════════════════════════
@@ -361,7 +363,7 @@ async function runDeploy() {
         if (!isFirstDeploy) {
             try {
                 await client.cd(ftpRoot);
-                await client.downloadTo('/tmp/.last_deploy_sha', `${targetDir}/.last_deploy_sha`);
+                await client.downloadTo('/tmp/.last_deploy_sha', `${targetDir}/.deploy/.last_deploy_sha`);
                 const lastSha = fs.readFileSync('/tmp/.last_deploy_sha', 'utf8').trim();
                 if (lastSha && /^[0-9a-f]{7,40}$/.test(lastSha)) {
                     lastDeployRef = lastSha;
@@ -369,6 +371,27 @@ async function runDeploy() {
                 }
             } catch {
                 console.log('📌 Không tìm thấy lịch sử deploy → so sánh HEAD~1');
+            }
+        }
+
+        // ─── Tính Site URL (dùng chung cho extract + health check) ───
+        const rootPath = serverInfo.root_path || '';
+        const pubIdx = rootPath.indexOf('public_html');
+        const webPath = pubIdx >= 0 ? rootPath.substring(pubIdx + 'public_html'.length) : '';
+        const siteUrl = `http://${serverInfo.host}${webPath}`;
+
+        // ════════════════════════════════════════
+        // CHẾ ĐỘ BẢO TRÌ (.maintenance) TRƯỚC DEPLOY
+        // ════════════════════════════════════════
+        if (config.maintenance_mode !== false) {
+            try {
+                console.log('🚧 Bật chế độ bảo trì (.maintenance)...');
+                await client.ensureDir(targetDir);
+                await client.cd(ftpRoot);
+                fs.writeFileSync('/tmp/.maintenance', '<?php $upgrading = time(); ?>');
+                await client.uploadFrom('/tmp/.maintenance', `${targetDir}/.maintenance`);
+            } catch (err) {
+                console.log('ℹ️ Bỏ qua chế độ bảo trì (thư mục có thể chưa cấu hình đủ).');
             }
         }
 
@@ -383,13 +406,17 @@ async function runDeploy() {
             await client.ensureDir(targetDir);
             await client.cd(ftpRoot);
 
-            // 1. Tạo .repo_lock
-            console.log('🔒 Tạo .repo_lock...');
-            fs.writeFileSync('/tmp/.repo_lock', process.env.GITHUB_REPO);
-            await client.uploadFrom('/tmp/.repo_lock', `${targetDir}/.repo_lock`);
+            // 1. Tạo .deploy/ + .repo_lock
+            console.log('🔒 Tạo .deploy/.repo_lock...');
+            await client.ensureDir(`${targetDir}/.deploy`);
+            await client.cd(ftpRoot);
+            fs.writeFileSync('/tmp/.repo_lock', `${process.env.GITHUB_REPO}:${envName}`);
+            await client.uploadFrom('/tmp/.repo_lock', `${targetDir}/.deploy/.repo_lock`);
 
-            // 2. Upload .htpasswd (đã tạo ở trên)
-            await client.uploadFrom('/tmp/.htpasswd', `${targetDir}/.htpasswd`);
+            // 2. Upload .htpasswd (nếu có basic_auth)
+            if (hasBasicAuth) {
+                await client.uploadFrom('/tmp/.htpasswd', `${targetDir}/.htpasswd`);
+            }
 
             // 3. Upload WP + Theme (ZIP + PHP Extract)
             console.log('🚀 Upload ZIP + Giải nén trên server...');
@@ -406,11 +433,12 @@ async function runDeploy() {
             console.log('   ✅ Upload zip hoàn tất!');
 
             // 3c. Tạo PHP extract script (có secret token bảo vệ)
-            const crypto = require('crypto');
             const token = crypto.randomBytes(32).toString('hex');
             const extractPhp = [
                 '<?php',
                 'error_reporting(0);',
+                '// Auto-destruct after 60 seconds',
+                'if (time() - filemtime(__FILE__) > 60) { @unlink("_deploy.zip"); @unlink(__FILE__); http_response_code(410); die("Expired"); }',
                 `if (($_GET["t"] ?? "") !== "${token}") { http_response_code(403); die("Forbidden"); }`,
                 '$zip = new ZipArchive;',
                 'if ($zip->open("_deploy.zip") === TRUE) {',
@@ -428,31 +456,10 @@ async function runDeploy() {
             fs.writeFileSync('/tmp/_extract.php', extractPhp);
             await client.uploadFrom('/tmp/_extract.php', `${targetDir}/_extract.php`);
 
-            // 3d. Tính URL từ host + root_path (host có thể là IP hoặc domain)
-            const rootPath = serverInfo.root_path || '';
-            const pubIdx = rootPath.indexOf('public_html');
-            const webPath = pubIdx >= 0 ? rootPath.substring(pubIdx + 'public_html'.length) : '';
-            const siteUrl = `http://${serverInfo.host}${webPath}`;
             const extractUrl = `${siteUrl}/${config.project_dir}/_extract.php?t=${token}`;
             console.log(`🔧 Gọi extract: ${siteUrl}/${config.project_dir}/_extract.php`);
 
-            // 3e. Gọi HTTP để giải nén (hỗ trợ redirect http→https)
-            function httpGet(url, maxRedirects = 5) {
-                return new Promise((resolve, reject) => {
-                    const mod = require(url.startsWith('https') ? 'https' : 'http');
-                    const req = mod.get(url, { timeout: 120000, rejectUnauthorized: false }, (res) => {
-                        if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location && maxRedirects > 0) {
-                            console.log(`   ↪️ Redirect → ${res.headers.location.split('?')[0]}`);
-                            return httpGet(res.headers.location, maxRedirects - 1).then(resolve).catch(reject);
-                        }
-                        let data = '';
-                        res.on('data', chunk => data += chunk);
-                        res.on('end', () => resolve({ status: res.statusCode, body: data.trim() }));
-                    });
-                    req.on('error', reject);
-                    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout (120s)')); });
-                });
-            }
+            // 3e. Gọi HTTP để giải nén
             try {
                 const extractResult = await httpGet(extractUrl);
 
@@ -469,32 +476,41 @@ async function runDeploy() {
                 await uploadDirectory(client, config.source_folder, targetDir, ftpRoot);
             }
 
-            // 4. Tạo .htaccess (WordPress rewrite + Basic Auth)
-            console.log('🔐 Tạo .htaccess (WordPress + Basic Auth)...');
-            const htaccessContent = [
-                '# === Bảo vệ tất cả file ẩn (bắt đầu bằng dấu chấm) ===',
-                '<Files ~ "^\\.">',
-                'Deny from all',
-                '</Files>',
-                '',
-                '# === Basic Auth ===',
-                'AuthType Basic',
-                'AuthName "Restricted Area"',
-                `AuthUserFile ${serverInfo.root_path}/${config.project_dir}/.htpasswd`,
-                'Require valid-user',
-                '',
-                '# === WordPress Rewrite Rules ===',
-                '<IfModule mod_rewrite.c>',
-                'RewriteEngine On',
-                `RewriteBase /${config.project_dir}/`,
-                'RewriteRule ^index\\.php$ - [L]',
-                'RewriteCond %{REQUEST_FILENAME} !-f',
-                'RewriteCond %{REQUEST_FILENAME} !-d',
-                'RewriteRule . index.php [L]',
-                '</IfModule>',
-            ].join('\n');
-            fs.writeFileSync('/tmp/.htaccess', htaccessContent);
-            await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
+            // 4. Thêm Basic Auth vào .htaccess (nếu có)
+            if (hasBasicAuth) {
+                console.log('🔐 Thêm cấu hình Basic Auth vào .htaccess...');
+                const basicAuthLines = [
+                    '# === Basic Auth ===',
+                    'AuthType Basic',
+                    'AuthName "Restricted Area"',
+                    `AuthUserFile ${serverInfo.root_path}/${config.project_dir}/.htpasswd`,
+                    'Require valid-user',
+                    '# ==================\n'
+                ].join('\n');
+
+                try {
+                    // Tải .htaccess hiện có (được giải nén ra từ WP zip hoặc source)
+                    await client.downloadTo('/tmp/.htaccess', `${targetDir}/.htaccess`);
+                    let htaccessContent = fs.readFileSync('/tmp/.htaccess', 'utf8');
+                    
+                    if (!htaccessContent.includes('AuthType Basic')) {
+                        // Chèn auth vào đầu file
+                        htaccessContent = basicAuthLines + '\n' + htaccessContent;
+                        fs.writeFileSync('/tmp/.htaccess', htaccessContent);
+                        await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
+                        console.log('   ✅ Đã chèn Basic Auth vào .htaccess hiện có.');
+                    } else {
+                        console.log('   ℹ️ .htaccess đã có cấu hình Basic Auth.');
+                    }
+                } catch (err) {
+                    // Nếu chưa có file .htaccess trên server, tạo mới (WP sẽ tự thêm rule vào thẻ này sau)
+                    fs.writeFileSync('/tmp/.htaccess', basicAuthLines);
+                    await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
+                    console.log('   ✅ Không tìm thấy .htaccess cũ. Đã tạo mới .htaccess với cấu hình Basic Auth.');
+                }
+            } else {
+                console.log('ℹ️ Không có basic_auth — giữ nguyên toàn bộ .htaccess mặc định.');
+            }
 
             console.log('');
             console.log('✅ Hoàn thành Deploy lần đầu!');
@@ -581,15 +597,20 @@ async function runDeploy() {
             }
 
             // Delete removed files (chỉ trong theme, bảo vệ WP core)
-            for (const delRel of changes.delete) {
-                // 🛡️ LỚP 3: Chỉ xoá trong theme directory
-                const remotePath = `${themeRemoteDir}/${delRel}`;
-                try {
-                    await client.remove(remotePath);
-                    console.log(`   🗑️ Đã xóa: ${delRel}`);
-                    deleteCount++;
-                } catch {
-                    // File có thể không tồn tại trên server
+            if (config.allow_purge === false) {
+                console.log('   ℹ️ Cờ allow_purge = false: Bỏ qua quá trình xoá file mồ côi (bảo vệ thư mục đích).');
+                skipCount += changes.delete.length;
+            } else {
+                for (const delRel of changes.delete) {
+                    // 🛡️ LỚP 3: Chỉ xoá trong theme directory
+                    const remotePath = `${themeRemoteDir}/${delRel}`;
+                    try {
+                        await client.remove(remotePath);
+                        console.log(`   🗑️ Đã xóa: ${delRel}`);
+                        deleteCount++;
+                    } catch {
+                        // File có thể không tồn tại trên server
+                    }
                 }
             }
 
@@ -602,12 +623,50 @@ async function runDeploy() {
             console.log('✅ Hoàn thành Cập nhật Theme!');
         }
 
+        console.log('');
+        // ════════════════════════════════════════
+        // TẮT CHẾ ĐỘ BẢO TRÌ
+        // ════════════════════════════════════════
+        if (config.maintenance_mode !== false) {
+            try {
+                console.log('🚧 Tắt chế độ bảo trì...');
+                await client.cd(ftpRoot);
+                await client.remove(`${targetDir}/.maintenance`);
+            } catch { /* ignore */ }
+        }
+
+        // ════════════════════════════════════════
+        // HEALTH CHECK — Kiểm tra site sau deploy
+        // ════════════════════════════════════════
+        console.log('');
+        console.log('🏥 Health Check...');
+        const healthUrl = `${siteUrl}/${config.project_dir}/`;
+        try {
+            const health = await httpGet(healthUrl);
+            if (health.status >= 500) {
+                console.error(`⚠️ CẢNH BÁO: Site trả về lỗi ${health.status} sau deploy!`);
+                console.error(`   URL: ${healthUrl}`);
+                console.error(`   Kiểm tra: wp-config.php, database, file permissions.`);
+            } else if (health.status === 401) {
+                console.log(`✅ Site respond (401 — Basic Auth đang hoạt động)`);
+            } else if (health.status >= 200 && health.status < 400) {
+                console.log(`✅ Site respond OK (${health.status})`);
+            } else {
+                console.log(`ℹ️ Site respond: ${health.status}`);
+            }
+        } catch (healthErr) {
+            console.log(`ℹ️ Health check không thể kết nối: ${healthErr.message}`);
+            console.log(`   (Không ảnh hưởng deploy — có thể do DNS/firewall)`);
+        }
+
         // Lưu commit SHA hiện tại lên server (để lần deploy sau so sánh chính xác)
         try {
             const currentSha = execSync('git rev-parse HEAD').toString().trim();
             fs.writeFileSync('/tmp/.last_deploy_sha', currentSha);
             await client.cd(ftpRoot);
-            await client.uploadFrom('/tmp/.last_deploy_sha', `${targetDir}/.last_deploy_sha`);
+            await client.ensureDir(`${targetDir}/.deploy`);
+            await client.cd(ftpRoot);
+            await client.uploadFrom('/tmp/.last_deploy_sha', `${targetDir}/.deploy/.last_deploy_sha`);
             console.log(`📌 Đã lưu deploy marker: ${currentSha.substring(0, 7)}`);
         } catch {
             console.log('⚠️ Không thể lưu deploy marker (không ảnh hưởng deploy).');

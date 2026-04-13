@@ -20,23 +20,19 @@
                     }
                 </style>
         <?php endif; ?>
+
         <?php if (is_front_page()): ?>
         <script>
             if (!sessionStorage.getItem('storage_loading')) {
                 document.documentElement.classList.add('is-loading');
+                sessionStorage.setItem('storage_loading', new Date().getTime().toString());
             }
         </script>
         <?php endif; ?>
     </head>
     <body>
-        <?php if (is_front_page()): ?>
-        <script>
-            if (!window.sessionStorage.getItem("storage_loading")) {
-                document.documentElement.classList.add("is-loading");    
-                window.sessionStorage.setItem("storage_loading", new Date().getTime().toString());    
-            }
-        </script>
-        <?php endif; ?>
-        <header class="c-header">
-            Header 123
-        </header>
+        <?php wp_body_open(); ?>
+        <div id="wrapper">
+            <header class="c-header">
+                Header
+            </header>

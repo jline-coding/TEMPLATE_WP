@@ -1,0 +1,83 @@
+# ═══════════════════════════════════════════════════════════════
+#  Release Workflow — Tạo GitHub Release với Theme ZIP
+#
+#  Trigger:
+#    git tag v1.0.0 && git push origin v1.0.0
+#
+#  Output:
+#    → GitHub Release "theme_name v1.0.0"
+#    → Attach theme_name.zip (chỉ chứa theme, không có WP core)
+# ═══════════════════════════════════════════════════════════════
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 Kéo Source Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Cài đặt Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Cài đặt dependencies
+        run: npm ci
+
+      - name: 💾 Cache WordPress download
+        uses: actions/cache@v4
+        with:
+          path: public
+          key: wp-public-${{ hashFiles('scripts/download-wp.js') }}
+
+      - name: 🔨 Build dự án
+        run: |
+          BUILD_CMD=$(jq -r '.build_command // "npm run build"' deploy-config.json)
+          eval "$BUILD_CMD"
+
+      - name: 📦 Tạo Theme ZIP
+        run: |
+          SOURCE_FOLDER=$(jq -r '.source_folder // "public"' deploy-config.json)
+          THEME_DIR="${SOURCE_FOLDER}/wp-content/themes"
+          THEME_NAME=$(ls "$THEME_DIR" | grep -v '^twenty' | grep -v '^\.' | head -1)
+
+          if [[ -z "$THEME_NAME" ]]; then
+            echo "❌ Không tìm thấy theme trong $THEME_DIR"
+            exit 1
+          fi
+
+          echo "THEME_NAME=$THEME_NAME" >> $GITHUB_ENV
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+
+          cd "$THEME_DIR/$THEME_NAME"
+          zip -r "/tmp/${THEME_NAME}.zip" . -x ".*"
+
+          ZIP_SIZE=$(du -h "/tmp/${THEME_NAME}.zip" | cut -f1)
+          echo "THEME_ZIP=/tmp/${THEME_NAME}.zip" >> $GITHUB_ENV
+
+          echo ""
+          echo "╔══════════════════════════════════════════════╗"
+          printf "║   📦 Theme: %-32s ║\n" "$THEME_NAME"
+          printf "║   🏷️  Tag:   %-32s ║\n" "$TAG_NAME"
+          printf "║   💾 Size:  %-32s ║\n" "$ZIP_SIZE"
+          echo "╚══════════════════════════════════════════════╝"
+
+      - name: 🏷️ Tạo GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: "${{ env.THEME_NAME }} ${{ env.TAG_NAME }}"
+          files: ${{ env.THEME_ZIP }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
