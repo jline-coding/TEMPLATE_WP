@@ -2,8 +2,8 @@
   "source_folder": "public",
   "build_command": "npm run wp:download && npm run build",
   "production": {
-    "deploy_method": "ftp",
-    "server": "JLWEB",
+    "deploy_method": "zip",
+    "server": "",
     "project_dir": "template_wp_production"
   },
   "test": {
