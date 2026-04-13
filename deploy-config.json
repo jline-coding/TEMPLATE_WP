@@ -9,7 +9,7 @@
   "test": {
     "deploy_method": "ftp",
     "server": "JLWEB",
-    "project_dir": "template_wp",
+    "project_dir": "template_jline_wp",
     "basic_auth": {
       "username": "wp",
       "password": "test"
