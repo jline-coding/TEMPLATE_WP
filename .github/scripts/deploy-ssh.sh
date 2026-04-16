@@ -35,7 +35,32 @@ if [[ "$PROJECT_DIR" =~ [^a-zA-Z0-9_-] ]]; then
 fi
 
 THEME_NAME="$PROJECT_DIR"
-echo "🎨 Tên Theme (Lấy cứng từ project_dir): $THEME_NAME"
+echo "🎨 Tên Theme đích (project_dir): $THEME_NAME"
+
+# Phát hiện tên Theme thực tế đã được Build ra (có thể khác project_dir)
+BUILT_THEMES_DIR="$SOURCE_FOLDER/wp-content/themes"
+BUILT_THEME=""
+if [ -d "$BUILT_THEMES_DIR" ]; then
+    for dir in "$BUILT_THEMES_DIR"/*/; do
+        [ ! -d "$dir" ] && continue
+        dname=$(basename "$dir")
+        # Bỏ qua các theme mặc định của WP (twenty*)
+        case "$dname" in twenty*) continue ;; esac
+        BUILT_THEME="$dname"
+        break
+    done
+fi
+
+if [ -z "$BUILT_THEME" ]; then
+    echo "❌ LỖI: Không tìm thấy theme đã build trong $BUILT_THEMES_DIR"
+    exit 1
+fi
+
+if [ "$BUILT_THEME" != "$THEME_NAME" ]; then
+    echo "ℹ️ Theme build trên CI: [$BUILT_THEME] → Sẽ ánh xạ sang [$THEME_NAME] trên server"
+else
+    echo "✅ Theme build khớp project_dir: $BUILT_THEME"
+fi
 
 # ── Đọc credentials (Node.js xử lý multiline private_key an toàn) ──
 if [ -z "$SERVER_SECRET_JSON" ]; then
@@ -157,6 +182,12 @@ if [ "$IS_FIRST_DEPLOY" = true ]; then
     
     echo "🔨 4. Điều binh Command Native xả nén ngay trên Chip Máy chủ..."
     $SSH_CMD "cd \"$TARGET_DIR\" && unzip -o _deploy.zip > /dev/null && rm _deploy.zip"
+    
+    # Đổi tên thư mục theme nếu tên Build khác project_dir
+    if [ "$BUILT_THEME" != "$THEME_NAME" ]; then
+        echo "🔄 5. Đổi tên theme trên server: $BUILT_THEME → $THEME_NAME"
+        $SSH_CMD "cd \"$TARGET_DIR/wp-content/themes/\" && mv \"$BUILT_THEME\" \"$THEME_NAME\""
+    fi
     echo "✅ Toàn trình First Upload thành công chớp nhoáng!"
     
     # Kích hoạt Basic Auth cho môi trường Test
@@ -188,7 +219,8 @@ else
     echo ""
     echo "━━━ LẦN CẬP NHẬT (INCREMENTAL): TÌM FILE DỊ BẢN GỬI BẰNG RSYNC ━━━"
     
-    LOCAL_THEME="$SOURCE_FOLDER/wp-content/themes/$THEME_NAME/"
+    # LOCAL dùng tên theme thực tế từ Build, REMOTE dùng project_dir
+    LOCAL_THEME="$SOURCE_FOLDER/wp-content/themes/$BUILT_THEME/"
     REMOTE_THEME="$TARGET_DIR/wp-content/themes/$THEME_NAME/"
     
     if [ ! -d "$LOCAL_THEME" ]; then
@@ -196,7 +228,7 @@ else
          exit 1
     fi
     
-    echo "⬆️ Kích hoạt vòi rồng Rsync --Delete chĩa súng duy nhất vào lõi THEME..."
+    echo "⬆️ Rsync --Delete: [$BUILT_THEME] (local) → [$THEME_NAME] (server)..."
     # Lệnh --delete chỉ áp dụng chĩa vào mục Theme con. Lõi WP Core hoàn toàn ngoại bất nhập!
     eval "$RSYNC_CMD \"$LOCAL_THEME\" \"$SSH_USER@$SSH_HOST:$REMOTE_THEME\""
     echo "✅ Cân đo đong đếm lượng dư / thiếu Delta Hash kết thúc hoàn hảo!"
