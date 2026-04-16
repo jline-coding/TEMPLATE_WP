@@ -1,0 +1,17 @@
+/*!
+global > color
+------------------------------
+*/
+/*!
+global > content-width
+------------------------------
+*/
+/*!
+global > font
+------------------------------
+*/
+/*!
+global > mixin
+------------------------------
+*/.p-privacy__sign__txt{font-size:.75rem}.p-privacy__sign__name{font-size:1.25rem}.p-privacy .c-ttl32{font-family:Noto Sans JP,sans-serif;margin-bottom:20px}.p-privacy__content{padding-bottom:80px}.p-privacy__block{margin-top:60px}.p-privacy__block .c-ttl24{font-family:Noto Sans JP,sans-serif;margin-bottom:20px}.p-privacy__block .c-ttl24:after{background-color:var(--base);content:"";display:block;height:1px;margin-top:10px;opacity:.25;width:100%}.p-privacy__block+.p-privacy__block{margin-top:40px}.p-privacy__sign{display:table;margin-left:auto;margin-top:60px}.p-privacy__sign__txt{font-weight:500;line-height:1.4285714286}.p-privacy__sign__name{font-weight:500;line-height:1.4583333333;margin-top:4px}@media screen and (min-width:768px){.p-privacy__sign__txt{font-size:clamp(.75rem,.2403846154vw + .6346153846rem,.875rem)}.p-privacy__sign__name{font-size:clamp(1.25rem,.4807692308vw + 1.0192307692rem,1.5rem)}.p-privacy .c-ttl32{margin-bottom:37px}.p-privacy__content{padding-bottom:160px}.p-privacy__block{margin-top:93px}.p-privacy__block .c-ttl24{margin-bottom:34px}.p-privacy__block .c-ttl24:after{margin-top:12px}.p-privacy__block+.p-privacy__block{margin-top:73px}.p-privacy__sign{margin-top:114px}}
+/*# sourceMappingURL=privacy.css.map */

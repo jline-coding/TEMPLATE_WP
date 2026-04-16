@@ -24,8 +24,7 @@
           ((expires) ? ';expires=' + expires_date.toUTCString() : '') +
           ((path) ? ';path=' + path : '') +
           ((domain) ? ';domain=' + domain : '') +
-          ((secure) ? ';secure' : '') +
-          ';SameSite=Lax';
+          ((secure) ? ';secure' : '');
       },
       del: function(name, path, domain) {
         var d = document;
