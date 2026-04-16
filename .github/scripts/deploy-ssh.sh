@@ -37,30 +37,61 @@ fi
 THEME_NAME="$PROJECT_DIR"
 echo "🎨 Tên Theme (Lấy cứng từ project_dir): $THEME_NAME"
 
-# Đọc credentials
+# ── Đọc credentials (Node.js xử lý multiline private_key an toàn) ──
 if [ -z "$SERVER_SECRET_JSON" ]; then
     echo "❌ LỖI: Không tìm thấy biến SERVER_SECRET_JSON (Secret trên Github)."
     exit 1
 fi
 
-SSH_HOST=$(echo "$SERVER_SECRET_JSON" | jq -r ".host // empty")
-SSH_USER=$(echo "$SERVER_SECRET_JSON" | jq -r ".user // empty")
-SSH_PORT=$(echo "$SERVER_SECRET_JSON" | jq -r ".ssh_port // 22")
-TARGET_DIR=$(echo "$SERVER_SECRET_JSON" | jq -r ".ftp_dir // empty")/$PROJECT_DIR
-FTP_GIT=$(echo "$SERVER_SECRET_JSON" | jq -r ".ftp_git // empty")
-ROOT_PATH=$(echo "$SERVER_SECRET_JSON" | jq -r ".root_path // empty")
-PRIVATE_KEY=$(echo "$SERVER_SECRET_JSON" | jq -r ".private_key // empty")
+node -e '
+const fs = require("fs");
+const raw = process.env.SERVER_SECRET_JSON;
+let config;
+try {
+    config = JSON.parse(raw);
+} catch (e1) {
+    // GitHub Secrets giữ nguyên ký tự xuống dòng thật trong private_key
+    // → Tự động escape newline bên trong giá trị private_key để JSON hợp lệ
+    try {
+        const fixed = raw.replace(
+            /("private_key"\s*:\s*")([\s\S]*?)("\s*[,}])/,
+            (_, pre, val, post) => pre + val.replace(/\r?\n/g, "\\n") + post
+        );
+        config = JSON.parse(fixed);
+    } catch (e2) {
+        console.error("❌ JSON trong SECRET không hợp lệ:", e2.message);
+        process.exit(1);
+    }
+}
 
-if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$PRIVATE_KEY" ]; then
+// Ghi cấu hình ra file tạm cho Bash source
+const q = (v) => String(v || "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+const lines = [
+    "SSH_HOST=\"" + q(config.host) + "\"",
+    "SSH_USER=\"" + q(config.user) + "\"",
+    "SSH_PORT=\"" + q(config.ssh_port || 22) + "\"",
+    "TARGET_DIR_BASE=\"" + q(config.ftp_dir) + "\"",
+    "FTP_GIT=\"" + q(config.ftp_git) + "\"",
+    "ROOT_PATH=\"" + q(config.root_path) + "\"",
+];
+fs.writeFileSync("/tmp/_ssh_config.sh", lines.join("\n") + "\n");
+
+// Ghi private key ra file riêng (giữ nguyên format đúng chuẩn OpenSSH)
+const key = (config.private_key || "").trimEnd() + "\n";
+fs.writeFileSync("/tmp/deploy_rsa", key, { mode: 0o600 });
+' || { echo "❌ LỖI: Không thể phân tích SERVER_SECRET_JSON"; exit 1; }
+
+source /tmp/_ssh_config.sh
+rm -f /tmp/_ssh_config.sh
+TARGET_DIR="$TARGET_DIR_BASE/$PROJECT_DIR"
+
+if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ ! -s /tmp/deploy_rsa ]; then
     echo "❌ LỖI: Thông tin SSH host/user/private_key trong Secret không đủ."
     exit 1
 fi
 
 # Thiết lập SSH Key
 export SSH_KEY_FILE="/tmp/deploy_rsa"
-echo "$PRIVATE_KEY" > "$SSH_KEY_FILE"
-# Loại bỏ ký tự thừa CR nếu có để private key hợp lệ
-sed -i 's/\r$//' "$SSH_KEY_FILE"
 chmod 600 "$SSH_KEY_FILE"
 
 SSH_CMD="ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i $SSH_KEY_FILE $SSH_USER@$SSH_HOST"
