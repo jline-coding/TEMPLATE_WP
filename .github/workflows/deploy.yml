@@ -90,25 +90,25 @@ jobs:
       # Build
       # ─────────────────────────────────────────────
       - name: ⚙️ Cài đặt Node.js
-        if: env.SHOULD_FTP == 'true'
+        if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: 📦 Cài đặt dependencies
-        if: env.SHOULD_FTP == 'true'
+        if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         run: npm ci
 
       - name: 💾 Cache WordPress download
-        if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true'
+        if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         uses: actions/cache@v4
         with:
           path: public
           key: wp-public-${{ hashFiles('scripts/download-wp.js') }}
 
       - name: 🔨 Build dự án
-        if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true'
+        if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         run: ${{ env.BUILD_CMD }}
 
       # ─────────────────────────────────────────────
