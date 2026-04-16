@@ -17,7 +17,7 @@ add_action( 'wp_enqueue_scripts', function() {
 
     // js files
 
-    wp_enqueue_script( 'jquery-js', $themeUrl . '/assets/vendor/jquery/jquery-3.5.1.min.js', array(), '1.0', true );    
+    wp_enqueue_script( 'jquery-js', $themeUrl . '/assets/vendor/jquery/jquery-4.0.0.min.js', array(), '1.0', true );    
     wp_enqueue_script( 'scrollable-js', $themeUrl . '/assets/vendor/scrollable/scrollable.js', array(), '1.0', true );
     wp_enqueue_script( 'inview-js', $themeUrl . '/assets/js/inview.js', array(), '1.0', true );
     wp_enqueue_script( 'cookie-js', $themeUrl . '/assets/js/cookie.js', array(), filemtime($themeDir . '/assets/js/cookie.js'), true );

@@ -97,26 +97,44 @@ jobs:
         run: npm ci
 
       - name: 💾 Cache WordPress download
-        if: env.SHOULD_FTP == 'true'
+        if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true'
         uses: actions/cache@v4
         with:
           path: public
           key: wp-public-${{ hashFiles('scripts/download-wp.js') }}
 
       - name: 🔨 Build dự án
-        if: env.SHOULD_FTP == 'true'
+        if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true'
         run: ${{ env.BUILD_CMD }}
 
       # ─────────────────────────────────────────────
-      # FTP Deploy
+      # ZIP Mode
       # ─────────────────────────────────────────────
-      - name: 📦 Cài đặt thư viện deploy
-        if: env.SHOULD_FTP == 'true'
+      - name: ℹ️ Chế độ ZIP (Chỉ tạo bản Build)
+        if: env.SHOULD_ZIP == 'true'
+        run: echo "Chế độ ZIP không cần đẩy file qua mạng. Hãy tạo Tag để Release code nhé!"
+
+      # ─────────────────────────────────────────────
+      # Deploy Scripts Options (Cài Node Packages)
+      # ─────────────────────────────────────────────
+      - name: 📦 Cài đặt thư viện Deploy (FTP / Crypt)
+        if: env.SHOULD_FTP == 'true' || env.SHOULD_SSH == 'true'
         run: npm install --no-save basic-ftp apache-crypt
 
-      - name: 🚀 FTP Deploy
+      - name: 🚀 Triển khai qua FTP
         if: env.SHOULD_FTP == 'true'
-        run: node .github/scripts/deploy.cjs
+        run: node .github/scripts/deploy-ftp.cjs
+        env:
+          DEPLOY_ENV: ${{ env.ENVIRONMENT }}
+          GITHUB_REPO: ${{ github.repository }}
+          SERVER_SECRET_JSON: ${{ secrets[format('{0}_CONFIG', env.SERVER_NAME)] }}
+
+      # ─────────────────────────────────────────────
+      # SSH Deploy
+      # ─────────────────────────────────────────────
+      - name: 🚀 Triển khai qua SSH/Rsync
+        if: env.SHOULD_SSH == 'true'
+        run: bash .github/scripts/deploy-ssh.sh
         env:
           DEPLOY_ENV: ${{ env.ENVIRONMENT }}
           GITHUB_REPO: ${{ github.repository }}
