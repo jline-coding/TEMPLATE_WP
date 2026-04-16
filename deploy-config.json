@@ -8,7 +8,7 @@
   },
   "test": {
     "deploy_method": "ssh",
-    "server": "JLWEB",
+    "server": "JLWEB_SSH",
     "project_dir": "template_jline_wp",
     "basic_auth": {
       "username": "wp",
