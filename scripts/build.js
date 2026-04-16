@@ -35,22 +35,26 @@ import { cpus } from 'os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-// --- AUTO-THEME NAMING ---
-// CI (DEPLOY_ENV set) → đọc project_dir từ deploy-config.json
-// Local dev (không có DEPLOY_ENV) → dùng tên thư mục gốc (Laragon style)
+// --- AUTO-THEME NAMING (đọc project_dir từ deploy-config.json) ---
+// CI: dùng DEPLOY_ENV → lấy project_dir của môi trường đó
+// Local: mặc định lấy project_dir từ "test", fallback "production"
 function resolveProjectName() {
-  const deployEnv = process.env.DEPLOY_ENV;
-  if (deployEnv) {
-    try {
-      const configPath = resolve(ROOT, 'deploy-config.json');
-      const config = JSON.parse(readFileSync(configPath, 'utf8'));
-      const envConfig = config[deployEnv];
-      if (envConfig && envConfig.project_dir) {
-        console.log(`[Config] CI mode (${deployEnv}) → project_dir: ${envConfig.project_dir}`);
-        return envConfig.project_dir;
-      }
-    } catch { /* fallback */ }
-  }
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+
+    // CI: dùng project_dir của môi trường DEPLOY_ENV
+    const deployEnv = process.env.DEPLOY_ENV;
+    if (deployEnv && config[deployEnv] && config[deployEnv].project_dir) {
+      console.log(`[Config] CI mode (${deployEnv}) → project_dir: ${config[deployEnv].project_dir}`);
+      return config[deployEnv].project_dir;
+    }
+
+    // Local: ưu tiên test → production
+    if (config.test && config.test.project_dir) return config.test.project_dir;
+    if (config.production && config.production.project_dir) return config.production.project_dir;
+  } catch { /* fallback */ }
+
   return basename(ROOT);
 }
 const PROJECT_NAME = resolveProjectName();
