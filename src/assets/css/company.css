@@ -1,0 +1,17 @@
+/*!
+global > color
+------------------------------
+*/
+/*!
+global > content-width
+------------------------------
+*/
+/*!
+global > font
+------------------------------
+*/
+/*!
+global > mixin
+------------------------------
+*/.p-company__greetings{padding-top:80px}.p-company__greetings__inner{padding-inline:20px}.p-company__greetings__content{padding-top:40px;width:100%}.p-company__greetings__content .c-title,.p-company__greetings__content .c-ttl28{margin-bottom:30px}.p-company__greetings__content .c-txt12{line-height:1.6666666667;margin-top:20px}.p-company__greetings__img{margin-inline:auto;max-width:70%}.p-company__greetings__name{margin-top:10px;max-width:160px}.p-company__philosophy__main{margin-top:60px;padding-block:60px;position:relative;z-index:0}.p-company__philosophy__main:after{background-color:var(--blue04);bottom:0;content:"";position:absolute;right:0;top:0;width:100%;z-index:-2}.p-company__philosophy .c-slider04{margin-top:60px}.p-company__philosophy .c-title{margin-bottom:40px;text-align:center}.p-company__philosophy .c-ttl48{margin-bottom:30px}.p-company__philosophy .c-txt16{margin-inline:auto}.p-company__philosophy__icon{bottom:20px;max-width:200px;position:absolute;right:20px;z-index:-1}.p-company__outline{margin-top:30px;padding-bottom:80px;padding-top:60px}.p-company__outline__list{display:grid;margin-top:30px}@media screen and (min-width:768px){.p-company .c-mv{margin-bottom:clamp(4.375rem,15.5048076923vw + -3.0673076923rem,12.4375rem)}.p-company__greetings{padding-top:0}.p-company__greetings__inner{align-items:flex-start;display:flex;gap:clamp(2.5rem,10.2163461538vw + -2.4038461538rem,7.8125rem);max-width:calc(50% + 617px);padding-inline:0 40px}.p-company__greetings__content{flex-shrink:0;max-width:672px;padding-top:111px;width:55%}.p-company__greetings__content .c-title{margin-bottom:54px}.p-company__greetings__content .c-ttl28{margin-bottom:53px}.p-company__greetings__content .c-txt12{margin-top:43px}.p-company__greetings__img{margin:0;max-width:100%;position:sticky;top:80px}.p-company__greetings__name{margin-top:15px;max-width:212px;padding-left:3px}.p-company__philosophy__main{margin-top:70px;padding-block:clamp(6.25rem,7.3317307692vw + 2.7307692308rem,10.0625rem) clamp(6.25rem,4.2067307692vw + 4.2307692308rem,8.4375rem)}.p-company__philosophy__main:after{max-width:calc(50% + 760px);width:calc(100% - 20px)}.p-company__philosophy .c-slider04{margin-top:clamp(5rem,3.4855769231vw + 3.3269230769rem,6.8125rem)}.p-company__philosophy .c-title{margin-bottom:clamp(3.75rem,4.6875vw + 1.5rem,6.1875rem)}.p-company__philosophy .c-ttl48{margin-bottom:clamp(3.125rem,2.7644230769vw + 1.7980769231rem,4.5625rem);text-align:center}.p-company__philosophy .c-txt16{max-width:690px}.p-company__philosophy__icon{bottom:clamp(2.5rem,.7211538462vw + 2.1538461538rem,2.875rem);max-width:clamp(18.75rem,13.2211538462vw + 12.4038461538rem,25.625rem);right:max(20px,50% - 741px)}.p-company__outline{margin-top:clamp(3.75rem,2.4038461538vw + 2.5961538462rem,5rem);padding-bottom:clamp(7.5rem,3.6057692308vw + 5.7692307692rem,9.375rem);padding-top:clamp(3.75rem,2.4038461538vw + 2.5961538462rem,5rem)}.p-company__outline__list{gap:14px 40px;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));margin-top:clamp(3.75rem,1.5625vw + 3rem,4.5625rem)}}
+/*# sourceMappingURL=company.css.map */
