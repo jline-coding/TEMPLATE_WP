@@ -14,24 +14,9 @@
           "name": "Noto Sans JP"
         },
         {
-          "fontFamily": "\"Fira Sans\", sans-serif",
-          "slug": "font-fira",
-          "name": "Fira Sans"
-        },
-        {
-          "fontFamily": "\"Fira Sans Condensed\", sans-serif",
-          "slug": "font-firacon",
-          "name": "Fira Sans Condensed"
-        },
-        {
           "fontFamily": "\"Shippori Mincho\", serif",
           "slug": "font-shippori",
           "name": "Shippori Mincho"
-        },
-        {
-          "fontFamily": "\"Ubuntu\", sans-serif",
-          "slug": "font-ubuntu",
-          "name": "Ubuntu"
         }
       ]
     }

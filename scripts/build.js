@@ -36,8 +36,25 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
 // --- AUTO-THEME NAMING ---
-const PROJECT_NAME = basename(ROOT);
-console.log(`[Config] Project Name detected as: ${PROJECT_NAME}`);
+// CI (DEPLOY_ENV set) → đọc project_dir từ deploy-config.json
+// Local dev (không có DEPLOY_ENV) → dùng tên thư mục gốc (Laragon style)
+function resolveProjectName() {
+  const deployEnv = process.env.DEPLOY_ENV;
+  if (deployEnv) {
+    try {
+      const configPath = resolve(ROOT, 'deploy-config.json');
+      const config = JSON.parse(readFileSync(configPath, 'utf8'));
+      const envConfig = config[deployEnv];
+      if (envConfig && envConfig.project_dir) {
+        console.log(`[Config] CI mode (${deployEnv}) → project_dir: ${envConfig.project_dir}`);
+        return envConfig.project_dir;
+      }
+    } catch { /* fallback */ }
+  }
+  return basename(ROOT);
+}
+const PROJECT_NAME = resolveProjectName();
+console.log(`[Config] Theme Name: ${PROJECT_NAME}`);
 
 // --- PATHS ---
 const SRC_THEME = resolve(ROOT, 'src');

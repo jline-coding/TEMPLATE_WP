@@ -110,6 +110,8 @@ jobs:
       - name: 🔨 Build dự án
         if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         run: ${{ env.BUILD_CMD }}
+        env:
+          DEPLOY_ENV: ${{ env.ENVIRONMENT }}
 
       # ─────────────────────────────────────────────
       # ZIP Mode
