@@ -59,27 +59,31 @@ jobs:
           fi
 
           # Đọc config từ deploy-config.json
-          DEPLOY_METHOD=$(jq -r ".${ENVIRONMENT}.deploy_method // \"ftp\"" deploy-config.json)
-
-          if [[ "$DEPLOY_METHOD" != "ftp" ]]; then
-            echo "ℹ️ deploy_method = '$DEPLOY_METHOD' (không phải ftp) — bỏ qua."
-            echo "SHOULD_FTP=false" >> $GITHUB_ENV
-            echo "BUILD_CMD=echo 'Skipped'" >> $GITHUB_ENV
-            exit 0
-          fi
-
+          DEPLOY_METHOD=$(jq -r ".${ENVIRONMENT}.deploy_method // \"ssh\"" deploy-config.json)
           SERVER_NAME=$(jq -r ".${ENVIRONMENT}.server // empty" deploy-config.json | tr 'a-z' 'A-Z')
           BUILD_CMD=$(jq -r '.build_command // "npm run build"' deploy-config.json)
 
-          echo "SHOULD_FTP=true" >> $GITHUB_ENV
+          # Kích hoạt trạng thái dựa vào deploy_method
+          if [[ "$DEPLOY_METHOD" == "ssh" ]]; then
+            echo "SHOULD_SSH=true" >> $GITHUB_ENV
+          elif [[ "$DEPLOY_METHOD" == "ftp" ]]; then
+            echo "SHOULD_FTP=true" >> $GITHUB_ENV
+          elif [[ "$DEPLOY_METHOD" == "zip" ]]; then
+            echo "SHOULD_ZIP=true" >> $GITHUB_ENV
+          else
+            echo "⚠️ Phương thức chưa xác định. Chuyển hướng mặc định về SSH."
+            echo "SHOULD_SSH=true" >> $GITHUB_ENV
+          fi
+
           echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
           echo "SERVER_NAME=$SERVER_NAME" >> $GITHUB_ENV
           echo "BUILD_CMD=$BUILD_CMD" >> $GITHUB_ENV
 
           echo ""
           echo "╔══════════════════════════════════════════════╗"
-          printf "║   🚀 FTP Deploy [%-26s] ║\n" "$ENVIRONMENT"
-          printf "║   Server: %-34s ║\n" "$SERVER_NAME"
+          printf "║   🚀 Pipeline Deploy [%-24s]║\n" "$ENVIRONMENT"
+          printf "║   Phương thức: %-30s║\n" "$DEPLOY_METHOD"
+          printf "║   Server: %-35s║\n" "$SERVER_NAME"
           echo "╚══════════════════════════════════════════════╝"
 
       # ─────────────────────────────────────────────
