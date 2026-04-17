@@ -415,7 +415,20 @@ async function runDeploy() {
             // 3. Upload WP + Theme (ZIP + PHP Extract)
             console.log('🚀 Upload ZIP + Giải nén trên server...');
 
-            // 3a. Zip public/
+            // 3a. Dọn theme rác từ cache (chỉ giữ themeName + twenty* mặc định)
+            const themesBaseDir = path.join(config.source_folder, 'wp-content', 'themes');
+            if (fs.existsSync(themesBaseDir)) {
+                const themeDirs = fs.readdirSync(themesBaseDir, { withFileTypes: true });
+                for (const entry of themeDirs) {
+                    if (!entry.isDirectory()) continue;
+                    if (entry.name === themeName || entry.name.startsWith('twenty') || entry.name.startsWith('.')) continue;
+                    const stalePath = path.join(themesBaseDir, entry.name);
+                    console.log(`🧹 Xóa theme rác từ cache: ${entry.name}`);
+                    fs.rmSync(stalePath, { recursive: true, force: true });
+                }
+            }
+
+            // 3b. Zip public/
             console.log('📦 Đang nén thư mục...');
             execSync(`cd "${config.source_folder}" && zip -r /tmp/_deploy.zip . -x ".*"`, { stdio: 'pipe' });
             const zipSize = (fs.statSync('/tmp/_deploy.zip').size / 1024 / 1024).toFixed(1);

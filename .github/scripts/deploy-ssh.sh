@@ -154,6 +154,18 @@ if [ "$IS_FIRST_DEPLOY" = true ]; then
     echo ""
     echo "━━━ LẦN ĐẦU: ĐÓNG GÓI ZIP, BẮN SCP VÀ RÃ NÉN VỚI CPU UNIX HỎA TỐC ━━━"
     
+    # Dọn theme rác từ cache (chỉ giữ THEME_NAME + twenty* mặc định)
+    THEMES_DIR="$SOURCE_FOLDER/wp-content/themes"
+    if [ -d "$THEMES_DIR" ]; then
+        for dir in "$THEMES_DIR"/*/; do
+            [ ! -d "$dir" ] && continue
+            dname=$(basename "$dir")
+            case "$dname" in twenty*|"$THEME_NAME") continue ;; esac
+            echo "🧹 Xóa theme rác từ cache: $dname"
+            rm -rf "$dir"
+        done
+    fi
+
     echo "📦 1. Đang nén toàn bộ thư mục Public..."
     ( cd "$SOURCE_FOLDER" && zip -r /tmp/_deploy.zip . -x ".*" > /dev/null )
     

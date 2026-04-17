@@ -105,7 +105,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: public
-          key: wp-public-${{ hashFiles('scripts/download-wp.js') }}
+          key: wp-public-${{ hashFiles('scripts/download-wp.js', 'deploy-config.json') }}
 
       - name: 🔨 Build dự án
         if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
