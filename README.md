@@ -1,6 +1,4 @@
-# WordPress Theme Boilerplate
-
-Boilerplate phát triển giao diện WordPress hiện đại, tích hợp sẵn SCSS, tự động biên dịch WebP, proxy BrowserSync và auto-deploy qua CI/CD (FTP/SSH).
+# WordPress Theme
 
 ### Yêu Cầu Hệ Thống
 
@@ -25,6 +23,32 @@ npm run link
 # === LỆNH PHÁT TRIỂN (Chạy mỗi khi ngồi code) ===
 npm start
 ```
+
+### ⚙️ Thiết lập `deploy-config.json`
+
+```json
+{
+  "source_folder": "public",
+  "build_command": "npm run wp:download && npm run build",
+  "test": {
+    "deploy_method": "ftp",
+    "server": "TEST_SERVER",
+    "project_dir": "my_project_test",
+    "basic_auth": { "username": "test", "password": "test" }
+  },
+  "production": {
+    "deploy_method": "ssh",
+    "server": "PROD_SERVER",
+    "project_dir": "my_project_production"
+  }
+}
+```
+*Ghi chú quan trọng:*
+- **`deploy_method`**: Chọn `"ftp"`, `"ssh"`, hoặc `"zip"`. Hệ thống tự gọi đúng script tương ứng.
+- **`build_command`**: Nếu muốn **chọn phiên bản WordPress** cụ thể, thêm `--version` (VD: `npm run wp:download -- --version=6.5.2 && npm run build`).
+- **`basic_auth` (Không bắt buộc)**: Hệ thống TỰ ĐỘNG sinh `.htaccess` + `.htpasswd` để khóa thư mục test bằng mật khẩu (chặn Bot).
+- **Tùy chọn Bàn Giao ZIP**: Nếu khách không cung cấp FTP/SSH, đổi sang `"deploy_method": "zip"` — lúc này bỏ luôn `"server"` cho gọn.
+- **Repo Lock**: Nếu gõ nhầm tên `project_dir` của dự án khác, GitHub sẽ từ chối deploy để tránh ghi đè.
 
 ---
 
@@ -153,30 +177,6 @@ Vào mục `Settings > Secrets and variables > Actions` trên Repo GitHub. Dựa
 > Nếu dùng **FTP**: chỉ cần điền `host`, `user`, `pass`, `ftp_dir`, `root_path`. Các trường SSH (`ssh_port`, `private_key`) để trống hoặc bỏ qua.
 > Nếu dùng **SSH**: cần `host`, `user`, `ssh_port`, `private_key`, `ftp_dir`, `root_path`. Trường `pass` bỏ qua.
 
-#### 3. File `deploy-config.json` — Giải thích các trường:
-```json
-{
-  "source_folder": "public",
-  "build_command": "npm run wp:download && npm run build",
-  "test": {
-    "deploy_method": "ftp",
-    "server": "TEST_SERVER",
-    "project_dir": "my_project_test",
-    "basic_auth": { "username": "test", "password": "test" }
-  },
-  "production": {
-    "deploy_method": "ssh",
-    "server": "PROD_SERVER",
-    "project_dir": "my_project_production"
-  }
-}
-```
-*Ghi chú quan trọng:*
-- **`deploy_method`**: Chọn `"ftp"`, `"ssh"`, hoặc `"zip"`. Hệ thống tự gọi đúng script tương ứng.
-- **`build_command`**: Nếu muốn **chọn phiên bản WordPress** cụ thể, thêm `--version` (VD: `npm run wp:download -- --version=6.5.2 && npm run build`).
-- **`basic_auth` (Không bắt buộc)**: Hệ thống TỰ ĐỘNG sinh `.htaccess` + `.htpasswd` để khóa thư mục test bằng mật khẩu (chặn Bot).
-- **Tùy chọn Bàn Giao ZIP**: Nếu khách không cung cấp FTP/SSH, đổi sang `"deploy_method": "zip"` — lúc này bỏ luôn `"server"` cho gọn.
-- **Repo Lock**: Nếu gõ nhầm tên `project_dir` của dự án khác, GitHub sẽ từ chối deploy để tránh ghi đè.
 
 ### 🚀 Lệnh thực thi tải Code đẩy lên (Terminal hoặc App GUI)
 
