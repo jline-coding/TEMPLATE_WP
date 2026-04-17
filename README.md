@@ -7,27 +7,27 @@
 <a id="日本語版"></a>
 # 日本語版 (Japanese)
 
-0. # === 初期セットアップコマンド (設定完了後にプロジェクトで1回のみ実行) ===
+## 1. 初期セットアップコマンド (設定完了後にプロジェクトで1回のみ実行)
 ```bash
 npm run wp:download
 cp .env.example .env
 npm run link
 ```
 
-# === 開発用コマンド (コーディング時に毎回実行) ===
+## 2. 開発用コマンド (コーディング時に毎回実行)
 ```bash
 npm start
 または 
 npm run dev
 ```
 
-## 1. システム要件
+## 3. システム要件
 - Node.js 18+ (`node -v`)
 - npm 9+ (`npm -v`)
 - Git 2.30+ (`git --version`)
 - ローカルサーバー (Laragon, XAMPP など)
 
-## 2. `deploy-config.json` の設定
+## 4. `deploy-config.json` の設定
 ```json
 {
   "source_folder": "public",
@@ -58,7 +58,7 @@ npm run dev
 - `"project_dir"`: サーバー上に Web サイトのコードを格納するために自動生成されるターゲットのディレクトリ名です（例: `task01`, `template_wp`...）。
 - `"basic_auth"`: (オプション) HTTP Basic 認証の設定。この設定が記述されている場合、システムは自動的に暗号化されたパスワードを使用して `.htaccess` ファイルを生成し、一般のパブリックアクセスをブロックします。
 
-## 3. ローカル環境ファイル (`.env`) の設定
+## 5. ローカル環境ファイル (`.env`) の設定
 `.env` ファイルは、開発者のローカル環境でプロジェクトを実行するために使用されます。
 
 **設定変数の説明:**
@@ -74,7 +74,7 @@ npm run dev
   - **XAMPP (Linux)**: 例 `/opt/lampp/htdocs`
   - **MAMP (macOS)**: 例 `/Applications/MAMP/htdocs`
 
-## 4. GitHub Repository または Organization 用の Secrets 設定
+## 6. GitHub Repository または Organization 用の Secrets 設定
 - プロジェクトの GitHub リポジトリ（または Organization）設定画面の **Settings > Secrets and variables > Actions > New repository secret** へ移動します。
 - **命名規則:** `deploy-config.json` 内の `"server"` で指定した値の末尾に `_CONFIG` というサフィックスを付けます（例: `deploy-config.json` で `"server": "JLWEB"` と定義している場合、作成する Secret 変数名は必ず `JLWEB_CONFIG` となります）。
 - **JSON 構成の例:**
@@ -111,27 +111,27 @@ npm run dev
 <a id="bản-tiếng-việt"></a>
 # Bản Tiếng Việt
 
-0. # === LỆNH KHỞI TẠO (Chỉ chạy 1 lần khi cài đặt dự án sau khi setup deploy-config.json và Actions secrets and variables xong) ===
+## 1. Lệnh khởi tạo (Chỉ chạy 1 lần khi cài đặt dự án sau khi setup deploy-config.json và Actions secrets)
 ```bash
 npm run wp:download
 cp .env.example .env
 npm run link
 ```
 
-# === LỆNH PHÁT TRIỂN (Chạy mỗi khi ngồi code) ===
+## 2. Lệnh phát triển (Chạy mỗi khi ngồi code)
 ```bash
 npm start
 hoặc 
 npm run dev
 ```
 
-## 1. Yêu cầu hệ thống
+## 3. Yêu cầu hệ thống
 - Node.js 18+ (`node -v`)
 - npm 9+ (`npm -v`)
 - Git 2.30+ (`git --version`)
 - Local Server (Laragon, XAMPP, v.v...)
 
-## 2. Setup `deploy-config.json`
+## 4. Setup `deploy-config.json`
 ```json
 {
   "source_folder": "public",
@@ -162,7 +162,7 @@ npm run dev
 - `"project_dir"`: Tên thư mục đích (thư mục dự án) sẽ được hệ thống khởi tạo tự động để lưu trữ website trên máy chủ đích (ví dụ: `task01`, `template_wp`...).
 - `"basic_auth"`: (Bổ sung tùy chọn) Cung cấp cấu hình xác thực HTTP Basic Authentication. Hệ thống sẽ tự động tổng hợp mã hoá sinh ra file `.htaccess` ngăn chặn truy cập công khai nếu cung cấp cấu hình này.
 
-## 3. Setup File Môi Trường Local (.env)
+## 5. Setup File Môi Trường Local (.env)
 File `.env` dùng để thiết lập cấu hình chạy tại máy tính của lập trình viên trong quá trình phát triển (Local).
 
 **Giải thích các biến định cấu hình:**
@@ -178,7 +178,7 @@ File `.env` dùng để thiết lập cấu hình chạy tại máy tính của 
   - **XAMPP (Linux)**: ví dụ `/opt/lampp/htdocs`
   - **MAMP (macOS)**: ví dụ `/Applications/MAMP/htdocs`
 
-## 4. Setup GitHub Secrets cho Repository hoặc Organization
+## 6. Setup GitHub Secrets cho Repository hoặc Organization
 - Vào mục **Settings > Secrets and variables > Actions > New repository secret** (nằm trong bảng điều khiển Repo hoặc Organization GitHub dự án của bạn).
 - **Quy tắc đặt tên:** Cấu trúc lấy giá trị `"server"` trong `deploy-config.json` và nối thêm hậu tố `_CONFIG` vào phía sau. (Ví dụ: Nếu `deploy-config.json` định nghĩa `"server": "JLWEB"`, thì tên biến Secret bắt buộc là `JLWEB_CONFIG`).
 - **Ví dụ chuỗi JSON cấu hình thiết lập:**
