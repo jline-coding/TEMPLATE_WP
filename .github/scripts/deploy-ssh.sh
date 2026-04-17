@@ -181,27 +181,32 @@ if [ "$IS_FIRST_DEPLOY" = true ]; then
     $SSH_CMD "cd \"$TARGET_DIR\" && unzip -o _deploy.zip > /dev/null && rm _deploy.zip"
     echo "✅ Toàn trình First Upload thành công chớp nhoáng!"
     
-    # Kích hoạt Basic Auth cho môi trường Test
+    # Tạo .htaccess chuẩn WordPress (kèm Basic Auth nếu có)
+    echo "📝 Tạo .htaccess chuẩn WordPress..."
+
+    WP_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteBase /\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . /index.php [L]\n</IfModule>\n# END WordPress"
+
     if [ -n "$BASIC_AUTH_USER" ] && [ -n "$BASIC_AUTH_PASS" ]; then
-        echo "🔐 Đang tiêm phòng .htpasswd và chèn đỉnh .htaccess (giữ zin WP core)..."
+        echo "🔐 Kèm cấu hình Basic Auth..."
         
-        # Nhờ NodeJS sinh mật khẩu MD5/Crypt cục bộ tại GitHub Run
+        # Sinh .htpasswd
         node -e "const fs=require('fs'); const crypt=require('apache-crypt'); fs.writeFileSync('/tmp/.htpasswd', '$BASIC_AUTH_USER:' + crypt('$BASIC_AUTH_PASS'));"
         $SCP_CMD /tmp/.htpasswd "$SSH_USER@$SSH_HOST:$TARGET_DIR/.htpasswd"
         
-        HTACCESS_ADD="# === Basic Auth ===\nAuthType Basic\nAuthName \"Restricted Area\"\nAuthUserFile $ROOT_PATH/$PROJECT_DIR/.htpasswd\nRequire valid-user\n# =================="
-        
-        $SSH_CMD "if [ -f \"$TARGET_DIR/.htaccess\" ]; then \
-            if ! grep -q 'AuthType Basic' \"$TARGET_DIR/.htaccess\"; then \
-                echo -e '$HTACCESS_ADD' > /tmp/.htaccess_auth; \
-                cat \"$TARGET_DIR/.htaccess\" >> /tmp/.htaccess_auth; \
-                mv /tmp/.htaccess_auth \"$TARGET_DIR/.htaccess\"; \
-            fi; \
-        else \
-            echo -e '$HTACCESS_ADD' > \"$TARGET_DIR/.htaccess\"; \
-        fi"
-        echo "✅ Hàng rào Basic Auth đã bao trọn 100%."
+        HTACCESS_AUTH="# === Basic Auth ===\nAuthType Basic\nAuthName \"Restricted Area\"\nAuthUserFile $ROOT_PATH/$PROJECT_DIR/.htpasswd\nRequire valid-user\n# =================="
+        HTACCESS_FULL="$HTACCESS_AUTH\n\n$WP_RULES"
+    else
+        HTACCESS_FULL="$WP_RULES"
     fi
+
+    # Kiểm tra nếu server đã có .htaccess đầy đủ
+    $SSH_CMD "if [ -f \"$TARGET_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_DIR/.htaccess\"; then \
+        echo 'ℹ️ .htaccess đã có WP rules — giữ nguyên.'; \
+    else \
+        echo -e '$HTACCESS_FULL' > \"$TARGET_DIR/.htaccess\"; \
+        chmod 644 \"$TARGET_DIR/.htaccess\"; \
+        echo '✅ Đã tạo .htaccess (Auth + WP Permalinks).'; \
+    fi"
 
 # ==========================================
 # CHẾ ĐỘ 2: LẦN CẬP NHẬT KẾ TIẾP (GIẢI THUẬT RSYNC DIFFERENCE)

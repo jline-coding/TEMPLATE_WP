@@ -483,40 +483,62 @@ async function runDeploy() {
                 await uploadDirectory(client, config.source_folder, targetDir, ftpRoot);
             }
 
-            // 4. Thêm Basic Auth vào .htaccess (nếu có)
+            // 4. Tạo .htaccess chuẩn WordPress (kèm Basic Auth nếu có)
+            console.log('📝 Tạo .htaccess chuẩn WordPress...');
+
+            // WordPress permalink rules mặc định
+            const wpRules = [
+                '# BEGIN WordPress',
+                '<IfModule mod_rewrite.c>',
+                'RewriteEngine On',
+                'RewriteBase /',
+                'RewriteRule ^index\\.php$ - [L]',
+                'RewriteCond %{REQUEST_FILENAME} !-f',
+                'RewriteCond %{REQUEST_FILENAME} !-d',
+                'RewriteRule . /index.php [L]',
+                '</IfModule>',
+                '# END WordPress',
+            ].join('\n');
+
+            let htaccessContent = '';
+
             if (hasBasicAuth) {
-                console.log('🔐 Thêm cấu hình Basic Auth vào .htaccess...');
+                console.log('🔐 Kèm cấu hình Basic Auth...');
                 const basicAuthLines = [
                     '# === Basic Auth ===',
                     'AuthType Basic',
                     'AuthName "Restricted Area"',
                     `AuthUserFile ${serverInfo.root_path}/${config.project_dir}/.htpasswd`,
                     'Require valid-user',
-                    '# ==================\n'
+                    '# ==================',
                 ].join('\n');
-
-                try {
-                    // Tải .htaccess hiện có (được giải nén ra từ WP zip hoặc source)
-                    await client.downloadTo('/tmp/.htaccess', `${targetDir}/.htaccess`);
-                    let htaccessContent = fs.readFileSync('/tmp/.htaccess', 'utf8');
-                    
-                    if (!htaccessContent.includes('AuthType Basic')) {
-                        // Chèn auth vào đầu file
-                        htaccessContent = basicAuthLines + '\n' + htaccessContent;
-                        fs.writeFileSync('/tmp/.htaccess', htaccessContent);
-                        await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
-                        console.log('   ✅ Đã chèn Basic Auth vào .htaccess hiện có.');
-                    } else {
-                        console.log('   ℹ️ .htaccess đã có cấu hình Basic Auth.');
-                    }
-                } catch (err) {
-                    // Nếu chưa có file .htaccess trên server, tạo mới (WP sẽ tự thêm rule vào thẻ này sau)
-                    fs.writeFileSync('/tmp/.htaccess', basicAuthLines);
-                    await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
-                    console.log('   ✅ Không tìm thấy .htaccess cũ. Đã tạo mới .htaccess với cấu hình Basic Auth.');
-                }
+                htaccessContent = basicAuthLines + '\n\n' + wpRules + '\n';
             } else {
-                console.log('ℹ️ Không có basic_auth — giữ nguyên toàn bộ .htaccess mặc định.');
+                htaccessContent = wpRules + '\n';
+            }
+
+            // Kiểm tra nếu server đã có .htaccess (từ lần cài WP trước)
+            try {
+                await client.downloadTo('/tmp/.htaccess_existing', `${targetDir}/.htaccess`);
+                const existingContent = fs.readFileSync('/tmp/.htaccess_existing', 'utf8');
+                // Nếu file đã đầy đủ (có cả auth + WP rules), giữ nguyên
+                const needsAuth = hasBasicAuth && !existingContent.includes('AuthType Basic');
+                const needsWP = !existingContent.includes('# BEGIN WordPress');
+                if (!needsAuth && !needsWP) {
+                    console.log('   ℹ️ .htaccess đã đầy đủ — giữ nguyên.');
+                } else {
+                    // Ghi đè bằng bản hoàn chỉnh
+                    fs.writeFileSync('/tmp/.htaccess', htaccessContent);
+                    await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
+                    try { await client.send(`SITE CHMOD 644 ${targetDir}/.htaccess`); } catch {}
+                    console.log('   ✅ Đã cập nhật .htaccess (Auth + WP Permalinks).');
+                }
+            } catch {
+                // Server chưa có .htaccess → tạo mới hoàn chỉnh
+                fs.writeFileSync('/tmp/.htaccess', htaccessContent);
+                await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
+                try { await client.send(`SITE CHMOD 644 ${targetDir}/.htaccess`); } catch {}
+                console.log('   ✅ Đã tạo .htaccess mới (Auth + WP Permalinks).');
             }
 
             console.log('');
