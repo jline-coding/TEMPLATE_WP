@@ -237,3 +237,14 @@ component > Other
         }
     }
 }
+
+.grecaptcha-badge{
+    display: none;
+}
+
+.wpcf7-form {
+    &.resetting,
+    &.submitting {
+        pointer-events: none;
+    }
+}
