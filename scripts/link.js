@@ -10,15 +10,27 @@
 
 import { resolve, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, lstatSync, readlinkSync, writeFileSync, unlinkSync, rmSync, symlinkSync } from 'fs';
+import { existsSync, lstatSync, readFileSync, writeFileSync, unlinkSync, rmSync, symlinkSync } from 'fs';
 import { execSync } from 'child_process';
 import { platform } from 'os';
 import dotenv from 'dotenv';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const PROJECT_NAME = basename(ROOT);
 const PUBLIC_DIR = resolve(ROOT, 'public');
+
+// Đọc project_dir từ deploy-config.json (đồng bộ với build.js / clean.js)
+function resolveProjectName() {
+  try {
+    const config = JSON.parse(readFileSync(resolve(ROOT, 'deploy-config.json'), 'utf8'));
+    const env = process.env.DEPLOY_ENV;
+    if (env && config[env] && config[env].project_dir) return config[env].project_dir;
+    if (config.test && config.test.project_dir) return config.test.project_dir;
+    if (config.production && config.production.project_dir) return config.production.project_dir;
+  } catch { /* fallback */ }
+  return basename(ROOT);
+}
+const PROJECT_NAME = resolveProjectName();
 const IS_WIN = platform() === 'win32';
 
 // Tải file .env nếu có

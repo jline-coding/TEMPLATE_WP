@@ -59,27 +59,7 @@ function validateConfig(config) {
     return errors;
 }
 
-/**
- * Tự detect theme name từ build output.
- * Build.js tạo theme tại: public/wp-content/themes/[project_folder_name]/
- */
-function detectThemeName(sourceFolder) {
-    const themesDir = path.join(sourceFolder, 'wp-content', 'themes');
-    if (!fs.existsSync(themesDir)) return null;
 
-    const entries = fs.readdirSync(themesDir, { withFileTypes: true });
-    const themes = entries.filter(e =>
-        e.isDirectory() &&
-        !e.name.startsWith('.') &&
-        // Bỏ qua theme mặc định của WP
-        !e.name.startsWith('twenty')
-    );
-
-    if (themes.length === 1) return themes[0].name;
-
-    // Fallback: lấy tên thư mục gốc project
-    return path.basename(process.cwd());
-}
 
 // ─────────────────────────────────────────────
 // FTP Upload (recursive directory)
@@ -279,14 +259,9 @@ async function runDeploy() {
         process.exit(1);
     }
 
-    // ─── Detect theme name ───
-    const themeName = detectThemeName(config.source_folder);
-    if (!themeName) {
-        console.error('❌ LỖI: Không tìm thấy theme trong wp-content/themes/!');
-        console.error('   Hãy chạy "npm run build" trước khi deploy.');
-        process.exit(1);
-    }
-    console.log(`🎨 Theme detected: ${themeName}`);
+    // ─── Tên Theme === Tên Project theo cấu hình ───
+    const themeName = config.project_dir;
+    console.log(`🎨 Lấy tên Theme theo project_dir: ${themeName}`);
 
     // ─── Kiểm tra Server Secret ───
     if (!process.env.SERVER_SECRET_JSON) {
@@ -299,11 +274,17 @@ async function runDeploy() {
     const targetDir = `${serverInfo.ftp_dir}/${config.project_dir}`;
     const themeRemoteDir = `${targetDir}/wp-content/themes/${themeName}`;
 
+    // Yêu cầu 2: Fallback logic MetaDir
+    let remoteMetaDir = `${targetDir}/.deploy`;
+    if (serverInfo.ftp_git && serverInfo.ftp_git.trim() !== '') {
+        remoteMetaDir = `${serverInfo.ftp_git}/.deploy/${config.project_dir}`;
+    }
+
     console.log('');
     console.log(`📋 Cấu hình [${envName.toUpperCase()}]:`);
     console.log(`   • Server: ${serverInfo.host}`);
     console.log(`   • Thư mục FTP: ${targetDir}`);
-    console.log(`   • Theme: ${themeName}`);
+    console.log(`   • Thư mục Meta: ${remoteMetaDir}`);
     console.log(`   • Theme remote: ${themeRemoteDir}`);
     console.log(`   • Basic Auth: ${config.basic_auth ? '✅ Có' : '❌ Không'}`);
     console.log('');
@@ -322,7 +303,15 @@ async function runDeploy() {
         try {
             await client.cd(targetDir);
             const lockFileLocal = '/tmp/.repo_lock';
-            await client.downloadTo(lockFileLocal, '.deploy/.repo_lock');
+            
+            try {
+                await client.cd(ftpRoot);
+                await client.downloadTo(lockFileLocal, `${remoteMetaDir}/.repo_lock`);
+            } catch (errFallback) {
+                await client.cd(ftpRoot);
+                await client.downloadTo(lockFileLocal, `${targetDir}/.deploy/.repo_lock`);
+            }
+            
             const lockOwner = fs.readFileSync(lockFileLocal, 'utf8').trim();
             const expectedLock = `${process.env.GITHUB_REPO}:${envName}`;
 
@@ -335,9 +324,9 @@ async function runDeploy() {
             }
             console.log('✅ Khớp mã chủ quyền (.repo_lock) — an toàn.');
         } catch (err) {
-            if (err.message.includes('CẢNH BÁO BẢO MẬT')) throw err;
+            if (err.message && err.message.includes('CẢNH BÁO BẢO MẬT')) throw err;
             isFirstDeploy = true;
-            console.log('ℹ️ Phát hiện deploy lần đầu — sẽ setup đầy đủ.');
+            console.log('ℹ️ Phát hiện deploy lần đầu (hoặc thiếu repo_lock) — sẽ setup đầy đủ.');
         }
 
         // ════════════════════════════════════════
@@ -363,7 +352,11 @@ async function runDeploy() {
         if (!isFirstDeploy) {
             try {
                 await client.cd(ftpRoot);
-                await client.downloadTo('/tmp/.last_deploy_sha', `${targetDir}/.deploy/.last_deploy_sha`);
+                try {
+                    await client.downloadTo('/tmp/.last_deploy_sha', `${remoteMetaDir}/.last_deploy_sha`);
+                } catch(e) {
+                    await client.downloadTo('/tmp/.last_deploy_sha', `${targetDir}/.deploy/.last_deploy_sha`);
+                }
                 const lastSha = fs.readFileSync('/tmp/.last_deploy_sha', 'utf8').trim();
                 if (lastSha && /^[0-9a-f]{7,40}$/.test(lastSha)) {
                     lastDeployRef = lastSha;
@@ -406,12 +399,13 @@ async function runDeploy() {
             await client.ensureDir(targetDir);
             await client.cd(ftpRoot);
 
-            // 1. Tạo .deploy/ + .repo_lock
-            console.log('🔒 Tạo .deploy/.repo_lock...');
-            await client.ensureDir(`${targetDir}/.deploy`);
+            // 1. Tạo .repo_lock
+            console.log(`🔒 Tạo .repo_lock tại ${remoteMetaDir}...`);
+            await client.cd(ftpRoot);
+            await client.ensureDir(remoteMetaDir);
             await client.cd(ftpRoot);
             fs.writeFileSync('/tmp/.repo_lock', `${process.env.GITHUB_REPO}:${envName}`);
-            await client.uploadFrom('/tmp/.repo_lock', `${targetDir}/.deploy/.repo_lock`);
+            await client.uploadFrom('/tmp/.repo_lock', `${remoteMetaDir}/.repo_lock`);
 
             // 2. Upload .htpasswd (nếu có basic_auth)
             if (hasBasicAuth) {
@@ -421,7 +415,20 @@ async function runDeploy() {
             // 3. Upload WP + Theme (ZIP + PHP Extract)
             console.log('🚀 Upload ZIP + Giải nén trên server...');
 
-            // 3a. Zip public/
+            // 3a. Dọn theme rác từ cache (chỉ giữ themeName + twenty* mặc định)
+            const themesBaseDir = path.join(config.source_folder, 'wp-content', 'themes');
+            if (fs.existsSync(themesBaseDir)) {
+                const themeDirs = fs.readdirSync(themesBaseDir, { withFileTypes: true });
+                for (const entry of themeDirs) {
+                    if (!entry.isDirectory()) continue;
+                    if (entry.name === themeName || entry.name.startsWith('twenty') || entry.name.startsWith('.')) continue;
+                    const stalePath = path.join(themesBaseDir, entry.name);
+                    console.log(`🧹 Xóa theme rác từ cache: ${entry.name}`);
+                    fs.rmSync(stalePath, { recursive: true, force: true });
+                }
+            }
+
+            // 3b. Zip public/
             console.log('📦 Đang nén thư mục...');
             execSync(`cd "${config.source_folder}" && zip -r /tmp/_deploy.zip . -x ".*"`, { stdio: 'pipe' });
             const zipSize = (fs.statSync('/tmp/_deploy.zip').size / 1024 / 1024).toFixed(1);
@@ -664,9 +671,9 @@ async function runDeploy() {
             const currentSha = execSync('git rev-parse HEAD').toString().trim();
             fs.writeFileSync('/tmp/.last_deploy_sha', currentSha);
             await client.cd(ftpRoot);
-            await client.ensureDir(`${targetDir}/.deploy`);
+            await client.ensureDir(remoteMetaDir);
             await client.cd(ftpRoot);
-            await client.uploadFrom('/tmp/.last_deploy_sha', `${targetDir}/.deploy/.last_deploy_sha`);
+            await client.uploadFrom('/tmp/.last_deploy_sha', `${remoteMetaDir}/.last_deploy_sha`);
             console.log(`📌 Đã lưu deploy marker: ${currentSha.substring(0, 7)}`);
         } catch {
             console.log('⚠️ Không thể lưu deploy marker (không ảnh hưởng deploy).');

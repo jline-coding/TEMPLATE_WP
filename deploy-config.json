@@ -7,8 +7,8 @@
     "project_dir": "template_wp_production"
   },
   "test": {
-    "deploy_method": "ftp",
-    "server": "JLWEB",
+    "deploy_method": "ssh",
+    "server": "JLWEB_SSH",
     "project_dir": "template_jline_wp",
     "basic_auth": {
       "username": "wp",
@@ -16,3 +16,4 @@
     }
   }
 }
+
