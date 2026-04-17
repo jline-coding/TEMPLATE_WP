@@ -13,8 +13,6 @@ add_action( 'wp_enqueue_scripts', function() {
         wp_enqueue_style( 'top-css', $themeUrl . '/assets/css/top.css', array(), filemtime($themeDir . '/assets/css/top.css') );
     }
 
-    
-
     // js files
 
     wp_enqueue_script( 'jquery-js', $themeUrl . '/assets/vendor/jquery/jquery-4.0.0.min.js', array(), '1.0', true );    

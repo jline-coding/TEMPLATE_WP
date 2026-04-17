@@ -59,27 +59,7 @@ function validateConfig(config) {
     return errors;
 }
 
-/**
- * Tự detect theme name từ build output.
- * Build.js tạo theme tại: public/wp-content/themes/[project_folder_name]/
- */
-function detectThemeName(sourceFolder) {
-    const themesDir = path.join(sourceFolder, 'wp-content', 'themes');
-    if (!fs.existsSync(themesDir)) return null;
 
-    const entries = fs.readdirSync(themesDir, { withFileTypes: true });
-    const themes = entries.filter(e =>
-        e.isDirectory() &&
-        !e.name.startsWith('.') &&
-        // Bỏ qua theme mặc định của WP
-        !e.name.startsWith('twenty')
-    );
-
-    if (themes.length === 1) return themes[0].name;
-
-    // Fallback: lấy tên thư mục gốc project
-    return path.basename(process.cwd());
-}
 
 // ─────────────────────────────────────────────
 // FTP Upload (recursive directory)
