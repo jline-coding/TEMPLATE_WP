@@ -7,7 +7,6 @@ require_once( get_template_directory() . '/includes/shortcode.php' );
 add_theme_support( 'post-thumbnails' );
 
 /*--add feature images--*/
-
 /**
  * Allow SVG & ICO upload (Admin only)
  * ⚠️ Note: For production, consider using the "Safe SVG" plugin
