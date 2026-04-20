@@ -19,7 +19,7 @@ if [ ! -f "deploy-config.json" ]; then
     exit 1
 fi
 
-PROJECT_DIR=$(jq -r ".${ENVIRONMENT}.project_dir // empty" deploy-config.json)
+PROJECT_DIR=$(jq -r ".${ENVIRONMENT}.project_dir // .project_dir // empty" deploy-config.json)
 SOURCE_FOLDER=$(jq -r ".source_folder // empty" deploy-config.json)
 BASIC_AUTH_USER=$(jq -r ".${ENVIRONMENT}.basic_auth.username // empty" deploy-config.json)
 BASIC_AUTH_PASS=$(jq -r ".${ENVIRONMENT}.basic_auth.password // empty" deploy-config.json)

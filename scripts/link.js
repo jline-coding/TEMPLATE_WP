@@ -19,16 +19,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const PUBLIC_DIR = resolve(ROOT, 'public');
 
-// Đọc project_dir từ deploy-config.json (đồng bộ với build.js / clean.js)
+// Đọc theme_name từ deploy-config.json (đồng bộ với build.js / clean.js)
 function resolveProjectName() {
+  const defaultTheme = "original-theme";
   try {
     const config = JSON.parse(readFileSync(resolve(ROOT, 'deploy-config.json'), 'utf8'));
-    const env = process.env.DEPLOY_ENV;
-    if (env && config[env] && config[env].project_dir) return config[env].project_dir;
-    if (config.test && config.test.project_dir) return config.test.project_dir;
-    if (config.production && config.production.project_dir) return config.production.project_dir;
+    if (config.theme_name && config.theme_name.trim() !== '') {
+      return config.theme_name.trim();
+    }
   } catch { /* fallback */ }
-  return basename(ROOT);
+  return defaultTheme;
 }
 const PROJECT_NAME = resolveProjectName();
 const IS_WIN = platform() === 'win32';

@@ -1,15 +1,15 @@
 {
+  "theme_name": "original-theme",
   "source_folder": "public",
+  "project_dir": "my-global-project-dir",
   "build_command": "npm run wp:download && npm run build",
   "production": {
     "deploy_method": "zip",
-    "server": "",
-    "project_dir": "template_wp_production"
+    "server": ""
   },
   "test": {
     "deploy_method": "ssh",
     "server": "JLWEB_SSH",
-    "project_dir": "template_jline_wp",
     "basic_auth": {
       "username": "wp",
       "password": "test"

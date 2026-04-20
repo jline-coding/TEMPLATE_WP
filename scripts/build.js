@@ -35,27 +35,25 @@ import { cpus } from 'os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-// --- AUTO-THEME NAMING (đọc project_dir từ deploy-config.json) ---
-// CI: dùng DEPLOY_ENV → lấy project_dir của môi trường đó
-// Local: mặc định lấy project_dir từ "test", fallback "production"
+// --- THEME NAMING ---
+// Đọc theme_name từ deploy-config.json. Mặc định là "original-theme" nếu không có.
 function resolveProjectName() {
+  const defaultTheme = "original-theme";
   try {
     const configPath = resolve(ROOT, 'deploy-config.json');
     const config = JSON.parse(readFileSync(configPath, 'utf8'));
 
-    // CI: dùng project_dir của môi trường DEPLOY_ENV
-    const deployEnv = process.env.DEPLOY_ENV;
-    if (deployEnv && config[deployEnv] && config[deployEnv].project_dir) {
-      console.log(`[Config] CI mode (${deployEnv}) → project_dir: ${config[deployEnv].project_dir}`);
-      return config[deployEnv].project_dir;
+    if (config.theme_name && config.theme_name.trim() !== '') {
+      const name = config.theme_name.trim();
+      const deployEnv = process.env.DEPLOY_ENV;
+      if (deployEnv) {
+        console.log(`[Config] CI mode (${deployEnv}) → theme_name: ${name}`);
+      }
+      return name;
     }
-
-    // Local: ưu tiên test → production
-    if (config.test && config.test.project_dir) return config.test.project_dir;
-    if (config.production && config.production.project_dir) return config.production.project_dir;
   } catch { /* fallback */ }
 
-  return basename(ROOT);
+  return defaultTheme;
 }
 const PROJECT_NAME = resolveProjectName();
 console.log(`[Config] Theme Name: ${PROJECT_NAME}`);
