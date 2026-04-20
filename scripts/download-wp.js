@@ -137,7 +137,23 @@ async function main() {
         rmSync(tempExtractDir, { recursive: true, force: true });
         rmSync(WP_ZIP_PATH, { force: true });
 
-        console.log(`   ✓ WordPress successfully extracted to ${PUBLIC_DIR}\n`);
+        // Xóa các theme mặc định của WordPress
+        const themesDir = join(PUBLIC_DIR, 'wp-content', 'themes');
+        if (existsSync(themesDir)) {
+            const entries = await import('fs').then(fs => fs.readdirSync(themesDir, { withFileTypes: true }));
+            let deletedCount = 0;
+            for (let entry of entries) {
+                if (entry.isDirectory()) {
+                    rmSync(join(themesDir, entry.name), { recursive: true, force: true });
+                    deletedCount++;
+                }
+            }
+            if (deletedCount > 0) {
+                console.log(`   ✓ Đã vứt bỏ ${deletedCount} theme mặc định để dọn dẹp không gian.`);
+            }
+        }
+
+        console.log(`\n   ✓ WordPress successfully extracted to ${PUBLIC_DIR}\n`);
     } catch (err) {
         console.error('\n❌ Error downloading or extracting WordPress:', err.message);
         process.exit(1);

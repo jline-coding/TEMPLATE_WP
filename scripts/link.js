@@ -19,18 +19,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const PUBLIC_DIR = resolve(ROOT, 'public');
 
-// Đọc theme_name từ deploy-config.json (đồng bộ với build.js / clean.js)
-function resolveProjectName() {
-  const defaultTheme = "original-theme";
+// Đọc project_dir từ deploy-config.json ưu tiên để thiết lập thư mục web root local
+function resolveProjectDir() {
   try {
     const config = JSON.parse(readFileSync(resolve(ROOT, 'deploy-config.json'), 'utf8'));
-    if (config.theme_name && config.theme_name.trim() !== '') {
-      return config.theme_name.trim();
-    }
+    const env = process.env.DEPLOY_ENV;
+    if (env && config[env] && config[env].project_dir) return config[env].project_dir;
+    if (config.test && config.test.project_dir) return config.test.project_dir;
+    if (config.production && config.production.project_dir) return config.production.project_dir;
+    if (config.project_dir) return config.project_dir;
   } catch { /* fallback */ }
-  return defaultTheme;
+  return basename(ROOT);
 }
-const PROJECT_NAME = resolveProjectName();
+const PROJECT_DIR = resolveProjectDir();
 const IS_WIN = platform() === 'win32';
 
 // Tải file .env nếu có
@@ -69,14 +70,14 @@ function detectProjectDomain() {
     return url.startsWith('http') ? url : `http://${url}`;
   }
 
-  // Fallback: project_name.test (Laragon-style)
-  if (IS_WIN) return `http://${PROJECT_NAME}.test`;
-  return `http://localhost/${PROJECT_NAME}`;
+  // Fallback: project_dir.test (Laragon-style)
+  if (IS_WIN) return `http://${PROJECT_DIR}.test`;
+  return `http://localhost/${PROJECT_DIR}`;
 }
 
 const SERVER_WWW = detectServerWww();
 const PROJECT_DOMAIN = detectProjectDomain();
-const LINK_PATH = resolve(SERVER_WWW, PROJECT_NAME);
+const LINK_PATH = resolve(SERVER_WWW, PROJECT_DIR);
 
 // ─────────────────────────────────────────────
 // Kiểm tra quyền ghi vào thư mục server (macOS/Linux)
@@ -124,7 +125,7 @@ console.log('╚═════════════════════�
 
 console.log(`  OS           : ${platform()}`);
 console.log(`  WEB_ROOT     : ${SERVER_WWW}`);
-console.log(`  Project Name : ${PROJECT_NAME}`);
+console.log(`  Project Name : ${PROJECT_DIR}`);
 console.log(`  Source       : ${PUBLIC_DIR}`);
 console.log(`  Link         : ${LINK_PATH}`);
 console.log(`  Domain       : ${PROJECT_DOMAIN}\n`);

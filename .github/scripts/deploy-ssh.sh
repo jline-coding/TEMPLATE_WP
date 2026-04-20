@@ -34,8 +34,8 @@ if [[ "$PROJECT_DIR" =~ [^a-zA-Z0-9_-] ]]; then
     exit 1
 fi
 
-THEME_NAME="$PROJECT_DIR"
-echo "🎨 Tên Theme đích (project_dir): $THEME_NAME"
+THEME_NAME=$(jq -r 'if .theme_name and .theme_name != "" then .theme_name else "original-theme" end' deploy-config.json)
+echo "🎨 Tên Theme local: $THEME_NAME (triển khai vào mục: $PROJECT_DIR)"
 
 # Xác nhận theme đã được build đúng theo project_dir
 if [ -d "$SOURCE_FOLDER/wp-content/themes/$THEME_NAME" ]; then

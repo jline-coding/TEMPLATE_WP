@@ -260,8 +260,10 @@ async function runDeploy() {
     }
 
     // ─── Tên Theme === Tên Project theo cấu hình ───
-    const themeName = config.project_dir;
-    console.log(`🎨 Lấy tên Theme theo project_dir: ${themeName}`);
+    const themeName = (fullConfig.theme_name && fullConfig.theme_name.trim() !== "") 
+        ? fullConfig.theme_name.trim() 
+        : "original-theme";
+    console.log(`🎨 Lấy tên Theme theo cấu hình: ${themeName} (triển khai vào: ${config.project_dir})`);
 
     // ─── Kiểm tra Server Secret ───
     if (!process.env.SERVER_SECRET_JSON) {

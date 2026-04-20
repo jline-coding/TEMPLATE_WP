@@ -34,5 +34,5 @@
         <?php wp_body_open(); ?>
         <div id="wrapper">
             <header class="c-header">
-                Header test 1
+                Header test 1123
             </header>

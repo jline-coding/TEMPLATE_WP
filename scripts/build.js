@@ -55,29 +55,41 @@ function resolveProjectName() {
 
   return defaultTheme;
 }
-const PROJECT_NAME = resolveProjectName();
-console.log(`[Config] Theme Name: ${PROJECT_NAME}`);
+const THEME_NAME = resolveProjectName();
+console.log(`[Config] Theme Name: ${THEME_NAME}`);
 
 // --- PATHS ---
 const SRC_THEME = resolve(ROOT, 'src');
 
 const OUT_PUBLIC = resolve(ROOT, 'public');
-const OUT_THEME = resolve(OUT_PUBLIC, 'wp-content', 'themes', PROJECT_NAME);
+const OUT_THEME = resolve(OUT_PUBLIC, 'wp-content', 'themes', THEME_NAME);
 const OUT_ASSETS = resolve(OUT_THEME, 'assets');
 
 // Source sub-directories (all inside src/)
 const SCSS_DIR = resolve(SRC_THEME, 'assets', 'scss');
-const JS_DIR = resolve(SRC_THEME, 'assets', 'js');
 const IMAGES_DIR = resolve(SRC_THEME, 'assets', 'images');
-const VIDEOS_DIR = resolve(SRC_THEME, 'assets', 'videos');
-const VENDOR_DIR = resolve(SRC_THEME, 'assets', 'vendor');
 
 const isWatch = process.argv.includes('--watch');
 
 // --- ENV & PROXY ---
 dotenv.config({ path: resolve(ROOT, '.env') });
 
-// Proxy URL priority: --proxy= arg > PROXY_URL env > fallback to project_name.test
+// --- PROJECT DIR FOR LOCAL DOMAIN ---
+function resolveProjectDir() {
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    const env = process.env.DEPLOY_ENV;
+    if (env && config[env] && config[env].project_dir) return config[env].project_dir;
+    if (config.test && config.test.project_dir) return config.test.project_dir;
+    if (config.production && config.production.project_dir) return config.production.project_dir;
+    if (config.project_dir) return config.project_dir;
+  } catch { /* fallback */ }
+  return basename(ROOT);
+}
+const PROJECT_DIR = resolveProjectDir();
+
+// Proxy URL priority: --proxy= arg > PROXY_URL env > fallback to project_dir.test
 function resolveProxyTarget() {
   const customProxyArg = process.argv.find(arg => arg.startsWith('--proxy='));
   if (customProxyArg) return customProxyArg.split('=')[1];
@@ -87,8 +99,8 @@ function resolveProxyTarget() {
     return url.startsWith('http') ? url : `http://${url}`;
   }
 
-  // Fallback: project_name.test (Laragon-style)
-  return `http://${PROJECT_NAME}.test`;
+  // Fallback: project_dir.test (Laragon-style)
+  return `http://${PROJECT_DIR}.test`;
 }
 const PROXY_TARGET = resolveProxyTarget();
 
@@ -571,7 +583,7 @@ async function buildImages(changedFile) {
 // ─────────────────────────────────────────────
 async function fullBuild() {
   console.log('\n╔══════════════════════════════════════╗');
-  console.log(`║    Building WP Theme: ${PROJECT_NAME}`.padEnd(39) + '║');
+  console.log(`║    Building WP Theme: ${THEME_NAME}`.padEnd(39) + '║');
   console.log('╚══════════════════════════════════════╝\n');
 
   const start = Date.now();
