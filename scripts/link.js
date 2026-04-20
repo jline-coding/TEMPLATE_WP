@@ -17,7 +17,18 @@ import dotenv from 'dotenv';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const PUBLIC_DIR = resolve(ROOT, 'public');
+function resolveSourceFolder() {
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    if (config.source_folder && config.source_folder.trim() !== '') {
+      return config.source_folder.trim();
+    }
+  } catch { /* fallback */ }
+  return 'public';
+}
+const SOURCE_FOLDER_NAME = resolveSourceFolder();
+const PUBLIC_DIR = resolve(ROOT, SOURCE_FOLDER_NAME);
 
 // Đọc project_dir từ deploy-config.json ưu tiên để thiết lập thư mục web root local
 function resolveProjectDir() {
@@ -132,7 +143,7 @@ console.log(`  Domain       : ${PROJECT_DOMAIN}\n`);
 
 // Kiểm tra public/ tồn tại
 if (!existsSync(PUBLIC_DIR)) {
-  console.log('⚠ Thư mục public/ chưa tồn tại. Hãy chạy "npm run wp:download" trước.\n');
+  console.log(`⚠ Thư mục ${SOURCE_FOLDER_NAME}/ chưa tồn tại. Hãy chạy "npm run wp:download" trước.\n`);
   process.exit(1);
 }
 

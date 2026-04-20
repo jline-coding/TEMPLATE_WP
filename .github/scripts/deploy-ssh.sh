@@ -20,12 +20,12 @@ if [ ! -f "deploy-config.json" ]; then
 fi
 
 PROJECT_DIR=$(jq -r ".${ENVIRONMENT}.project_dir // .project_dir // empty" deploy-config.json)
-SOURCE_FOLDER=$(jq -r ".source_folder // empty" deploy-config.json)
+SOURCE_FOLDER=$(jq -r 'if .source_folder and .source_folder != "" then .source_folder else "public" end' deploy-config.json)
 BASIC_AUTH_USER=$(jq -r ".${ENVIRONMENT}.basic_auth.username // empty" deploy-config.json)
 BASIC_AUTH_PASS=$(jq -r ".${ENVIRONMENT}.basic_auth.password // empty" deploy-config.json)
 
-if [ -z "$PROJECT_DIR" ] || [ -z "$SOURCE_FOLDER" ]; then
-    echo "❌ LỖI: Thiếu cấu hình project_dir hoặc source_folder"
+if [ -z "$PROJECT_DIR" ]; then
+    echo "❌ LỖI: Thiếu cấu hình project_dir"
     exit 1
 fi
 

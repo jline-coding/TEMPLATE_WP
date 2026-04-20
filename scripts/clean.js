@@ -19,8 +19,20 @@ function resolveProjectName() {
   } catch { /* fallback */ }
   return defaultTheme;
 }
+// Đọc source_folder từ deploy-config.json
+function resolveSourceFolder() {
+  try {
+    const config = JSON.parse(readFileSync(resolve(ROOT, 'deploy-config.json'), 'utf8'));
+    if (config.source_folder && config.source_folder.trim() !== '') {
+      return config.source_folder.trim();
+    }
+  } catch { /* fallback */ }
+  return 'public';
+}
+
 const PROJECT_NAME = resolveProjectName();
-const THEME_DIR = resolve(ROOT, 'public', 'wp-content', 'themes', PROJECT_NAME);
+const SOURCE_FOLDER_NAME = resolveSourceFolder();
+const THEME_DIR = resolve(ROOT, SOURCE_FOLDER_NAME, 'wp-content', 'themes', PROJECT_NAME);
 
 console.log('╔══════════════════════════════════════╗');
 console.log('║         Clean Theme Output           ║');

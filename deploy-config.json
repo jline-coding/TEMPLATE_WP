@@ -1,7 +1,7 @@
 {
   "theme_name": "original-theme",
-  "source_folder": "public",
   "project_dir": "template_jline_wp",
+  "source_folder": "public",
   "build_command": "npm run wp:download && npm run build",
   "production": {
     "deploy_method": "zip",

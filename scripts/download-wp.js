@@ -1,12 +1,24 @@
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, mkdirSync, createWriteStream, rmSync, renameSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, createWriteStream, rmSync, renameSync, unlinkSync, readFileSync } from 'fs';
 import { get } from 'https';
 import AdmZip from 'adm-zip';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const PUBLIC_DIR = resolve(ROOT, 'public');
+
+function resolveSourceFolder() {
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    if (config.source_folder && config.source_folder.trim() !== '') {
+      return config.source_folder.trim();
+    }
+  } catch { /* fallback */ }
+  return 'public';
+}
+const SOURCE_FOLDER_NAME = resolveSourceFolder();
+const PUBLIC_DIR = resolve(ROOT, SOURCE_FOLDER_NAME);
 const versionArg = process.argv.find(arg => arg.startsWith('--version='));
 const version = versionArg ? versionArg.split('=')[1] : null;
 

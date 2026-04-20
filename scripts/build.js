@@ -61,7 +61,18 @@ console.log(`[Config] Theme Name: ${THEME_NAME}`);
 // --- PATHS ---
 const SRC_THEME = resolve(ROOT, 'src');
 
-const OUT_PUBLIC = resolve(ROOT, 'public');
+function resolveSourceFolder() {
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    if (config.source_folder && config.source_folder.trim() !== '') {
+      return config.source_folder.trim();
+    }
+  } catch { /* fallback */ }
+  return 'public';
+}
+const SOURCE_FOLDER_NAME = resolveSourceFolder();
+const OUT_PUBLIC = resolve(ROOT, SOURCE_FOLDER_NAME);
 const OUT_THEME = resolve(OUT_PUBLIC, 'wp-content', 'themes', THEME_NAME);
 const OUT_ASSETS = resolve(OUT_THEME, 'assets');
 

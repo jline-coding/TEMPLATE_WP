@@ -227,7 +227,7 @@ async function runDeploy() {
 
     const envConfig = fullConfig[envName];
     const config = {
-        source_folder: fullConfig.source_folder,
+        source_folder: (fullConfig.source_folder && fullConfig.source_folder.trim() !== '') ? fullConfig.source_folder.trim() : 'public',
         project_dir: envConfig.project_dir || fullConfig.project_dir,
         server: envConfig.server,
         deploy_method: envConfig.deploy_method || 'ftp',
