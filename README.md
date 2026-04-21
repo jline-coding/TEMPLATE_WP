@@ -11,8 +11,10 @@
 ```bash
 npm install
 npm run wp:download
-cp .env.example .env
+# 特定のバージョンを指定したい場合 (例): npm run wp:download -- --version=6.5.2
+
 npm run link
+# 注意: 仮想サーバーを確認し、リンクが存在しない、または削除されている場合は、このコマンドを再実行してください。
 ```
 
 ## 2. 開発用コマンド (コーディング時に毎回実行)
@@ -65,7 +67,7 @@ npm run dev
 | `"test"` | 内部テスト/ステージング環境 (Test/Staging) 向けのパラメータ設定です。 |
 | `"deploy_method"` | サーバーへのデプロイ方法。`ssh` (推奨) , `ftp` , またはパッケージ出力用の `zip` の3つのオプションから選択します。 |
 | `"server"` | サーバーの識別キー。この値は、GitHub の Repository または Organization で設定する Secret 名のプレフィックスと完全に一致させる必要があります。 |
-| `"basic_auth"` | (オプション) HTTP Basic 認証の設定。設定されている場合、システムは自動的に暗号化されたパスワードを使用して `.htaccess` ファイルを生成し、一般のパブリックアクセスをブロックします。 |
+| `"basic_auth"` | (オプション) サイトに Basic 認証（パスワード保護）を設定したい場合のみ使用します。設定されている場合、システムは自動的に暗号化されたパスワードを使用して `.htaccess` ファイルを生成し、アクセスを制限します。Basic 認証が不要な場合は、この `"basic_auth"` ブロック全体を削除して構いません。 |
 
 ## 5. ローカル環境ファイル (`.env`) の設定
 `.env` ファイルは、開発者のローカル環境でプロジェクトを実行するために使用されます。
@@ -90,8 +92,10 @@ npm run dev
 ```bash
 npm install
 npm run wp:download
-cp .env.example .env
+# Chú ý: Có thể tải phiên bản WordPress cụ thể bằng cách thêm tham số (Ví dụ: npm run wp:download -- --version=6.5.2)
+
 npm run link
+# Chú ý: Kiểm tra server ảo, nếu thư mục dự án chưa có hoặc bị xóa thì phải chạy lại lệnh này.
 ```
 
 ## 2. Lệnh phát triển (Chạy mỗi khi ngồi code)
@@ -144,7 +148,7 @@ npm run dev
 | `"test"` | Cấu hình thông số triển khai cho môi trường kiểm thử (Test/Staging) nội bộ. |
 | `"deploy_method"` | Phương thức truyền tải mã nguồn. Hỗ trợ 3 lựa chọn: `ssh` (khuyên dùng), `ftp`, hoặc `zip` (chỉ đóng gói phát hành). |
 | `"server"` | Khóa định danh của máy chủ. Giá trị này phải khớp với tiền tố tên cấu hình Secret (Repository Secrets) trên GitHub Repository hoặc Organization. |
-| `"basic_auth"` | (Bổ sung tùy chọn) Cung cấp cấu hình xác thực HTTP Basic Authentication. Hệ thống sẽ tự động tổng hợp mã hoá sinh ra file `.htaccess` ngăn chặn truy cập công khai nếu cung cấp cấu hình này. |
+| `"basic_auth"` | (Tùy chọn) Chỉ sử dụng khi bạn muốn cài đặt xác thực cơ bản (Basic Auth - yêu cầu nhập tài khoản/mật khẩu để xem trang). Hệ thống sẽ tự động mã hoá và tạo file `.htaccess` ngăn chặn truy cập công khai. Nếu không có nhu cầu bảo vệ bằng mật khẩu, bạn có thể xóa hoàn toàn block `"basic_auth"` này khỏi file JSON. |
 
 ## 5. Setup File Môi Trường Local (.env)
 File `.env` dùng để thiết lập cấu hình chạy tại máy tính của lập trình viên trong quá trình phát triển (Local).
