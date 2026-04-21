@@ -9,6 +9,7 @@
 
 ## 1. 初期セットアップコマンド (設定完了後にプロジェクトで1回のみ実行)
 ```bash
+npm i
 npm run wp:download
 cp .env.example .env
 npm run link
@@ -74,35 +75,7 @@ npm run dev
   - **XAMPP (Linux)**: 例 `/opt/lampp/htdocs`
   - **MAMP (macOS)**: 例 `/Applications/MAMP/htdocs`
 
-## 6. GitHub Repository または Organization 用の Secrets 設定
-- プロジェクトの GitHub リポジトリ（または Organization）設定画面の **Settings > Secrets and variables > Actions > New repository secret** へ移動します。
-- **命名規則:** `deploy-config.json` 内の `"server"` で指定した値の末尾に `_CONFIG` というサフィックスを付けます（例: `deploy-config.json` で `"server": "JLWEB"` と定義している場合、作成する Secret 変数名は必ず `JLWEB_CONFIG` となります）。
-- **JSON 構成の例:**
-```json
-{
-  "host": "mayserver.example.com",
-  "user": "developer_username",
-  "pass": "ftp_mat_khau",
-  "ssh_port": "22",
-  "ftp_dir": "./public_html/github_deploy",
-  "root_path": "/home/web-user/public_html/github_deploy",
-  "ftp_git": "./public_html/github_deploy",
-  "private_key": "-----PRIVATE KEY-----"
-}
-```
 
-**JSON パラメータの詳細説明:**
-
-| フィールド名 | 対応プロトコル | 意味 / 使用目的 |
-|---|---|---|
-| `host` | `ftp`, `ssh` | ターゲットサーバーの IP アドレスまたはドメイン名。 |
-| `user` | `ftp`, `ssh` | サーバーとの通信を識別するためのアカウント名 (FTP ユーザー または SSH ユーザー)。 |
-| `ftp_dir` | `ftp`, `ssh` | Web ソースコードをデプロイする対象ディレクトリへの相対パス (Relative path)（ログイン時のルートディレクトリからの相対位置）。 |
-| `root_path` | `ftp`, `ssh` | Linux システムベースの絶対物理パス (Absolute Path)。Basic 認証における `.htpasswd` ファイルとのパスを `.htaccess` にマッピングするために必須の要素です。 |
-| `ftp_git` | `ftp`, `ssh` | 各ファイルのハッシュコードを含むメタデータ `.deploy/` を保存し、差分デプロイ (Incremental Deploy) を処理するためのディレクトリパス。空の場合は自動的に `ftp_dir` の値が再利用されます。 |
-| `pass` | `ftp` のみ | FTP アカウントのパスワード (SSH プロトコルを使用する場合は空白または未設定)。 |
-| `ssh_port` | `ssh` のみ | SSH 通信ポート。このパラメータを空白にした場合、Action ワークフローはデフォルトの `22` 番ポートを経由してアクセスします。 |
-| `private_key`| `ssh` のみ | RSA プライベートキーの認証暗号化文字列。フォーマットはフラットな1行でなければなりません。Enter キー（改行）の代わりに `\n` を使用してください。 |
 
 ---
 
@@ -113,6 +86,7 @@ npm run dev
 
 ## 1. Lệnh khởi tạo (Chỉ chạy 1 lần khi cài đặt dự án sau khi setup deploy-config.json và Actions secrets)
 ```bash
+npm i
 npm run wp:download
 cp .env.example .env
 npm run link
@@ -178,32 +152,3 @@ File `.env` dùng để thiết lập cấu hình chạy tại máy tính của 
   - **XAMPP (Linux)**: ví dụ `/opt/lampp/htdocs`
   - **MAMP (macOS)**: ví dụ `/Applications/MAMP/htdocs`
 
-## 6. Setup GitHub Secrets cho Repository hoặc Organization
-- Vào mục **Settings > Secrets and variables > Actions > New repository secret** (nằm trong bảng điều khiển Repo hoặc Organization GitHub dự án của bạn).
-- **Quy tắc đặt tên:** Cấu trúc lấy giá trị `"server"` trong `deploy-config.json` và nối thêm hậu tố `_CONFIG` vào phía sau. (Ví dụ: Nếu `deploy-config.json` định nghĩa `"server": "JLWEB"`, thì tên biến Secret bắt buộc là `JLWEB_CONFIG`).
-- **Ví dụ chuỗi JSON cấu hình thiết lập:**
-```json
-{
-  "host": "mayserver.example.com",
-  "user": "developer_username",
-  "pass": "ftp_mat_khau",
-  "ssh_port": "22",
-  "ftp_dir": "./public_html/github_deploy",
-  "root_path": "/home/web-user/public_html/github_deploy",
-  "ftp_git": "./public_html/github_deploy",
-  "private_key": "-----PRIVATE KEY-----"
-}
-```
-
-**Bảng Tham Số Config Nghĩa Hành Kèm Theo:**
-
-| Tên Trường Cấu Hình | Phương Thức Hỗ Trợ | Ý Nghĩa / Mục Đích Sử Dụng |
-|---|---|---|
-| `host` | `ftp`, `ssh` | Địa chỉ IP hoặc Khóa Tên miền (Domain) của máy chủ đích. |
-| `user` | `ftp`, `ssh` | Tên tài khoản định danh giao tiếp với máy chủ (FTP user hoặc SSH user). |
-| `ftp_dir` | `ftp`, `ssh` | Đường dẫn tương đối (Relative path) trỏ trực tiếp đến thư mục đặt trang web web. (Đếm bắt đầu từ gốc chỉ mục sau khi đăng nhập thành công). |
-| `root_path` | `ftp`, `ssh` | Đường dẫn vật lý tuyệt đối (Absolute Path) hệ thống Linux. Yếu tố bắt buộc để tạo ánh xạ thiết lập mật khẩu Basic Auth bằng `.htpasswd`. |
-| `ftp_git` | `ftp`, `ssh` | Đường dẫn để lưu trữ bộ đệm metadata `.deploy/` chứa mã hash của từng file, xử lý deploy dạng Incremental Deploy (chỉ thay đổi file rác). Nếu bỏ trống sẽ tự động tái sử dụng đường dẫn `ftp_dir`. |
-| `pass` | Cổng `ftp` | Mật khẩu đăng nhập FTP (Bỏ trống hoặc không cấu trúc với SSH). |
-| `ssh_port` | Cổng `ssh` | Cổng giao tiếp SSH. Nếu bỏ trống tham số này, luồng thực thi action mặc định truy cập mở qua cổng `22`. |
-| `private_key` | Cổng `ssh` | Chuỗi khóa mã hoá xác thực Private Key (RSA). Định dạng yêu cầu phải ở dạng một dòng liền mạch (flatten). Sử dụng toán tử `\n` để thay thế cho ký tự Enter. |
