@@ -9,7 +9,7 @@
 
 ## 1. 初期セットアップコマンド (設定完了後にプロジェクトで1回のみ実行)
 ```bash
-npm i
+npm install
 npm run wp:download
 cp .env.example .env
 npm run link
@@ -88,7 +88,7 @@ npm run dev
 
 ## 1. Lệnh khởi tạo (Chỉ chạy 1 lần khi cài đặt dự án sau khi setup deploy-config.json và Actions secrets)
 ```bash
-npm i
+npm install
 npm run wp:download
 cp .env.example .env
 npm run link
