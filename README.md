@@ -7,7 +7,7 @@
 <a id="日本語版"></a>
 # 日本語版 (Japanese)
 
-## 1. 初期セットアップコマンド (設定完了後にプロジェクトで1回のみ実行)
+## 1. 初期セットアップコマンド (deploy-config.json と Actions secrets の設定完了後にプロジェクトで1回のみ実行)
 ```bash
 npm install
 npm run wp:download
