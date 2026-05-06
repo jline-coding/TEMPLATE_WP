@@ -31,7 +31,7 @@ jobs:
           cache: 'npm'
 
       - name: 📦 Cài đặt dependencies
-        run: npm ci
+        run: npm install
 
       - name: 💾 Cache WordPress download
         uses: actions/cache@v4
