@@ -44,11 +44,17 @@ jobs:
           BUILD_CMD=$(jq -r '.build_command // "npm run build"' deploy-config.json)
           eval "$BUILD_CMD"
 
-      - name: 📦 Tạo Theme ZIP
+      - name: 📦 Thiết lập Biến
         run: |
           SOURCE_FOLDER=$(jq -r '.source_folder // "public"' deploy-config.json)
           THEME_DIR="${SOURCE_FOLDER}/wp-content/themes"
-          THEME_NAME=$(ls "$THEME_DIR" | grep -v '^twenty' | grep -v '^\.' | head -1)
+          
+          # Lấy THEME_NAME từ deploy-config.json
+          THEME_NAME=$(jq -r '.theme_name // ""' deploy-config.json)
+          if [[ -z "$THEME_NAME" ]]; then
+            # Fallback nếu không có trong config
+            THEME_NAME=$(ls "$THEME_DIR" | grep -v '^twenty' | grep -v '^\.' | head -1)
+          fi
 
           if [[ -z "$THEME_NAME" ]]; then
             echo "❌ Không tìm thấy theme trong $THEME_DIR"
@@ -56,28 +62,121 @@ jobs:
           fi
 
           echo "THEME_NAME=$THEME_NAME" >> $GITHUB_ENV
+          echo "THEME_DIR=$THEME_DIR" >> $GITHUB_ENV
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
-          cd "$THEME_DIR/$THEME_NAME"
-          zip -r "/tmp/${THEME_NAME}.zip" . -x ".*"
+      - name: 🔍 Lấy bản Release trước đó (Nếu có)
+        id: prev_release
+        run: |
+          PREV_TAG=$(gh release view --json tagName -q ".tagName" 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            echo "📌 Đã tìm thấy bản Release trước đó: $PREV_TAG"
+            
+            # Tìm tên file ZIP gốc (loại trừ file có chữ diff_data)
+            FULL_ZIP=$(gh release view "$PREV_TAG" --json assets -q '.assets[].name | select(test("diff_data") | not) | select(endswith(".zip"))' | head -n 1)
+            
+            if [ -n "$FULL_ZIP" ]; then
+              echo "⬇️ Tải file: $FULL_ZIP"
+              gh release download "$PREV_TAG" -p "$FULL_ZIP" --dir prev_release
+              
+              # Giải nén thông minh để đảm bảo lấy đúng nội dung ruột theme
+              mkdir -p theme_old_extract theme_old
+              unzip -q "prev_release/$FULL_ZIP" -d theme_old_extract
+              
+              if [ -f "theme_old_extract/style.css" ]; then
+                cp -a theme_old_extract/* theme_old/
+              elif [ -f "theme_old_extract/$THEME_NAME/style.css" ]; then
+                cp -a theme_old_extract/$THEME_NAME/* theme_old/
+              else
+                cp -a theme_old_extract/* theme_old/ 2>/dev/null || true
+              fi
+              echo "HAS_PREV_RELEASE=true" >> $GITHUB_ENV
+            fi
+          else
+            echo "ℹ️ Đây là Release đầu tiên, không có bản cũ để so sánh."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          ZIP_SIZE=$(du -h "/tmp/${THEME_NAME}.zip" | cut -f1)
-          echo "THEME_ZIP=/tmp/${THEME_NAME}.zip" >> $GITHUB_ENV
+      - name: ✂️ Trích xuất các file thay đổi (Diff)
+        if: env.HAS_PREV_RELEASE == 'true'
+        run: |
+          mkdir -p theme_diff
+          # So sánh nội dung bên trong thư mục theme (-c), cờ -m giúp loại bỏ vỏ thư mục rỗng
+          rsync -rcvm --compare-dest="$(pwd)/theme_old/" "$(pwd)/$THEME_DIR/$THEME_NAME/" "$(pwd)/theme_diff/"
+          
+          # Dọn dẹp các file rác/không cần thiết khỏi thư mục diff
+          find theme_diff -type f -name '.DS_Store' -delete 2>/dev/null || true
+          find theme_diff -type f -name '*.map' -delete 2>/dev/null || true
+          rm -rf theme_diff/.deploy
+          
+          # Xóa toàn bộ các thư mục rỗng (nếu có)
+          find theme_diff -type d -empty -delete 2>/dev/null || true
+          
+          # Kiểm tra xem có file nào thực sự thay đổi không
+          CHANGE_COUNT=$(find theme_diff -type f | wc -l)
+          if [ "$CHANGE_COUNT" -gt "0" ]; then
+            DIFF_ZIP_NAME="${THEME_NAME}_diff_data_${TAG_NAME}.zip"
+            echo "DIFF_ZIP_NAME=$DIFF_ZIP_NAME" >> $GITHUB_ENV
+            
+            # Nén thư mục diff - Bọc thư mục $THEME_NAME vào trong file ZIP để chuẩn WP Admin
+            mkdir -p "diff_wrap/$THEME_NAME"
+            cp -a theme_diff/* "diff_wrap/$THEME_NAME/"
+            
+            cd diff_wrap
+            zip -r "$GITHUB_WORKSPACE/$DIFF_ZIP_NAME" "$THEME_NAME"
+            cd "$GITHUB_WORKSPACE"
+            
+            DIFF_ZIP_SIZE=$(du -h "$DIFF_ZIP_NAME" | cut -f1)
+            echo "📦 Đã tạo file Diff: $DIFF_ZIP_NAME ($CHANGE_COUNT file thay đổi, kích thước: $DIFF_ZIP_SIZE)"
+          else
+            echo "ℹ️ Không có sự thay đổi nào về file tĩnh hợp lệ so với bản trước."
+          fi
 
-          echo ""
-          echo "╔══════════════════════════════════════════════╗"
-          printf "║   📦 Theme: %-32s ║\n" "$THEME_NAME"
-          printf "║   🏷️  Tag:   %-32s ║\n" "$TAG_NAME"
-          printf "║   💾 Size:  %-32s ║\n" "$ZIP_SIZE"
-          echo "╚══════════════════════════════════════════════╝"
+      - name: 📁 Nén thành file ZIP (Bản Full)
+        run: |
+          ZIP_NAME="${THEME_NAME}_${TAG_NAME}.zip"
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          
+          # Nén thư mục theme thành ZIP sạch, bọc folder $THEME_NAME ở gốc
+          cd "$THEME_DIR"
+          zip -r "$GITHUB_WORKSPACE/$ZIP_NAME" "$THEME_NAME" -x '*/.deploy/*' '*/.DS_Store' '*/*.map' '*/node_modules/*' '*/.git/*'
+          cd "$GITHUB_WORKSPACE"
+          
+          ZIP_SIZE=$(du -h "$ZIP_NAME" | cut -f1)
+          echo "📦 File: $ZIP_NAME ($ZIP_SIZE)"
 
-      - name: 🏷️ Tạo GitHub Release
+      - name: 🚀 Tạo GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "${{ env.THEME_NAME }} ${{ env.TAG_NAME }}"
-          files: ${{ env.THEME_ZIP }}
-          generate_release_notes: true
+          name: "🚀 Release ${{ env.TAG_NAME }}"
+          body: |
+            ## 📦 Release `${{ env.TAG_NAME }}`
+            **Giao diện / テーマ**: `${{ env.THEME_NAME }}`
+            **Ngày tạo / 作成日時**: ${{ github.event.head_commit.timestamp || 'N/A' }}
+            **Người tạo / 作成者**: @${{ github.actor }}
+
+            ---
+            ### 🇻🇳 📥 Hướng dẫn
+            1. Tải file **`.zip`** bên dưới mục **Assets**
+               - Bản **`${{ env.THEME_NAME }}_${{ env.TAG_NAME }}.zip`**: Chứa toàn bộ source code của Theme (bản đầy đủ). *Có thể cài đặt trực tiếp qua mục Upload Theme trong WordPress Admin.*
+               - Bản **`${{ env.THEME_NAME }}_diff_data_${{ env.TAG_NAME }}.zip`** *(nếu có)*: Chỉ chứa các file đã được chỉnh sửa/thêm mới so với bản phát hành trước đó. Dùng để upload đè qua FTP.
+            2. Giải nén và bàn giao cho khách hàng (nếu cần).
+            > ⚠️ **Lưu ý:** File ZIP chỉ chứa mã nguồn Theme đã build sạch, không chứa Core WordPress hay Plugins.
+
+            ---
+            ### 🇯🇵 📥 ダウンロードと使用方法
+            1. 下記の **Assets** から **`.zip`** ファイルをダウンロードしてください。
+               - **`${{ env.THEME_NAME }}_${{ env.TAG_NAME }}.zip`**: テーマの全てのクリーンなソースコードが含まれています（フルバージョン）。*WordPress管理画面の「テーマのアップロード」から直接インストール可能です。*
+               - **`${{ env.THEME_NAME }}_diff_data_${{ env.TAG_NAME }}.zip`** *(ある場合)*: 前回のリリース以降に修正・追加されたファイルのみが含まれています（差分データ）。FTPでの上書きアップロードに使用します。
+            2. 解凍して、お客様に納品してください（必要な場合）。
+            > ⚠️ **注意:** ZIPファイルには、ビルド済みのクリーンなテーマコードのみが含まれており、WordPressコアやプラグインは含まれていません。
+          files: |
+            ${{ env.ZIP_NAME }}
+            ${{ env.THEME_NAME }}_diff_data_${{ env.TAG_NAME }}.zip
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
