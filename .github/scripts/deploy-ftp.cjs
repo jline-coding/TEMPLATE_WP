@@ -667,6 +667,59 @@ async function runDeploy() {
         }
 
         // ════════════════════════════════════════
+        // MAILFORM PRO - AUTO CHMOD (VIA PHP)
+        // ════════════════════════════════════════
+        console.log('');
+        console.log('🔧 Cấp quyền tự động cho MailformPro (nếu có)...');
+        const chmodToken = crypto.randomBytes(16).toString('hex');
+        const chmodPhp = [
+            '<?php',
+            'error_reporting(0);',
+            'register_shutdown_function(function() { @unlink(__FILE__); });',
+            'if (($_GET["t"] ?? "") !== "' + chmodToken + '") { http_response_code(403); die("Forbidden"); }',
+            'try {',
+            '    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST);',
+            '    foreach ($iterator as $item) {',
+            '        // Ignore core WP directories for speed and safety',
+            '        if ($item->isDir() && in_array($item->getFilename(), ["wp-admin", "wp-includes"])) {',
+            '            continue;',
+            '        }',
+            '        if ($item->isDir() && $item->getFilename() === "mailformpro") {',
+            '            $mfp_dir = $item->getPathname();',
+            '            @chmod($mfp_dir, 0755);',
+            '            if (is_dir($mfp_dir . "/data")) @chmod($mfp_dir . "/data", 0777);',
+            '            if (file_exists($mfp_dir . "/mailformpro.cgi")) @chmod($mfp_dir . "/mailformpro.cgi", 0755);',
+            '            $parent_dir = dirname($mfp_dir);',
+            '            if (is_dir($parent_dir . "/iplogs")) {',
+            '                @chmod($parent_dir . "/iplogs", 0755);',
+            '                if (file_exists($parent_dir . "/iplogs/iplogs.cgi")) @chmod($parent_dir . "/iplogs/iplogs.cgi", 0755);',
+            '                if (file_exists($parent_dir . "/iplogs/iplogs.dat.cgi")) @chmod($parent_dir . "/iplogs/iplogs.dat.cgi", 0777);',
+            '            }',
+            '        }',
+            '    }',
+            '} catch (Exception $e) {}',
+            'echo "OK";',
+        ].join('\n');
+
+        fs.writeFileSync('/tmp/_mfp_chmod.php', chmodPhp);
+        await client.cd(ftpRoot);
+        await client.ensureDir(targetDir);
+        await client.cd(ftpRoot);
+        await client.uploadFrom('/tmp/_mfp_chmod.php', `${targetDir}/_mfp_chmod.php`);
+
+        try {
+            const chmodUrl = `${siteUrl}/${config.project_dir}/_mfp_chmod.php?t=${chmodToken}`;
+            const chmodResult = await httpGet(chmodUrl);
+            if (chmodResult.body === 'OK') {
+                console.log('   ✅ Đã quét và cấp quyền MailformPro thành công.');
+            }
+        } catch(e) {
+            console.log('   ℹ️ Bỏ qua (không có MailformPro hoặc không quét được).');
+        } finally {
+            try { await client.remove(`${targetDir}/_mfp_chmod.php`); } catch {}
+        }
+
+        // ════════════════════════════════════════
         // HEALTH CHECK — Kiểm tra site sau deploy
         // ════════════════════════════════════════
         console.log('');

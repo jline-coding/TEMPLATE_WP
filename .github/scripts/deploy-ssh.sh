@@ -229,6 +229,28 @@ else
     echo "✅ Rsync hoàn tất!"
 fi
 
+# ==========================================
+# CẤU HÌNH PHÂN QUYỀN CHO MAILFORM PRO (CGI) NẾU CÓ
+# ==========================================
+echo ""
+echo "--- Set permissions for Mailform Pro (CGI) ---"
+$SSH_CMD "
+    find \"$TARGET_DIR\" -type d -name 'mailformpro' -not -path \"*/wp-admin/*\" -not -path \"*/wp-includes/*\" 2>/dev/null | while read mfp_dir; do
+        chmod -f 755 \"\$mfp_dir\" || true
+        chmod -f 777 \"\$mfp_dir/data\" || true
+        chmod -f 755 \"\$mfp_dir/mailformpro.cgi\" || true
+        
+        parent_dir=\$(dirname \"\$mfp_dir\")
+        if [ -d \"\$parent_dir/iplogs\" ]; then
+            chmod -f 755 \"\$parent_dir/iplogs\" || true
+            chmod -f 755 \"\$parent_dir/iplogs/iplogs.cgi\" || true
+            chmod -f 777 \"\$parent_dir/iplogs/iplogs.dat.cgi\" || true
+        fi
+    done
+" 2>/dev/null || true
+echo "✅ Permissions checked and applied."
+echo ""
+
 # Lưu lại thông số bảo mật lần cuối cho lần Deploy tiếp
 COMMIT_SHA=$(git rev-parse HEAD)
 echo "$COMMIT_SHA" > /tmp/.last_deploy_sha
