@@ -98,7 +98,7 @@ jobs:
 
       - name: 📦 Cài đặt dependencies
         if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
-        run: npm install
+        run: npm install --no-package-lock
 
       - name: 💾 Cache WordPress download
         if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
