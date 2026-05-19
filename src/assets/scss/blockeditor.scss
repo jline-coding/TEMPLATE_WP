@@ -35,6 +35,15 @@
     padding-left: var(--#{$prefix}-padding-left);
 }
 
+.editor-styles-wrapper{
+    padding: 0 40px;
+    .editor-visual-editor__post-title-wrapper, .block-editor-block-list__layout{
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+}
+
+
 /* ==========================================================================
    BLOCK EDITOR: TABLE (.wp-block-table)
    Được tối ưu hóa bằng Mixin để ánh xạ từ blockeditor-variations.js

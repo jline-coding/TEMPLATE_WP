@@ -763,10 +763,25 @@ async function startWatch() {
   }));
 
   watcher.on('add', debouncePerFile(async (filepath) => {
+    const absPath = getAbs(filepath);
+    // Invalidate SCSS caches when a new SCSS file is added
+    // so findDependentEntries can discover it
+    if (isScssSource(absPath)) {
+      fileCache._scssFiles = null;
+      fileCache._scssEntries = null;
+      importsCache.clear();
+    }
     await handleChange(filepath, 'added');
   }));
 
   watcher.on('unlink', debouncePerFile((filepath) => {
+    const absPath = getAbs(filepath);
+    // Invalidate SCSS caches when a SCSS file is removed
+    if (isScssSource(absPath)) {
+      fileCache._scssFiles = null;
+      fileCache._scssEntries = null;
+      importsCache.clear();
+    }
     handleUnlink(filepath);
   }));
 }
