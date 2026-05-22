@@ -39,11 +39,11 @@ add_action( 'wp_enqueue_scripts', function() {
     ));
 
     // js only page, post
-    if(is_front_page()){
-        wp_enqueue_script( 'slick-js', $themeUrl . '/assets/vendor/slick/slick.min.js', array( 'jquery' ), '1.0', array(
+    if (is_front_page()) {
+        wp_enqueue_script('slick-js', $themeUrl . '/assets/vendor/slick/slick.min.js', array('jquery'), '1.0', array(
             'strategy' => 'defer',
         ));
-        wp_enqueue_script( 'top-js', $themeUrl . '/assets/js/top.js', array( 'jquery', 'slick-js' ), filemtime($themeDir . '/assets/js/top.js'), array(
+        wp_enqueue_script('top-js', $themeUrl . '/assets/js/top.js', array('jquery'), filemtime($themeDir . '/assets/js/top.js'), array(
             'strategy' => 'defer',
         ));
     }

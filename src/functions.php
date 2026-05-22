@@ -3,6 +3,8 @@ require_once( get_template_directory() . '/includes/editor-block-theme.php' );
 require_once( get_template_directory() . '/includes/styles-scripts-all.php' );
 require_once( get_template_directory() . '/includes/contactform.php' );
 require_once( get_template_directory() . '/includes/shortcode.php' );
+require_once( get_template_directory() . '/includes/custom_mv.php' );
+require_once( get_template_directory() . '/includes/custom_bread.php' );
 //add Featured Image
 add_theme_support( 'post-thumbnails' );
 
