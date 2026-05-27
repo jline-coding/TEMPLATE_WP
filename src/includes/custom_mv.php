@@ -3,6 +3,8 @@ if (!function_exists('mytheme_get_page_title')) {
 
     function mytheme_get_page_title() {
 
+        $items = [];
+
         // Front page
         if (is_front_page()) {
             return get_bloginfo('name');
@@ -16,11 +18,6 @@ if (!function_exists('mytheme_get_page_title')) {
         // Single page
         if (is_page()) {
             $title = get_the_title();
-            if(is_page(["uniform-center","ana-mileage-club","convenience-store","wonderful-day"])){
-                $title = "社員紹介";
-            }elseif(is_page(["cross-talk"])){
-                $title = "座談会";
-            }
             return $title;
         }
 

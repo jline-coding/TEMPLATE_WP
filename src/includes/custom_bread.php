@@ -7,7 +7,7 @@ if (!function_exists('mytheme_breadcrumb')) {
 
         // Home
         $items[] = [
-            'title' => 'HOME',
+            'title' => 'TOP',
             'url'   => home_url('/'),
         ];
 
@@ -45,12 +45,14 @@ if (!function_exists('mytheme_breadcrumb')) {
         elseif (is_single()) {
 
             $post_type = get_post_type();
-
+           
             // CPT archive
             if ($post_type !== 'post') {
 
+                $post_type_obj = get_post_type_object($post_type);
+
                 $items[] = [
-                    'title' => post_type_archive_title('', false),
+                    'title' => $post_type_obj->labels->name,
                     'url'   => get_post_type_archive_link($post_type),
                 ];
             }
