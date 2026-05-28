@@ -46,6 +46,27 @@ function fix_svg_ico_mime_check( $data, $file, $filename, $mimes ) {
 }
 add_filter( 'wp_check_filetype_and_ext', 'fix_svg_ico_mime_check', 10, 4 );
 
+function convert_title_br($title) {
+    if (empty($title)) return '';
+    $title = esc_html($title);
+    $title = str_replace('[br]',    '<br>',                              $title);
+    $title = str_replace('[br-pc]', '<br class="u-br-pc">',             $title);
+    $title = str_replace('[br-sp]', '<br class="u-br-sp">',             $title);
+    return $title;
+}
+
+function remove_title_br($title) {
+    if (empty($title)) return '';
+
+    $title = esc_html($title);
+
+    return str_replace(
+        ['[br]', '[br-pc]', '[br-sp]'],
+        '',
+        $title
+    );
+}
+
 //ADD MENU
 if ( function_exists( 'register_nav_menu' ) ) {
     register_nav_menu( 'main-menu', 'Main Menu' );
@@ -203,20 +224,49 @@ function block_direct_access_to_hidden_pages() {
 }
 add_action( 'admin_init', 'block_direct_access_to_hidden_pages', 999 );
 
-function overwrite_ssp_title($ssp_title) { 
+function overwrite_ssp_title($ssp_title) {
+
+    global $post;
+
+    // PAGE
     if ( is_page() ) {
-        global $post;
-        if ( $post->post_parent ) {
-            $parent_title = get_the_title( $post->post_parent );
-            return str_replace(
+
+        if ( ! empty($post->post_parent) ) {
+
+            $parent_title = get_the_title($post->post_parent);
+
+            $ssp_title = str_replace(
                 ' | ' . get_bloginfo('name'),
-                ' | ' . $parent_title . ' | ' . get_bloginfo('name'),
+                ' | ' . remove_title_br($parent_title) . ' | ' . get_bloginfo('name'),
                 $ssp_title
             );
         }
     }
-    return $ssp_title;
+
+    elseif ( is_singular() ) {
+
+        $post_type = get_post_type($post);
+
+        if ( $post_type && $post_type !== 'post' ) {
+
+            $post_type_obj = get_post_type_object($post_type);
+
+            if ( ! empty($post_type_obj->labels->name) ) {
+
+                $post_type_name = $post_type_obj->labels->name;
+
+                $ssp_title = str_replace(
+                    ' | ' . get_bloginfo('name'),
+                    ' | ' . remove_title_br($post_type_name) . ' | ' . get_bloginfo('name'),
+                    $ssp_title
+                );
+            }
+        }
+    }
+
+    return remove_title_br($ssp_title);
 }
+
 add_filter('ssp_output_title', 'overwrite_ssp_title');
 
 function target_main_category_query_with_conditional_tags( $query ) {

@@ -17,9 +17,9 @@ $mv_jp_title = ! empty( $args['jp_title'] )
         <div class="c-mv01__inner">
             <h1 class="c-heading01">
                 <?php if ( $mv_en_title ) : ?>
-                    <span class="c-ttl01__en"><?php echo esc_html( $mv_en_title ); ?></span>
+                    <span class="c-ttl01__en"><?php echo esc_html( remove_title_br($mv_en_title) ); ?></span>
                 <?php endif; ?>
-                <span class="c-ttl01__jp"><?php echo esc_html( $mv_jp_title ); ?></span>
+                <span class="c-ttl01__jp"><?php echo esc_html( remove_title_br($mv_jp_title) ); ?></span>
             </h1>
         </div>
     </div>
