@@ -202,3 +202,29 @@ function block_direct_access_to_hidden_pages() {
     }
 }
 add_action( 'admin_init', 'block_direct_access_to_hidden_pages', 999 );
+
+function overwrite_ssp_title($ssp_title) { 
+    if ( is_page() ) {
+        global $post;
+        if ( $post->post_parent ) {
+            $parent_title = get_the_title( $post->post_parent );
+            return str_replace(
+                ' | ' . get_bloginfo('name'),
+                ' | ' . $parent_title . ' | ' . get_bloginfo('name'),
+                $ssp_title
+            );
+        }
+    }
+    return $ssp_title;
+}
+add_filter('ssp_output_title', 'overwrite_ssp_title');
+
+function target_main_category_query_with_conditional_tags( $query ) {
+	if ( ! is_admin() && $query->is_main_query() ) {       
+		if ( is_post_type_archive('new') || is_tax('new_cate') ) {
+			$query->set( 'posts_per_page', 24 );
+		} 
+	} 
+    
+}
+add_action( 'pre_get_posts', 'target_main_category_query_with_conditional_tags' );
