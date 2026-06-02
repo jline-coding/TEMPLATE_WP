@@ -224,6 +224,20 @@ function block_direct_access_to_hidden_pages() {
 }
 add_action( 'admin_init', 'block_direct_access_to_hidden_pages', 999 );
 
+add_action( 'admin_footer-user-new.php', function() {
+	?>
+	<script>
+	( function() {
+		const checkbox = document.getElementById( 'send_user_notification' );
+
+		if ( checkbox ) {
+			checkbox.checked = false;
+		}
+	}() );
+	</script>
+	<?php
+} );
+
 function overwrite_ssp_title($ssp_title) {
 
     global $post;
