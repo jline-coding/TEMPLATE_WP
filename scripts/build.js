@@ -361,10 +361,12 @@ function cleanStaleCopiedFiles() {
 const postcssPlugins = [
   sortMediaQueries({ sort: 'mobile-first' }),
   autoprefixer({ cascade: false }),
+  cssnano({
+    preset: ['default', {
+      discardComments: { removeAll: true }
+    }]
+  })
 ];
-if (!isWatch) {
-  postcssPlugins.push(cssnano());
-}
 
 // Cache for parsed SCSS imports — cleared on each full build
 const importsCache = new Map();
