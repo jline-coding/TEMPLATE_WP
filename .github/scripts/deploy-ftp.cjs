@@ -86,6 +86,41 @@ async function uploadDirectory(client, localDir, remoteDir, ftpRoot) {
 }
 
 // ─────────────────────────────────────────────
+// FTP Clean Empty Directories (recursive)
+// ─────────────────────────────────────────────
+
+async function removeEmptyDirsFTP(client, remoteDir, baseDir, ftpRoot) {
+    await client.cd(ftpRoot);
+    let list;
+    try {
+        list = await client.list(remoteDir);
+    } catch {
+        return;
+    }
+
+    for (const item of list) {
+        if (item.isDirectory) {
+            const subDir = `${remoteDir}/${item.name}`;
+            await removeEmptyDirsFTP(client, subDir, baseDir, ftpRoot);
+        }
+    }
+
+    // Do not delete the base directory (theme root) itself
+    if (remoteDir === baseDir) return;
+
+    try {
+        await client.cd(ftpRoot);
+        const currentList = await client.list(remoteDir);
+        if (currentList.length === 0) {
+            console.log(`   🗑️ Xóa thư mục rỗng trên server: ${remoteDir}`);
+            await client.removeDir(remoteDir);
+        }
+    } catch (err) {
+        // ignore
+    }
+}
+
+// ─────────────────────────────────────────────
 // FTP Connection with Retry
 // ─────────────────────────────────────────────
 
@@ -642,6 +677,14 @@ async function runDeploy() {
                     } catch {
                         // File có thể không tồn tại trên server
                     }
+                }
+
+                // Dọn dẹp thư mục rỗng trên server FTP sau khi xóa file
+                try {
+                    console.log('   🧹 Đang quét dọn các thư mục rỗng trên server FTP...');
+                    await removeEmptyDirsFTP(client, themeRemoteDir, themeRemoteDir, ftpRoot);
+                } catch (cleanErr) {
+                    console.log(`   ℹ️ Không thể dọn dẹp thư mục rỗng: ${cleanErr.message}`);
                 }
             }
 
