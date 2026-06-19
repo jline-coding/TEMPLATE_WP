@@ -8,7 +8,6 @@
         <link rel="icon" type="image/x-icon" href="<?php echo get_site_icon_url(); ?>">
         <!-- link -->  
         <?php wp_head(); ?>
-        <link rel="apple-touch-icon" href="<?php echo get_template_directory_uri(); ?>/assets/images/common/apple-touch-icon.webp" />
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
