@@ -121,6 +121,79 @@ async function removeEmptyDirsFTP(client, remoteDir, baseDir, ftpRoot) {
 }
 
 // ─────────────────────────────────────────────
+// FTP Purge Stale Files and Folders (recursive comparison with local)
+// ─────────────────────────────────────────────
+
+async function purgeStaleRemoteFilesFTP(client, localThemeDir, remoteThemeDir, ftpRoot) {
+    console.log('   🧹 Đang quét dọn các file/thư mục thừa trên server FTP...');
+
+    // 1. Thu thập tất cả file và thư mục ở local
+    const localFiles = new Set();
+    const localDirs = new Set();
+
+    function walkLocal(dir) {
+        if (!fs.existsSync(dir)) return;
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            const rel = path.relative(localThemeDir, fullPath).replace(/\\/g, '/');
+            if (entry.isDirectory()) {
+                localDirs.add(rel);
+                walkLocal(fullPath);
+            } else {
+                localFiles.add(rel);
+            }
+        }
+    }
+    walkLocal(localThemeDir);
+
+    // 2. So sánh và xóa các file/thư mục không có ở local
+    async function scanAndPurge(remoteDir) {
+        await client.cd(ftpRoot);
+        let list;
+        try {
+            list = await client.list(remoteDir);
+        } catch {
+            return;
+        }
+
+        for (const item of list) {
+            const remoteItemPath = `${remoteDir}/${item.name}`;
+            // Tính toán relative path bằng slice để tránh lỗi cross-platform path.relative
+            const relPath = remoteItemPath.slice(remoteThemeDir.length + 1).replace(/\\/g, '/');
+
+            if (item.isDirectory) {
+                // Đệ quy vào thư mục con trước
+                await scanAndPurge(remoteItemPath);
+
+                // Sau khi con sạch, kiểm tra thư mục này có tồn tại ở local không
+                if (!localDirs.has(relPath)) {
+                    try {
+                        await client.cd(ftpRoot);
+                        const subList = await client.list(remoteItemPath);
+                        if (subList.length === 0) {
+                            console.log(`   🗑️ Xóa thư mục thừa trên server: ${relPath}`);
+                            await client.removeDir(remoteItemPath);
+                        }
+                    } catch {}
+                }
+            } else if (item.isFile) {
+                // Nếu là file và không tồn tại ở local thì xóa
+                if (!localFiles.has(relPath)) {
+                    try {
+                        await client.cd(ftpRoot);
+                        await client.remove(remoteItemPath);
+                        console.log(`   🗑️ Xóa file thừa trên server: ${relPath}`);
+                    } catch {}
+                }
+            }
+        }
+    }
+
+    await scanAndPurge(remoteThemeDir);
+}
+
+// ─────────────────────────────────────────────
 // FTP Connection with Retry
 // ─────────────────────────────────────────────
 
@@ -595,6 +668,7 @@ async function runDeploy() {
             console.log('');
             console.log('━━━ CẬP NHẬT: Chỉ đẩy file thay đổi trong theme ━━━');
 
+            const themeLocalDir = path.join(config.source_folder, 'wp-content', 'themes', themeName);
             await client.cd(ftpRoot);
 
             let diffOutput = '';
@@ -602,7 +676,6 @@ async function runDeploy() {
                 const commitCount = execSync('git rev-list --count HEAD').toString().trim();
                 if (parseInt(commitCount, 10) < 2) {
                     console.log('ℹ️ Chỉ có 1 commit — upload toàn bộ theme...');
-                    const themeLocalDir = path.join(config.source_folder, 'wp-content', 'themes', themeName);
                     await uploadDirectory(client, themeLocalDir, themeRemoteDir, ftpRoot);
                     console.log('✅ Hoàn thành!');
                 } else {
@@ -612,7 +685,6 @@ async function runDeploy() {
             } catch (gitErr) {
                 console.error(`⚠️ Git diff lỗi: ${gitErr.message}`);
                 console.log('ℹ️ Fallback: Upload toàn bộ theme...');
-                const themeLocalDir = path.join(config.source_folder, 'wp-content', 'themes', themeName);
                 await uploadDirectory(client, themeLocalDir, themeRemoteDir, ftpRoot);
                 console.log('✅ Hoàn thành!');
             }
@@ -679,12 +751,11 @@ async function runDeploy() {
                     }
                 }
 
-                // Dọn dẹp thư mục rỗng trên server FTP sau khi xóa file
+                // So sánh và quét sạch toàn bộ file/thư mục thừa trên server FTP để đồng bộ với local
                 try {
-                    console.log('   🧹 Đang quét dọn các thư mục rỗng trên server FTP...');
-                    await removeEmptyDirsFTP(client, themeRemoteDir, themeRemoteDir, ftpRoot);
+                    await purgeStaleRemoteFilesFTP(client, themeLocalDir, themeRemoteDir, ftpRoot);
                 } catch (cleanErr) {
-                    console.log(`   ℹ️ Không thể dọn dẹp thư mục rỗng: ${cleanErr.message}`);
+                    console.log(`   ℹ️ Không thể quét dọn file/thư mục thừa: ${cleanErr.message}`);
                 }
             }
 
