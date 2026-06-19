@@ -2,7 +2,7 @@
   "theme_name": "original-theme",
   "project_dir": "template_jline_wp",
   "source_folder": "public",
-  "build_command": "npm run wp:download && npm run build",
+  "build_command": "npm run clean && npm run wp:download && npm run build",
   "production": {
     "deploy_method": "zip",
     "server": ""
