@@ -43,7 +43,7 @@ $config{'SerialFormat'} = '<date>%04d';
 $config{'SerialBoost'} = 0;
 
 ## サンクスページのURL(URLかsend.cgiから見た相対パス)
-$config{'ThanksPage'} = './thanks?no=%s';
+$config{'ThanksPage'} = '/mailformpro/thanks/?no=%s';
 
 ## 設置者に届くメールの件名
 $config{'subject'} = 'お問い合わせフォームから';
