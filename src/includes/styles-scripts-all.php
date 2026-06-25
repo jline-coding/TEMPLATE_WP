@@ -6,11 +6,17 @@ add_action( 'wp_enqueue_scripts', function() {
 
     // css files
     wp_enqueue_style( 'scrollable-css', $themeUrl . '/assets/vendor/scrollable/scrollable.css', array(), '1.0.1' );
+    wp_enqueue_style( 'mCustomScrollbar-css', $themeUrl . '/assets/vendor/mCustomScrollbar/jquery.mCustomScrollbar.css', array(), '1.0.1' );
     wp_enqueue_style( 'style-css', $themeUrl . '/assets/css/common.css', array(), filemtime($themeDir . '/assets/css/common.css') );
 
     if(is_front_page()){
         wp_enqueue_style( 'slick-css', $themeUrl . '/assets/vendor/slick/slick.css', array(), '1.0.1' );
         wp_enqueue_style( 'top-css', $themeUrl . '/assets/css/top.css', array(), filemtime($themeDir . '/assets/css/top.css') );
+    }
+
+    if(is_page('mailformpro')){
+        wp_enqueue_style( 'jquery-ui-css', $themeUrl . '/assets/vendor/jquery/jquery-ui.min.css', array(), '1.0.1' );
+        wp_enqueue_style( 'contact-css', $themeUrl . '/assets/css/contact.css', array(), filemtime($themeDir . '/assets/css/contact.css') );
     }
 
     // js files — Replace WP's built-in jQuery with custom jQuery 4
@@ -28,6 +34,10 @@ add_action( 'wp_enqueue_scripts', function() {
     wp_enqueue_script( 'scrollable-js', $themeUrl . '/assets/vendor/scrollable/scrollable.js', array( 'jquery' ), '1.0', array(
         'strategy' => 'defer',
     ));
+    wp_enqueue_script( 'mCustomScrollbar-js', $themeUrl . '/assets/vendor/mCustomScrollbar/jquery.mCustomScrollbar.js', array( 'jquery' ), '1.0', array(
+        'strategy' => 'defer',
+    ));
+    
     wp_enqueue_script( 'inview-js', $themeUrl . '/assets/js/inview.js', array( 'jquery' ), '1.0', array(
         'strategy' => 'defer',
     ));
@@ -44,6 +54,18 @@ add_action( 'wp_enqueue_scripts', function() {
             'strategy' => 'defer',
         ));
         wp_enqueue_script('top-js', $themeUrl . '/assets/js/top.js', array('jquery'), filemtime($themeDir . '/assets/js/top.js'), array(
+            'strategy' => 'defer',
+        ));
+    }
+
+    if(is_page('mailformpro')){
+        wp_enqueue_script( 'jquery-ui-js', $themeUrl . '/assets/vendor/jquery/jquery-ui.min.js', array( 'jquery' ), '1.0', array(
+            'strategy' => 'defer',
+        ));
+        wp_enqueue_script( 'yubinbango-js', $themeUrl . '/assets/vendor/yubinbango/yubinbango.js', array( 'jquery' ), '1.0', array(
+            'strategy' => 'defer',
+        ));
+        wp_enqueue_script('contact-js', $themeUrl . '/assets/js/contact.js', array('jquery'), filemtime($themeDir . '/assets/js/contact.js'), array(
             'strategy' => 'defer',
         ));
     }
