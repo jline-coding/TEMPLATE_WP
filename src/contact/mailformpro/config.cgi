@@ -43,7 +43,11 @@ $config{'SerialFormat'} = '<date>%04d';
 $config{'SerialBoost'} = 0;
 
 ## サンクスページのURL(URLかsend.cgiから見た相対パス)
-$config{'ThanksPage'} = 'thanks/?no=%s';
+# WordPressのルートパスを自動取得する（/wp-content/...以降を削除）
+my $wp_root = $ENV{'SCRIPT_NAME'} || '';
+$wp_root =~ s/\/wp-content\/.*//i;
+
+$config{'ThanksPage'} = $wp_root . '/mailformpro/thanks/?no=%s';
 
 ## 設置者に届くメールの件名
 $config{'subject'} = 'お問い合わせフォームから';
