@@ -186,8 +186,8 @@ div#mfp_loading_screen {
 	background-color: #000;
 	position: absolute;
 }
-.mfp_err {
-  color: #d9534f;
+.mfp_err,.wpcf7-not-valid-tip {
+  color: var(--red);
   font-size: 13px;
   margin-top: 8px;
   display: block;

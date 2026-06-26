@@ -34,6 +34,7 @@ get_header();
                                     <option value="ダミーテキストが入ります7。">ダミーテキストが入ります7。</option>
                                 </select>
                             </div>
+                            <div id="errormsg_都道府県" class="mfp_err"></div>
                         </div>
                     </div>
                     <div class="c-form__item">
