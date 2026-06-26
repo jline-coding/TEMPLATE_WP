@@ -72,7 +72,25 @@
         top: 50%;
         transform: translateY(-50%) rotate(-45deg);
     }
+
+    .wpcf7-select{
+        border: 1px solid var(--gray);
+        background-color: var(--white);
+    }
 }
+
+.wpcf7 .c-select{
+    border: none;
+    background-color: transparent;
+    &::after{
+        transform: rotate(-45deg);
+        top: 20px;
+        @include mq(md) {
+            top: 22px;
+        }
+    }
+}
+
 .c-file{
     font-size: rem(14);
     border: 1px solid var(--gray);
@@ -94,6 +112,7 @@
     &__content{
         word-break: break-all;
         color: var(--base);
+        pointer-events: none;
     }
     &__clear{
         display: inline-flex;
@@ -112,6 +131,11 @@
         }
     }
 }
+
+.wpcf7-file{
+    
+}
+
 .c-checkbox{
     width: 100%;
     display: inline-block;
@@ -172,6 +196,75 @@
         }
     }
 }
+
+.wpcf7-checkbox{
+    display: grid;
+    grid-gap: 10px 15px;
+    grid-template-columns: 1fr;
+    @include mq(md) {
+        grid-gap: 15px 20px;
+        grid-template-columns: 1fr 1fr ;
+    }
+    .wpcf7-list-item{
+        margin: 0;
+    }
+    .wpcf7-list-item-label{
+        position: relative;
+        padding-left: 2em;
+        font-size: rem(14);
+        letter-spacing: 0em;
+        line-height: 1.6;
+        display: block;
+        cursor: pointer;
+        @include mq(md) {
+            font-size: rem(16);
+        }
+        &::before{
+            content: "";
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 2px solid var(--gray);
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 0;
+            @include mq(md) {
+                width: 26px;
+                height: 26px;
+            }
+        }
+        &::after{
+            content: "";
+            width: 10px;
+            height: 6px;
+            transform: rotate(-45deg);
+            border-left: 2px solid var(--gray);
+            border-bottom: 2px solid var(--gray);
+            position: absolute;
+            left: 6px;
+            top: 6px;
+            opacity: 0;
+            transition: 0.5s;
+            @include mq(md) {
+                width: 12px;
+                height: 8px;
+                left: 7px;
+                top: 7px;
+                border-left: 3px solid var(--gray);
+                border-bottom: 3px solid var(--gray);
+            }
+        }
+    }
+    input{
+        display: none;
+        opacity: 0;
+        &:checked + .wpcf7-list-item-label::after{
+            opacity: 1;
+        }
+    }
+}
+
 .c-radio{
     width: 100%;
     gap: 10px;
@@ -231,6 +324,75 @@
         }
     }
 }
+
+.wpcf7-radio{
+    display: grid;
+    grid-gap: 10px 15px;
+    grid-template-columns: 1fr;
+    @include mq(md) {
+        grid-gap: 15px 20px;
+        grid-template-columns: 1fr 1fr ;
+    }
+    .wpcf7-list-item{
+        margin: 0;
+    }
+    .wpcf7-list-item-label{
+        position: relative;
+        padding-left: 30px;
+        font-size: rem(14);
+        line-height: 1.6;
+        cursor: pointer;
+        display: block;
+        @include mq(md) {
+            padding-left: 36px;
+            font-size: rem(16);
+        }
+        &::before{
+            content: "";
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border: 2px solid var(--gray);
+            border-radius: 100px;
+            position: absolute;
+            left: 0;
+            top: 0.1em;
+            z-index: 0;
+            @include mq(md) {
+                width: 26px;
+                height: 26px;
+            }
+        }
+        &::after{
+            content: "";
+            width: 10px;
+            height: 10px;
+            aspect-ratio: 1/1;
+            background-color: var(--gray);
+            border-radius: 100px;
+            position: absolute;
+            left: 6px;
+            top: 7px;
+            opacity: 0;
+            transition: 0.5s;
+            @include mq(md) {
+                left: 7px;
+                top: 9px;
+                width: 12px;
+                height: 12px;
+            }
+        }
+        
+    }
+    input{
+        display: none;
+        opacity: 0;
+        &:checked + .wpcf7-list-item-label::after{
+            opacity: 1;
+        }
+    }
+}
+
 .c-textarea{
     font-size: rem(14);
     font-family: $font-family-base;
@@ -265,7 +427,8 @@
 .c-form{
     max-width: 100%;
     margin: 0 auto;
-    
+    position: relative;
+
     &__checkboxs{
         display: grid;
         grid-gap: 10px 15px;
@@ -438,7 +601,7 @@
         @include mq(md) {
             padding-top: 49px;
         }
-        button{
+        button,input{
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -465,6 +628,13 @@
                 position: relative;
             }
         }
+    }
+    .wpcf7-spinner{
+        position: absolute;
+        margin: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -100px;
     }
 }
 .p-contact {

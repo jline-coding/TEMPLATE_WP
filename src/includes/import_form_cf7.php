@@ -326,16 +326,16 @@ function ajax_handle_cf7_template_import() {
 
     if (!function_exists('cf7_get_title_for_node')) {
         function cf7_get_title_for_node($node, $xpath) {
-            // Tự động tìm thẻ wpf-title gần nhất phía trước field này (bất kể cấp bậc HTML)
+            // Automatically find the closest preceding wpf-title tag (regardless of HTML hierarchy)
             $title_node = $xpath->query('(ancestor::*[contains(concat(" ", normalize-space(@class), " "), " wpf-title ")] | preceding::*[contains(concat(" ", normalize-space(@class), " "), " wpf-title ")])[last()]', $node)->item(0);
             
             if ($title_node) {
                 $clone = $title_node->cloneNode(true);
-                // Xoá các thẻ con (như span required) để chỉ lấy text text thuần tuý
+                // Remove child nodes (like span required) to get pure text only
                 foreach ($xpath->query('.//*', $clone) as $child) {
                     $child->parentNode->removeChild($child);
                 }
-                // Lọc bỏ khoảng trắng thừa
+                // Remove extra whitespace
                 return trim(preg_replace('/\s+/', ' ', $clone->textContent));
             }
             return '';
@@ -366,6 +366,8 @@ function ajax_handle_cf7_template_import() {
         $required = $input->getAttribute('required') === 'required' ? '*' : '';
         $class = $input->getAttribute('class');
         $class_str = $class ? " class:$class" : "";
+        $id = $input->getAttribute('id');
+        $id_str = $id ? " id:$id" : "";
         $placeholder = $input->getAttribute('placeholder');
         $placeholder_str = $placeholder ? " placeholder \"$placeholder\"" : "";
         
@@ -375,7 +377,7 @@ function ajax_handle_cf7_template_import() {
         if (empty($email_field_name) && ($type === 'email' || strpos(strtolower($name), 'mail') !== false || strpos(strtolower($name), 'email') !== false)) {
             $email_field_name = $name;
             if ($tag_type === 'text') {
-                $tag_type = 'email'; // Tự động nâng cấp lên thẻ email của CF7 để có validate chuẩn
+                $tag_type = 'email'; // Automatically upgrade to CF7 email tag for standard validation
             }
         }
         
@@ -390,7 +392,7 @@ function ajax_handle_cf7_template_import() {
         $min_str = $min !== '' ? " min:$min" : "";
         $max_str = $max !== '' ? " max:$max" : "";
         
-        $tag = "[$tag_type$required $name$class_str$min_str$max_str$placeholder_str]";
+        $tag = "[$tag_type$required $name$id_str$class_str$min_str$max_str$placeholder_str]";
         
         $title = cf7_get_title_for_node($input, $xpath);
         if ($title) $fields[$name] = $title;
@@ -406,12 +408,14 @@ function ajax_handle_cf7_template_import() {
         if (!$name) continue;
         $required = $textarea->getAttribute('required') === 'required' ? '*' : '';
         $class = $textarea->getAttribute('class');
+        $id = $textarea->getAttribute('id');
         $placeholder = $textarea->getAttribute('placeholder');
         
         $class_str = $class ? " class:$class" : "";
+        $id_str = $id ? " id:$id" : "";
         $placeholder_str = $placeholder ? " placeholder \"$placeholder\"" : "";
         
-        $tag = "[textarea$required $name$class_str$placeholder_str]";
+        $tag = "[textarea$required $name$id_str$class_str$placeholder_str]";
         
         $title = cf7_get_title_for_node($textarea, $xpath);
         if ($title) $fields[$name] = $title;
@@ -427,6 +431,7 @@ function ajax_handle_cf7_template_import() {
         if (!$name) continue;
         $required = $select->getAttribute('required') === 'required' ? '*' : '';
         $class = $select->getAttribute('class');
+        $id = $select->getAttribute('id');
         
         $options = array();
         $first_as_label = false;
@@ -443,7 +448,8 @@ function ajax_handle_cf7_template_import() {
         }
         
         $class_str = $class ? " class:$class" : "";
-        $tag = "[select$required $name$class_str" . ($first_as_label ? " first_as_label" : "") . " " . implode(" ", $options) . "]";
+        $id_str = $id ? " id:$id" : "";
+        $tag = "[select$required $name$id_str$class_str" . ($first_as_label ? " first_as_label" : "") . " " . implode(" ", $options) . "]";
         
         $title = cf7_get_title_for_node($select, $xpath);
         if ($title) $fields[$name] = $title;
@@ -477,7 +483,7 @@ function ajax_handle_cf7_template_import() {
             $inputs_array[] = $inp;
         }
 
-        // Tự động tìm thẻ cha chung gần nhất (Lowest Common Ancestor - LCA) chứa tất cả các input này
+        // Automatically find the Lowest Common Ancestor (LCA) containing all these inputs
         $lca = $first_input->parentNode;
         while ($lca && $lca->nodeName != 'body') {
             $contains_all = true;
@@ -515,13 +521,15 @@ function ajax_handle_cf7_template_import() {
             }
         }
         
+        $id = $first_input->getAttribute('id');
+        $id_str = $id ? " id:$id" : "";
         $options_str = implode(" ", $options);
-        $tag = ($type == 'checkbox') ? "[checkbox$required $name use_label_element $options_str]" : "[radio $name use_label_element default:1 $options_str]";
+        $tag = ($type == 'checkbox') ? "[checkbox$required $name$id_str use_label_element $options_str]" : "[radio $name$id_str use_label_element default:1 $options_str]";
         
         $title = cf7_get_title_for_node($first_input, $xpath);
         if ($title) $fields[$name] = $title;
         
-        // Xoá tất cả các node bọc các input còn lại (từ input thứ 2 trở đi)
+        // Remove all wrapper nodes of the remaining inputs (from the 2nd input onwards)
         $nodes_to_remove = array();
         for ($i = 1; $i < count($inputs_array); $i++) {
             $node = $inputs_array[$i];
@@ -534,7 +542,7 @@ function ajax_handle_cf7_template_import() {
         }
         
         foreach ($nodes_to_remove as $node) {
-            // Xoá khoảng trắng (dấu xuống dòng, tab) thừa trước node để không bị thủng lỗ dòng trống
+            // Remove extra whitespace (newlines, tabs) before the node to prevent blank lines
             $prev = $node->previousSibling;
             if ($prev && $prev->nodeType === XML_TEXT_NODE && trim($prev->textContent) === '') {
                 $prev->parentNode->removeChild($prev);
@@ -542,7 +550,7 @@ function ajax_handle_cf7_template_import() {
             $node->parentNode->removeChild($node);
         }
         
-        // Thay thế node bọc input đầu tiên bằng shortcode
+        // Replace the first input's wrapper node with shortcode
         $first_node = $first_input;
         while ($first_node->parentNode && $first_node->parentNode !== $lca && $first_node->parentNode->nodeName !== 'body') {
             $first_node = $first_node->parentNode;
@@ -568,8 +576,10 @@ function ajax_handle_cf7_template_import() {
         $filetypes = str_replace(array('.', ','), array('', '|'), $accept);
         $class = $file->getAttribute('class');
         $class_str = $class ? " class:$class" : "";
+        $id = $file->getAttribute('id');
+        $id_str = $id ? " id:$id" : "";
         
-        $tag = "[file$required $name limit:10mb filetypes:$filetypes$class_str]";
+        $tag = "[file$required $name$id_str limit:10mb filetypes:$filetypes$class_str]";
         
         $title = cf7_get_title_for_node($file, $xpath);
         if ($title) $fields[$name] = $title;
@@ -595,7 +605,9 @@ function ajax_handle_cf7_template_import() {
         }
         $class = $input->getAttribute('class');
         $class_str = $class ? " class:$class" : "";
-        $tag = "[acceptance $name$class_str] $text [/acceptance]";
+        $id = $input->getAttribute('id');
+        $id_str = $id ? " id:$id" : "";
+        $tag = "[acceptance $name$id_str$class_str] $text [/acceptance]";
         
         $title = cf7_get_title_for_node($input, $xpath);
         if ($title) $fields[$name] = $title;
@@ -613,18 +625,37 @@ function ajax_handle_cf7_template_import() {
         }
     }
 
+    // G. Process Submit Button
+    $submits = $xpath->query('//input[@type="submit"] | //button[@type="submit"]');
+    foreach ($submits as $submit) {
+        $class = $submit->getAttribute('class');
+        $class_str = $class ? " class:$class" : "";
+        $id = $submit->getAttribute('id');
+        $id_str = $id ? " id:$id" : "";
+        
+        if (strtolower($submit->nodeName) === 'input') {
+            $text = trim($submit->getAttribute('value'));
+        } else {
+            $clone = $submit->cloneNode(true);
+            foreach ($xpath->query('.//*', $clone) as $child) {
+                $child->parentNode->removeChild($child);
+            }
+            $text = trim(preg_replace('/\s+/', ' ', $clone->textContent));
+        }
+        
+        $text_str = $text ? " \"$text\"" : "";
+        $tag = "[submit$id_str$class_str$text_str]";
+        
+        $textNode = $dom->createTextNode($tag);
+        $submit->parentNode->replaceChild($textNode, $submit);
+    }
+
     // 4. Generate final form HTML code
     $form_html = $dom->saveHTML();
     $form_html = str_replace(array('<?xml encoding="utf-8" ?>', '<body>', '</body>'), '', $form_html);
     $form_html = html_entity_decode($form_html, ENT_QUOTES, 'UTF-8');
     $form_html = str_replace(array('%5B', '%5D'), array('[', ']'), $form_html); // Fix saveHTML encode error
     $form_html = trim($form_html);
-
-    // PRESERVE HTML: Do not replace <button type="submit"> with shortcode [submit]
-    // Because shortcode [submit] does not support inner HTML tags (like <i> tags containing icons, <span>...).
-    // CF7 form still works perfectly with native <button type="submit"> HTML tag.
-    // $submitBtnPattern = '/<button[^>]*type="submit"[^>]*>(.*?)<\/button>/i';
-    // $form_html = preg_replace($submitBtnPattern, '[submit "$1"]', $form_html);
 
     // 5. Auto generate Mail 1 and Mail 2 content
     $mail_body_content = "";
