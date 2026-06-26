@@ -1,4 +1,9 @@
 <?php
+// Cookie がない場合はフォームページへリダイレクト
+if (empty($_COOKIE['contact_sent'])) {
+    wp_redirect(home_url('/contactform7/'));
+    exit;
+}
 /* Template Name: Thanks Contact form 7 */ 
 get_header();
 ?>

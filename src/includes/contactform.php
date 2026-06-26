@@ -1,6 +1,6 @@
 <?php 
 
-// Contact Form 7の自動pタグ無効
+// Disable Contact Form 7 automatic paragraph tags
 add_filter('wpcf7_autop_or_not', 'wpcf7_autop_return_false');
 function wpcf7_autop_return_false() {
   return false;
@@ -13,6 +13,10 @@ function custom_wpcf7_validate_furigana($result, $tag)
     $name  = $tag->name;
     $value = isset($_POST[$name]) ? trim(wp_unslash(strtr((string) $_POST[$name], "\n", " "))) : "";
     if ($name === "your-name-kana") {
+        // Skip validation if empty — field is not required
+        if (empty($value)) {
+            return $result;
+        }
         if (!preg_match('/^[ぁ-ゞァ-ヾ 　]*?[ぁ-ゞァ-ヾ]+?[ぁ-ゞァ-ヾ 　]*?$/u', $value)) {
             $result->invalidate($tag, "ひらがなかカタカナで入力してください。");
         }
@@ -23,7 +27,7 @@ function custom_wpcf7_validate_furigana($result, $tag)
 add_filter('wpcf7_validate_text*', 'custom_wpcf7_validate_furigana', 11, 2);
 add_filter('wpcf7_validate_text', 'custom_wpcf7_validate_furigana', 11, 2);
 
-// メールアドレス確認 — your-email と your-email-re が一致しているか検証
+// Email confirmation — verify that your-email and your-email-re match
 add_filter('wpcf7_validate_email*', 'validate_email_confirm', 20, 2);
 add_filter('wpcf7_validate_email', 'validate_email_confirm', 20, 2);
 function validate_email_confirm($result, $tag) {
@@ -33,9 +37,8 @@ function validate_email_confirm($result, $tag) {
 
   $email    = isset($_POST['your-email'])    ? trim(wp_unslash($_POST['your-email']))    : '';
   $email_re = isset($_POST['your-email-re']) ? trim(wp_unslash($_POST['your-email-re'])) : '';
-
   if ($email_re === '') {
-    return $result; // 必須チェックはCF7側に任せる
+    return $result; // Leave required validation to CF7
   }
 
   if ($email !== $email_re) {
@@ -57,14 +60,9 @@ function custom_cf7_redirect_and_cookie() {
         var redirectUrl = '';
         var cookieName = '';
 
-        if (/\/contact\//.test(currentPath) && !/\/thanks/.test(currentPath)) {
-            redirectUrl = '<?php echo esc_url($home); ?>/contact/thanks/';
+        if (/\/contactform7\//.test(currentPath) && !/\/thanks/.test(currentPath)) {
+            redirectUrl = '<?php echo esc_url($home); ?>/contactform7/thanks/';
             cookieName = 'contact_sent';
-        }
-
-        if (/\/order-form\//.test(currentPath) && !/\/thanks/.test(currentPath)) {
-            redirectUrl = '<?php echo esc_url($home); ?>/order-form/thanks/';
-            cookieName = 'form_order_sent';
         }
 
         if (redirectUrl !== '') {

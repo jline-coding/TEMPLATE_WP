@@ -1,5 +1,20 @@
 <?php
 
+// Helper function to format multiple classes for CF7
+if (!function_exists('cf7_format_class')) {
+    function cf7_format_class($class_attr) {
+        if (empty($class_attr)) return '';
+        $classes = explode(' ', preg_replace('/\s+/', ' ', trim($class_attr)));
+        $result = '';
+        foreach ($classes as $c) {
+            if (!empty($c)) {
+                $result .= " class:$c";
+            }
+        }
+        return $result;
+    }
+}
+
 // Add toggle option to Screen Options
 add_filter('screen_settings', 'add_cf7_importer_screen_options', 10, 2);
 function add_cf7_importer_screen_options($status, $args) {
@@ -365,7 +380,7 @@ function ajax_handle_cf7_template_import() {
 
         $required = $input->getAttribute('required') === 'required' ? '*' : '';
         $class = $input->getAttribute('class');
-        $class_str = $class ? " class:$class" : "";
+        $class_str = cf7_format_class($class);
         $id = $input->getAttribute('id');
         $id_str = $id ? " id:$id" : "";
         $placeholder = $input->getAttribute('placeholder');
@@ -411,7 +426,7 @@ function ajax_handle_cf7_template_import() {
         $id = $textarea->getAttribute('id');
         $placeholder = $textarea->getAttribute('placeholder');
         
-        $class_str = $class ? " class:$class" : "";
+        $class_str = cf7_format_class($class);
         $id_str = $id ? " id:$id" : "";
         $placeholder_str = $placeholder ? " placeholder \"$placeholder\"" : "";
         
@@ -447,7 +462,7 @@ function ajax_handle_cf7_template_import() {
             $first = false;
         }
         
-        $class_str = $class ? " class:$class" : "";
+        $class_str = cf7_format_class($class);
         $id_str = $id ? " id:$id" : "";
         $tag = "[select$required $name$id_str$class_str" . ($first_as_label ? " first_as_label" : "") . " " . implode(" ", $options) . "]";
         
@@ -575,7 +590,7 @@ function ajax_handle_cf7_template_import() {
         $accept = $file->getAttribute('accept');
         $filetypes = str_replace(array('.', ','), array('', '|'), $accept);
         $class = $file->getAttribute('class');
-        $class_str = $class ? " class:$class" : "";
+        $class_str = cf7_format_class($class);
         $id = $file->getAttribute('id');
         $id_str = $id ? " id:$id" : "";
         
@@ -604,7 +619,7 @@ function ajax_handle_cf7_template_import() {
             $text = trim($clone->textContent);
         }
         $class = $input->getAttribute('class');
-        $class_str = $class ? " class:$class" : "";
+        $class_str = cf7_format_class($class);
         $id = $input->getAttribute('id');
         $id_str = $id ? " id:$id" : "";
         $tag = "[acceptance $name$id_str$class_str] $text [/acceptance]";
@@ -629,7 +644,7 @@ function ajax_handle_cf7_template_import() {
     $submits = $xpath->query('//input[@type="submit"] | //button[@type="submit"]');
     foreach ($submits as $submit) {
         $class = $submit->getAttribute('class');
-        $class_str = $class ? " class:$class" : "";
+        $class_str = cf7_format_class($class);
         $id = $submit->getAttribute('id');
         $id_str = $id ? " id:$id" : "";
         

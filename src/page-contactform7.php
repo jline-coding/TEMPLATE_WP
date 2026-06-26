@@ -107,7 +107,7 @@ get_header();
                             <span class="c-form__head c-txt16 u-fw--500 wpf-title">メールアドレス（確認）<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
-                            <input class="c-input" type="email" name="confirm_email" placeholder="ダミーテキストが入ります。" required="required">
+                            <input class="c-input" type="email" name="your-email-re" placeholder="ダミーテキストが入ります。" required="required">
                         </div>
                     </div>
                     <div class="c-form__item">
