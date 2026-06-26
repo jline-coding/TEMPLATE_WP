@@ -11,11 +11,11 @@ function written_enqueue_block_variations() {
         'written-enqueue-block-variations',
         get_theme_file_uri( '/assets/js/blockeditor-variations.js' ),
         array( 'wp-rich-text','wp-blocks', 'wp-dom-ready', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-primitives', 'lodash' ),
-        filemtime( $script_path ), // Tự động xoá cache khi file thay đổi
-        true // Load in footer (Tối ưu hiệu suất)
+        filemtime( $script_path ), // Automatically clear cache when file changes
+        true // Load in footer (Optimize performance)
     );
     
-    // Ngôn ngữ cho JS theo cấu hình của Admin hiện tại
+    // Language for JS based on current Admin config
     $locale = get_user_locale();
     if ( strpos( $locale, 'ja' ) === 0 ) {
         $i18n = array(
@@ -66,20 +66,20 @@ add_action( 'after_setup_theme', function () {
     }
 });
 
-// Load block styles ở Front-end
+// Load block styles on Front-end
 add_action( 'wp_enqueue_scripts', function () {
     $css_path = get_theme_file_path( '/assets/css/blockeditor.css' );
     if ( ! file_exists( $css_path ) ) return;
 
     wp_enqueue_style(
-        'mytheme-block-style', // Đổi tên handle rõ ràng hơn
+        'mytheme-block-style', // Rename handle for clarity
         get_theme_file_uri( '/assets/css/blockeditor.css' ),
         array( 'wp-block-library' ),
-        filemtime( $css_path ) // Tự động xoá cache
+        filemtime( $css_path ) // Automatically clear cache
     );
 }, 20 );
 
-// Đăng ký Block Category mới
+// Register new Block Category
 add_filter( 'block_categories_all', function( $categories ) {
     $locale = get_user_locale();
     $title = ( strpos( $locale, 'ja' ) === 0 ) ? 'ブロックカスタム' : ( ( strpos( $locale, 'vi' ) === 0 ) ? 'Khối Tùy Chỉnh' : 'Custom Blocks' );
@@ -96,7 +96,7 @@ add_filter( 'block_categories_all', function( $categories ) {
     );
 } );
 
-// Đăng ký Block Styles (Class tuỳ chỉnh)
+// Register Block Styles (Custom classes)
 add_action('init', function () {
     $locale = get_user_locale();
     $dot_label = ( strpos( $locale, 'ja' ) === 0 ) ? 'ドット' : ( ( strpos( $locale, 'vi' ) === 0 ) ? 'Dấu chấm' : 'Dot' );

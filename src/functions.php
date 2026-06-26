@@ -2,6 +2,7 @@
 require_once( get_template_directory() . '/includes/editor-block-theme.php' );
 require_once( get_template_directory() . '/includes/styles-scripts-all.php' );
 require_once( get_template_directory() . '/includes/contactform.php' );
+require_once( get_template_directory() . '/includes/import_form_cf7.php' );
 require_once( get_template_directory() . '/includes/shortcode.php' );
 require_once( get_template_directory() . '/includes/custom_mv.php' );
 require_once( get_template_directory() . '/includes/custom_bread.php' );

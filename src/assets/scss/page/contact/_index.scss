@@ -29,6 +29,50 @@
         }
     }
 }
+.c-select{
+    width: 100%;
+    border: 1px solid var(--gray);
+    background-color: var(--white);
+    position: relative;
+    
+    select{
+        font-size: rem(14);
+        font-family: $font-family-base;
+        font-weight: 400;
+        letter-spacing: 0.0em;
+        line-height: 1.6;
+        display: block;
+        width: 100% !important;
+        padding: 1em 2em 1em 1em;
+        outline: 0;
+        @include mq(md) {
+            font-size: rem(16);
+        }
+        &::placeholder{
+            display: block;
+            font-family: $font-family-base;
+            font-weight: 400;
+            letter-spacing: 0.0em;
+            line-height: 1.6;
+            font-size: rem(14);
+            opacity: 0.5;
+            @include mq(md) {
+                font-size: rem(16);
+            }
+        }
+    }
+    &::after{
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-left: 2px solid var(--gray);
+        border-bottom: 2px solid var(--gray);
+        position: absolute;
+        right: 1em;
+        top: 50%;
+        transform: translateY(-50%) rotate(-45deg);
+    }
+}
 .c-file{
     font-size: rem(14);
     border: 1px solid var(--gray);

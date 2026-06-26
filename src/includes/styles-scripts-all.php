@@ -14,7 +14,7 @@ add_action( 'wp_enqueue_scripts', function() {
         wp_enqueue_style( 'top-css', $themeUrl . '/assets/css/top.css', array(), filemtime($themeDir . '/assets/css/top.css') );
     }
 
-    if(is_page('mailformpro')){
+    if(is_page(['mailformpro','contactform7'])){
         wp_enqueue_style( 'jquery-ui-css', $themeUrl . '/assets/vendor/jquery/jquery-ui.min.css', array(), '1.0.1' );
         wp_enqueue_style( 'contact-css', $themeUrl . '/assets/css/contact.css', array(), filemtime($themeDir . '/assets/css/contact.css') );
     }
@@ -58,7 +58,7 @@ add_action( 'wp_enqueue_scripts', function() {
         ));
     }
 
-    if(is_page('mailformpro')){
+    if(is_page(['mailformpro','contactform7'])){
         wp_enqueue_script( 'jquery-ui-js', $themeUrl . '/assets/vendor/jquery/jquery-ui.min.js', array( 'jquery' ), '1.0', array(
             'strategy' => 'defer',
         ));
