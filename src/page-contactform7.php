@@ -172,6 +172,7 @@ get_header();
                             </div>
                         </div>
                     </div>
+                    
                 </div>
                 <div class="c-form-pravicy">
                     <h2 class="c-form-pravicy__title">ダミーテキストが入ります。ダミーテキストが入ります。</h2>
