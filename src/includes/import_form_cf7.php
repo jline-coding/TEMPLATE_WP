@@ -683,7 +683,7 @@ function ajax_handle_cf7_template_import() {
     $mail_1_body = "以下の内容でお問い合わせがありました。\n\n━━━━━━　お問い合わせ内容　━━━━━━\n" . $mail_body_content . "\n━━━━━━━━━━━━━━━━━━";
 
     $customer_name_tag = !empty($name_field_name) ? "[$name_field_name]" : "[your-name]";
-    $mail_2_body = "{$customer_name_tag} 様\n\nこの度はお問い合せ頂き誠にありがとうございました。\n改めて担当者よりご連絡をさせていただきます。\n\n\n━━━━━━　お問い合わせ内容　━━━━━━\n" . $mail_body_content . "\n━━━━━━━━━━━━━━━━━━\n\n頂戴いたしましたお問い合わせにつきましては、内容を確認の上、\n後ほどご回答いたします。\nなお、お問い合わせの内容によっては、ご回答まで数日かかる場合\nやご回答いたしかねる場合がございます。\n恐れ入りますが、予めご了承くださいますようお願いいたします。\n\n\n———————————————————————\n\n*company name\n*company address and tell number\n\n———————————————————————";
+    $mail_2_body = "{$customer_name_tag} 様\n\nこの度はお問い合せ頂き誠にありがとうございました。\n改めて担当者よりご連絡をさせていただきます。\n\n\n━━━━━━　お問い合わせ内容　━━━━━━\n" . $mail_body_content . "\n━━━━━━━━━━━━━━━━━━\n\この度は、お問い合わせいただき誠にありがとうございます。\n\お問い合わせ内容を確認のうえ、担当者より改めてご連絡いたします。\n\なお、内容によりご回答までに数日お時間をいただく場合や、\nご回答いたしかねる場合がございます。\nあらかじめご了承くださいますようお願いいたします。\n\n\n———————————————————————\n\n*company name\n*company address and tell number\n\n———————————————————————";
 
     // 6. Create new form
     $post_args = array(
@@ -704,7 +704,7 @@ function ajax_handle_cf7_template_import() {
         // Mail 1
         update_post_meta($post_id, '_mail', array(
             'active' => true,
-            'subject' => 'お問い合わせフォームから',
+            'subject' => '【自動送信】お問い合わせフォームよりお問い合わせがありました',
             'sender' => '*company name <kensyo@j-line.co.jp>',
             'recipient' => 'kensyo@j-line.co.jp',
             'body' => $mail_1_body,
@@ -717,7 +717,7 @@ function ajax_handle_cf7_template_import() {
         // Mail 2
         update_post_meta($post_id, '_mail_2', array(
             'active' => true,
-            'subject' => 'お問い合わせを受け付けました｜*company name',
+            'subject' => '【自動返信】お問い合わせを受け付けました｜*company name',
             'sender' => '*company name <kensyo@j-line.co.jp>',
             'recipient' => $recipient_str,
             'body' => $mail_2_body,

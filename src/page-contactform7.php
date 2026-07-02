@@ -19,6 +19,14 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
+                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">フリガナ<span class="c-form__rq">必須</span></span>
+                        </div>
+                        <div class="c-form__content">
+                            <input class="c-input" type="text" name="your-name-kana" placeholder="ダミーテキストが入ります。" required="required">
+                        </div>
+                    </div>
+                    <div class="c-form__item">
+                        <div class="c-form__ttl">
                             <span class="c-form__head c-txt16 u-fw--500 wpf-title">都道府県<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
@@ -34,14 +42,6 @@ get_header();
                                     <option value="ダミーテキストが入ります7。">ダミーテキストが入ります7。</option>
                                 </select>
                             </div>
-                        </div>
-                    </div>
-                    <div class="c-form__item">
-                        <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">フリガナ<span class="c-form__rq">必須</span></span>
-                        </div>
-                        <div class="c-form__content">
-                            <input class="c-input" type="text" name="your-name-kana" placeholder="ダミーテキストが入ります。" required="required">
                         </div>
                     </div>
                     <div class="c-form__item">
@@ -91,7 +91,7 @@ get_header();
                             <span class="c-form__head c-txt16 u-fw--500 wpf-title">生年月日</span>
                         </div>
                         <div class="c-form__content">
-                            <input class="c-input js-datepicker" type="text" name="your-birthday" aria-invalid="false" placeholder="ダミーテキストが入ります。">
+                            <input class="c-input" type="text" name="your-birthday" aria-invalid="false" placeholder="ダミーテキストが入ります。">
                         </div>
                     </div>
                     <div class="c-form__item">
@@ -170,6 +170,7 @@ get_header();
                                 </label>
                                 <span class="c-file__clear js-file-clear" style="display: none;">×</span>
                             </div>
+                            <p class="c-form__txt16 c-txt16">※アップロード可能なファイル形式:.jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx</p>
                         </div>
                     </div>
                     
