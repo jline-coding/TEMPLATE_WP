@@ -6,7 +6,7 @@ function wpcf7_autop_return_false() {
   return false;
 }
 
-//Validate furigana (katakana + hiragana - フリガナ + ふりがな)
+// Validate furigana (katakana + hiragana)
 function custom_wpcf7_validate_furigana($result, $tag)
 {
     $tag   = new WPCF7_Shortcode($tag);

@@ -10,9 +10,9 @@
 
     /**
      * =========================================================================
-     * CUSTOM BLOCK: original/table (Nâng cao giống Flexible Table)
-     * Hệ thống Grid Math giúp tính toán Merge / Split ô tự động
-     * Hỗ trợ Chọn Nhiều Ô (Multi-Select) để chỉnh Style chung
+     * CUSTOM BLOCK: original/table (Advanced like Flexible Table)
+     * Grid Math system for automatic Cell Merge / Split calculations
+     * Supports Multi-Select for bulk styling
      * =========================================================================
      */
     const { useState, Fragment, createElement: el } = wp.element;
@@ -50,7 +50,7 @@
             const { attributes, setAttributes } = props;
             const [selectedCells, setSelectedCells] = useState([]); // Array of { r, c }
 
-            // Lấy ma trận lưới (Grid Math) để biết vị trí thực tế của từng ô
+            // Get the grid matrix (Grid Math) to know the actual position of each cell
             const buildGrid = (rows) => {
                 const grid = [];
                 rows.forEach((row, r) => {
@@ -97,7 +97,7 @@
                 const newRows = JSON.parse(JSON.stringify(attributes.rows));
                 selectedCells.forEach(sel => {
                     if (!newRows[sel.r].cells[sel.c].style) newRows[sel.r].cells[sel.c].style = {};
-                    // Loại bỏ thuộc tính nếu giá trị là undefined hoặc rỗng (để dọn rác CSS)
+                    // Remove property if value is undefined or empty (to clean up CSS)
                     Object.keys(styleProps).forEach(key => {
                         if (styleProps[key] === undefined || styleProps[key] === '') {
                             delete newRows[sel.r].cells[sel.c].style[key];
@@ -109,7 +109,7 @@
                 setAttributes({ rows: newRows });
             };
 
-            // ================== THAO TÁC GỘP & TÁCH Ô ==================
+            // ================== MERGE & SPLIT OPERATIONS ==================
             const mergeRight = () => {
                 if (selectedCells.length !== 1) return;
                 const { r, c } = selectedCells[0];
@@ -239,7 +239,7 @@
                 setSelectedCells([{ r: topLeft.r, c: topLeft.c }]);
             };
 
-            // ================== THÊM / XÓA HÀNG CỘT ==================
+            // ================== ADD / REMOVE ROWS & COLUMNS ==================
             const addRow = (offset) => {
                 if (selectedCells.length !== 1) return;
                 const { r } = selectedCells[0];
@@ -315,7 +315,7 @@
                 setSelectedCells([]);
             };
 
-            // ================== CHỌN NHIỀU Ô NHANH ==================
+            // ================== QUICK MULTI-SELECT ==================
             const selectAll = () => {
                 const all = [];
                 attributes.rows.forEach((row, r) => {
@@ -380,7 +380,7 @@
             let isMerged = false;
             let activeTag = 'td';
             if (selectedCells.length > 0) {
-                // Lấy style của ô đầu tiên trong danh sách đang chọn làm mẫu hiển thị
+                // Get the style of the first cell in the selection as the display template
                 const firstCell = attributes.rows[selectedCells[0].r].cells[selectedCells[0].c];
                 activeStyle = firstCell.style || {};
                 activeTag = firstCell.tag || 'td';

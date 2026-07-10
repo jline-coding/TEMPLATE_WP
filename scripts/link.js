@@ -1,11 +1,11 @@
 /**
- * link.js — Tự động tạo Symbolic Link vào thư mục web server → public/
+ * link.js — Automatically create Symbolic Link to web server directory → public/
  *
  * Cross-platform: Windows (Laragon/XAMPP), macOS (MAMP/Valet), Linux (Apache)
  *
- * Cách hoạt động:
- *   Windows: mklink /D  D:\laragon\www\[tên_project]  →  [project_root]\public
- *   macOS/Linux: ln -s  [project_root]/public  /var/www/html/[tên_project]
+ * How it works:
+ *   Windows: mklink /D  D:\laragon\www\[project_name]  →  [project_root]\public
+ *   macOS/Linux: ln -s  [project_root]/public  /var/www/html/[project_name]
  */
 
 import { resolve, dirname, basename } from 'path';
@@ -30,7 +30,7 @@ function resolveSourceFolder() {
 const SOURCE_FOLDER_NAME = resolveSourceFolder();
 const PUBLIC_DIR = resolve(ROOT, SOURCE_FOLDER_NAME);
 
-// Đọc project_dir từ deploy-config.json ưu tiên để thiết lập thư mục web root local
+// Read project_dir from deploy-config.json to set local web root
 function resolveProjectDir() {
   try {
     const config = JSON.parse(readFileSync(resolve(ROOT, 'deploy-config.json'), 'utf8'));
@@ -45,11 +45,11 @@ function resolveProjectDir() {
 const PROJECT_DIR = resolveProjectDir();
 const IS_WIN = platform() === 'win32';
 
-// Tải file .env nếu có
+// Load .env file if it exists
 dotenv.config({ path: resolve(ROOT, '.env') });
 
 // ─────────────────────────────────────────────
-// Detect thư mục web server: --www= arg > WEB_ROOT env > auto-detect
+// Detect web server directory: --www= arg > WEB_ROOT env > auto-detect
 // ─────────────────────────────────────────────
 function detectServerWww() {
   // --www= arg ưu tiên cao nhất
@@ -91,7 +91,7 @@ const PROJECT_DOMAIN = detectProjectDomain();
 const LINK_PATH = resolve(SERVER_WWW, PROJECT_DIR);
 
 // ─────────────────────────────────────────────
-// Kiểm tra quyền ghi vào thư mục server (macOS/Linux)
+// Check write permissions for server directory (macOS/Linux)
 // ─────────────────────────────────────────────
 function hasWriteAccess() {
   try {
@@ -105,7 +105,7 @@ function hasWriteAccess() {
 }
 
 // ─────────────────────────────────────────────
-// macOS/Linux: Tự nâng quyền qua sudo
+// macOS/Linux: Auto elevate via sudo
 // ─────────────────────────────────────────────
 function elevateUnix() {
   console.log('⚠ Không có quyền ghi. Đang tự nâng quyền qua sudo...\n');
@@ -141,13 +141,13 @@ console.log(`  Source       : ${PUBLIC_DIR}`);
 console.log(`  Link         : ${LINK_PATH}`);
 console.log(`  Domain       : ${PROJECT_DOMAIN}\n`);
 
-// Kiểm tra public/ tồn tại
+// Check if public/ exists
 if (!existsSync(PUBLIC_DIR)) {
   console.log(`⚠ Thư mục ${SOURCE_FOLDER_NAME}/ chưa tồn tại. Hãy chạy "npm run wp:download" trước.\n`);
   process.exit(1);
 }
 
-// Kiểm tra Server thư mục
+// Check server directory
 if (!existsSync(SERVER_WWW)) {
   console.error(`❌ Không tìm thấy thư mục Server: ${SERVER_WWW}`);
   if (!IS_WIN) {
@@ -157,7 +157,7 @@ if (!existsSync(SERVER_WWW)) {
   process.exit(1);
 }
 
-// Xóa symlink/junction cũ nếu có
+// Remove old symlink/junction if any
 try {
   const stats = lstatSync(LINK_PATH);
   console.log(`⚠ Đang xóa bản cũ: ${LINK_PATH}...`);
@@ -172,7 +172,7 @@ try {
 }
 
 // ─────────────────────────────────────────────
-// Tạo link
+// Create link
 // ─────────────────────────────────────────────
 if (IS_WIN) {
   // Windows: Dùng Junction (mklink /J) — KHÔNG cần quyền Admin

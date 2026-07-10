@@ -1,5 +1,5 @@
 <?php
-// Cookie がない場合はフォームページへリダイレクト
+// Redirect to form page if no cookie
 if (empty($_COOKIE['contact_sent'])) {
     wp_redirect(home_url('/contactform7/'));
     exit;

@@ -1,4 +1,10 @@
 <?php
+AssetManager::css([
+    'top'
+]);
+AssetManager::js([
+    'top'
+]);
 get_header();
 ?>
 <main class="p-top">

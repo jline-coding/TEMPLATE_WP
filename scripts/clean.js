@@ -8,7 +8,7 @@ import { existsSync, rmSync, readFileSync } from 'fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-// Đọc theme_name từ deploy-config.json (đồng bộ với build.js)
+// Read theme_name from deploy-config.json (sync with build.js)
 function resolveProjectName() {
   const defaultTheme = "original-theme";
   try {
@@ -19,7 +19,7 @@ function resolveProjectName() {
   } catch { /* fallback */ }
   return defaultTheme;
 }
-// Đọc source_folder từ deploy-config.json
+// Read source_folder from deploy-config.json
 function resolveSourceFolder() {
   try {
     const config = JSON.parse(readFileSync(resolve(ROOT, 'deploy-config.json'), 'utf8'));

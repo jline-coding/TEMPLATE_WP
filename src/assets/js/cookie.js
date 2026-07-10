@@ -1,6 +1,6 @@
 (function() {
     /**
-     * クッキー操作
+     * Cookie operations
      */
     var COOKIECTRL = {
       get: function(name) {
@@ -49,28 +49,28 @@
     };
 
     if (COOKIECTRL.get(COOKIE_NAME)) {
-      // GDPR表示なし
-      // GDPRを非表示にする
+      // No GDPR display
+      // Hide GDPR
       wrap.style.display = 'none';
     } else {
-      // GDPR表示あり
-      // body要素のclass属性値に「gdpr」を付加する
+      // GDPR display
+      // Add "gdpr" to body class
       var classes = getClassList();
       classes.push(GDPR);
       body.className = classes.join(' ');
 
-      // ボタンをクリックされた際の動作
+      // Action when button is clicked
       button.addEventListener('click', function() {
-        // body要素のclass属性値から「gdpr」を削除する
+        // Remove "gdpr" from body class
         var classes = getClassList();
         body.className = classes.filter(function(className) {
           return className !== GDPR;
         }).join(' ');
 
-        // クッキーにフラグをGDPR非表示フラグを立てる
+        // Set flag in cookie to hide GDPR
         COOKIECTRL.set(COOKIE_NAME, 'true', 365, '/');
 
-        // GDPRを非表示にする
+        // Hide GDPR
         wrap.style.display = 'none';
       });
       wrap.style.display = 'block';

@@ -82,7 +82,7 @@ async function downloadFile(url, dest, maxRetries = 3) {
                 throw new Error(`Failed to get '${url}' (${err.message}) after ${attempt} attempt(s)`);
             }
             const delay = attempt * 5;
-            console.log(`   ⚠️ Lần ${attempt} thất bại (${err.message}). Thử lại sau ${delay}s...`);
+            console.log(`   ⚠️ Attempt ${attempt} failed (${err.message}). Retrying in ${delay}s...`);
             await new Promise(r => setTimeout(r, delay * 1000));
         }
     }
@@ -132,10 +132,10 @@ async function main() {
                  const srcPath = join(innerWpDir, entry);
                  const destPath = join(PUBLIC_DIR, entry);
                  try {
-                     // Thử rename trước (nhanh nhất, cùng partition)
+                     // Try renaming first (fastest, same partition)
                      fs.renameSync(srcPath, destPath);
                  } catch {
-                     // Fallback: copy + delete (cross-partition safe, ví dụ Linux tmpfs)
+                     // Fallback: copy + delete (cross-partition safe, e.g. Linux tmpfs)
                      if (fs.statSync(srcPath).isDirectory()) {
                          fs.cpSync(srcPath, destPath, { recursive: true });
                      } else {
@@ -149,7 +149,7 @@ async function main() {
         rmSync(tempExtractDir, { recursive: true, force: true });
         rmSync(WP_ZIP_PATH, { force: true });
 
-        // Xóa các theme mặc định của WordPress
+        // Remove default WordPress themes
         const themesDir = join(PUBLIC_DIR, 'wp-content', 'themes');
         if (existsSync(themesDir)) {
             const entries = await import('fs').then(fs => fs.readdirSync(themesDir, { withFileTypes: true }));
@@ -161,7 +161,7 @@ async function main() {
                 }
             }
             if (deletedCount > 0) {
-                console.log(`   ✓ Đã vứt bỏ ${deletedCount} theme mặc định để dọn dẹp không gian.`);
+                console.log(`   ✓ Removed ${deletedCount} default themes to free up space.`);
             }
         }
 
