@@ -4,6 +4,28 @@
     });
 
     $(function() {
+
+        const el_select = $('.c-select');
+
+        el_select.on('click', function (e) {
+            console.log('sdfsdfds');
+            e.stopPropagation();
+            if($(this).hasClass('is-active')){
+                $(this).removeClass('is-active')
+            }else{
+                $(this).addClass('is-active')
+            }
+        });
+
+        $(document).on('click', function () {
+            const el_select = $('.c-select');
+            el_select.removeClass('is-active');
+        });
+
+        el_select.find('select').on('change', function () {
+            $(this).removeClass('is-active');
+        });
+
         var defaultText = '添付する';
 
         $('.js-file input[type="file"]').on('change', function() {
