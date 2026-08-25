@@ -1,0 +1,11 @@
+@use '../../../node_modules/sass-basis/src/css/core';
+
+.smf-form {
+	.smf-select-control {
+		@include core.select();
+	}
+}
+
+.smf-select-control__control {
+	color: inherit;
+}

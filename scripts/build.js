@@ -75,6 +75,8 @@ const SOURCE_FOLDER_NAME = resolveSourceFolder();
 const OUT_PUBLIC = resolve(ROOT, SOURCE_FOLDER_NAME);
 const OUT_THEME = resolve(OUT_PUBLIC, 'wp-content', 'themes', THEME_NAME);
 const OUT_ASSETS = resolve(OUT_THEME, 'assets');
+const PLUGINS_SRC = resolve(ROOT, 'plugins');
+const PLUGINS_DEST = resolve(OUT_PUBLIC, 'wp-content', 'plugins');
 
 // Source sub-directories (all inside src/)
 const SCSS_DIR = resolve(SRC_THEME, 'assets', 'scss');
@@ -356,7 +358,81 @@ function cleanStaleCopiedFiles() {
 }
 
 // ─────────────────────────────────────────────
-// 2. SCSS → CSS (with import cache & parallel compile)
+// 2. Plugin Copy (plugins/ → public/wp-content/plugins/)
+//    Chỉ quản lý plugin có trong thư mục plugins/ nguồn.
+//    Không ảnh hưởng plugin khác đã có sẵn trong output.
+// ─────────────────────────────────────────────
+function buildCopyPlugins(changedFile) {
+  if (!existsSync(PLUGINS_SRC)) return;
+  ensureDir(PLUGINS_DEST);
+
+  if (changedFile) {
+    // Single file update (watch mode)
+    const rel = relative(PLUGINS_SRC, changedFile);
+    const dest = resolve(PLUGINS_DEST, rel);
+    ensureDir(dirname(dest));
+    copyFileSync(changedFile, dest);
+    console.log(`[plugins] ${norm(rel)}`);
+    return;
+  }
+
+  // Full build: copy all plugin files (incremental — only newer)
+  const files = walkSync(PLUGINS_SRC);
+  let count = 0;
+  for (const file of files) {
+    const rel = relative(PLUGINS_SRC, file);
+    const dest = resolve(PLUGINS_DEST, rel);
+    if (isNewer(file, dest)) {
+      ensureDir(dirname(dest));
+      copyFileSync(file, dest);
+      count++;
+    }
+  }
+  if (count > 0) {
+    console.log(`[plugins] ✓ Copied ${count} plugin file(s)`);
+  } else {
+    console.log(`[plugins] ✓ All plugins up to date`);
+  }
+
+  // Clean stale plugin files (chỉ trong phạm vi plugin ta quản lý)
+  cleanStalePlugins(files);
+}
+
+/**
+ * Xóa file thừa trong output chỉ nếu file đó thuộc plugin
+ * mà ta đang quản lý (tồn tại trong plugins/ source).
+ * Không bao giờ xóa plugin do WP/user cài riêng.
+ */
+function cleanStalePlugins(srcFiles) {
+  if (!existsSync(PLUGINS_DEST) || !existsSync(PLUGINS_SRC)) return;
+
+  const allSrcFiles = srcFiles || walkSync(PLUGINS_SRC);
+  const srcRelFiles = new Set(
+    allSrcFiles.map(f => norm(relative(PLUGINS_SRC, f)))
+  );
+
+  // Chỉ quản lý các top-level entry có trong plugins/ source
+  const managedEntries = new Set(
+    readdirSync(PLUGINS_SRC).map(e => e)
+  );
+
+  const destFiles = walkSync(PLUGINS_DEST);
+  for (const f of destFiles) {
+    const rel = norm(relative(PLUGINS_DEST, f));
+    const topEntry = rel.split('/')[0];
+    // Chỉ xóa file thuộc plugin ta quản lý mà không còn trong source
+    if (managedEntries.has(topEntry) && !srcRelFiles.has(rel)) {
+      try {
+        unlinkSync(f);
+        console.log(`[plugins:clean] removed stale: ${rel}`);
+      } catch { /* ignore */ }
+    }
+  }
+  removeEmptyDirs(PLUGINS_DEST);
+}
+
+// ─────────────────────────────────────────────
+// 3. SCSS → CSS (with import cache & parallel compile)
 // ─────────────────────────────────────────────
 const postcssPlugins = [
   sortMediaQueries({ sort: 'mobile-first' }),
@@ -610,16 +686,19 @@ async function fullBuild() {
   // 1. Copy all non-compiled files
   buildCopyFiles();
 
-  // 2. Compile SCSS → CSS (parallel)
+  // 2. Copy plugins to public/wp-content/plugins/
+  buildCopyPlugins();
+
+  // 3. Compile SCSS → CSS (parallel)
   await buildScss();
 
-  // 3. Convert images JPG/PNG → WebP (parallel)
+  // 4. Convert images JPG/PNG → WebP (parallel)
   await buildImages();
 
-  // 4. Clean stale CSS
+  // 5. Clean stale CSS
   cleanStaleCss();
 
-  // 5. Remove scss source from output (don't deploy source files)
+  // 6. Remove scss source from output (don't deploy source files)
   const outScssDir = resolve(OUT_THEME, 'assets', 'scss');
   if (existsSync(outScssDir)) {
     rmSync(outScssDir, { recursive: true, force: true });
@@ -786,6 +865,41 @@ async function startWatch() {
     }
     handleUnlink(filepath);
   }));
+
+  // ── Plugin watcher (plugins/**) ──
+  if (existsSync(PLUGINS_SRC)) {
+    const pluginWatcher = chokidarWatch('plugins/**', {
+      cwd: ROOT,
+      ignoreInitial: true,
+      awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 50 },
+    });
+
+    pluginWatcher.on('change', debouncePerFile(async (filepath) => {
+      const absPath = getAbs(filepath);
+      console.log(`[watch:plugins] changed: ${norm(filepath)}`);
+      buildCopyPlugins(absPath);
+      browserSync.reload();
+    }));
+
+    pluginWatcher.on('add', debouncePerFile(async (filepath) => {
+      const absPath = getAbs(filepath);
+      console.log(`[watch:plugins] added: ${norm(filepath)}`);
+      buildCopyPlugins(absPath);
+      browserSync.reload();
+    }));
+
+    pluginWatcher.on('unlink', debouncePerFile((filepath) => {
+      const absPath = getAbs(filepath);
+      const rel = relative(PLUGINS_SRC, absPath);
+      const dest = resolve(PLUGINS_DEST, rel);
+      try { unlinkSync(dest); } catch { /* ignore */ }
+      console.log(`[watch:plugins] removed: ${norm(rel)}`);
+      removeEmptyDirs(PLUGINS_DEST);
+      browserSync.reload();
+    }));
+
+    console.log('[watch] Watching plugins/ for changes...');
+  }
 }
 
 // ─────────────────────────────────────────────

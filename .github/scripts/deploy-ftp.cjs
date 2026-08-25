@@ -696,7 +696,7 @@ async function runDeploy() {
                 const otherDiff = execSync(`git diff --name-status ${lastDeployRef} HEAD`).toString().trim();
                 if (!otherDiff) {
                     console.log('ℹ️ Không có thay đổi nào.');
-                    return;
+                    // Vẫn cần kiểm tra plugins trước khi return
                 }
 
                 // Nếu chỉ đổi config/scripts → không cần deploy theme
@@ -709,7 +709,13 @@ async function runDeploy() {
                            filePath !== '.gitignore';
                 });
 
-                if (!hasNonSrcChanges) {
+                // Kiểm tra plugins/ có thay đổi không
+                const hasPluginChanges = otherDiff.split('\n').some(line => {
+                    const filePath = line.split(/\t/)[1] || '';
+                    return filePath.startsWith('plugins/');
+                });
+
+                if (!hasNonSrcChanges && !hasPluginChanges) {
                     console.log('ℹ️ Chỉ thay đổi config/scripts — không cần deploy theme.');
                     return;
                 }
@@ -766,6 +772,44 @@ async function runDeploy() {
             console.log('');
             console.log(`📊 Kết quả: ${uploadCount} upload, ${deleteCount} xóa, ${skipCount} bảo vệ.`);
             console.log('✅ Hoàn thành Cập nhật Theme!');
+
+            // ── Upload Plugins (chỉ plugin được quản lý trong plugins/ source) ──
+            const pluginsSrcDir = path.resolve('plugins');
+            const pluginsLocalDir = path.join(config.source_folder, 'wp-content', 'plugins');
+            const pluginsRemoteDir = `${targetDir}/wp-content/plugins`;
+
+            if (fs.existsSync(pluginsSrcDir) && fs.existsSync(pluginsLocalDir)) {
+                // Lấy danh sách plugin ta quản lý (top-level entries trong plugins/)
+                const managedPlugins = fs.readdirSync(pluginsSrcDir, { withFileTypes: true })
+                    .map(e => e.name);
+
+                if (managedPlugins.length > 0) {
+                    console.log('');
+                    console.log(`📦 Upload Plugins (${managedPlugins.length} plugin quản lý)...`);
+
+                    let pluginUploadCount = 0;
+                    for (const pluginName of managedPlugins) {
+                        const localPluginPath = path.join(pluginsLocalDir, pluginName);
+                        const remotePluginPath = `${pluginsRemoteDir}/${pluginName}`;
+
+                        if (!fs.existsSync(localPluginPath)) continue;
+
+                        const stat = fs.statSync(localPluginPath);
+                        if (stat.isDirectory()) {
+                            await uploadDirectory(client, localPluginPath, remotePluginPath, ftpRoot);
+                        } else {
+                            // File lẻ (vd: hello.php)
+                            const remoteFileDir = path.posix.dirname(remotePluginPath);
+                            await client.ensureDir(remoteFileDir);
+                            await client.cd(ftpRoot);
+                            await client.uploadFrom(localPluginPath, remotePluginPath);
+                            console.log(`   ⬆️ plugins/${pluginName}`);
+                        }
+                        pluginUploadCount++;
+                    }
+                    console.log(`✅ Hoàn thành Upload ${pluginUploadCount} plugin!`);
+                }
+            }
         }
 
         console.log('');

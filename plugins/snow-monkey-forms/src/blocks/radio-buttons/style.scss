@@ -1,0 +1,36 @@
+@use '../../../node_modules/sass-basis/src/css/core';
+
+.smf-form {
+	.smf-radio-buttons-control {
+		&--horizontal {
+			.smf-radio-buttons-control {
+				&__control {
+					> .smf-label {
+						display: inline-block;
+						margin-right: var(--_margin-1);
+					}
+				}
+			}
+		}
+
+		&--vertical {
+			.smf-radio-buttons-control {
+				&__control {
+					> .smf-label {
+						display: block;
+					}
+				}
+			}
+		}
+	}
+
+	.smf-radio-button-control {
+		align-items: flex-start;
+		@include core.radio();
+
+		&__control {
+			flex: none;
+			margin-top: calc(var(--_half-leading) * 1em);
+		}
+	}
+}

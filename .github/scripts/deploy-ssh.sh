@@ -226,7 +226,18 @@ else
     echo "⬆️ Rsync --Delete: [$THEME_NAME] → server..."
     # Lệnh --delete chỉ áp dụng trong Theme. WP Core không bị ảnh hưởng.
     eval "$RSYNC_CMD \"$LOCAL_THEME\" \"$SSH_USER@$SSH_HOST:$REMOTE_THEME\""
-    echo "✅ Rsync hoàn tất!"
+    echo "✅ Rsync Theme hoàn tất!"
+
+    # ── Rsync Plugins (không dùng --delete để giữ an toàn plugin trên server) ──
+    LOCAL_PLUGINS="$SOURCE_FOLDER/wp-content/plugins/"
+    REMOTE_PLUGINS="$TARGET_DIR/wp-content/plugins/"
+    RSYNC_PLUGINS_CMD="rsync -avz -e \"ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i $SSH_KEY_FILE\""
+
+    if [ -d "$LOCAL_PLUGINS" ] && [ "$(ls -A "$LOCAL_PLUGINS" 2>/dev/null)" ]; then
+        echo "⬆️ Rsync Plugins → server... (không xóa plugin server)"
+        eval "$RSYNC_PLUGINS_CMD \"$LOCAL_PLUGINS\" \"$SSH_USER@$SSH_HOST:$REMOTE_PLUGINS\""
+        echo "✅ Rsync Plugins hoàn tất!"
+    fi
 fi
 
 # ==========================================
