@@ -1,11 +1,11 @@
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-#  Deploy Workflow â€” FTP Deploy
+# ═══════════════════════════════════════════════════════════════
+#  Deploy Workflow — FTP Deploy
 #
 #  Triggers:
-#    push master  â†’ production config â†’ FTP deploy
-#    push staging â†’ test config       â†’ FTP deploy
-#    workflow_dispatch â†’ chá»n environment thá»§ cÃ´ng
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+#    push master  → production config → FTP deploy
+#    push staging → test config       → FTP deploy
+#    workflow_dispatch → chọn environment thủ công
+# ═══════════════════════════════════════════════════════════════
 
 name: Deploy
 
@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Chá»n mÃ´i trÆ°á»ng deploy'
+        description: 'Chọn môi trường deploy'
         type: choice
         options:
           - production
@@ -30,16 +30,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: ðŸ“¥ KÃ©o Source Code
+      - name: 📥 Kéo Source Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
 
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      # XÃ¡c Ä‘á»‹nh mÃ´i trÆ°á»ng
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      - name: ðŸ” XÃ¡c Ä‘á»‹nh mÃ´i trÆ°á»ng
+      # ─────────────────────────────────────────────────
+      # Xác định môi trường
+      # ─────────────────────────────────────────────────
+      - name: 🔍 Xác định môi trường
         run: |
           ENVIRONMENT=""
 
@@ -55,16 +55,16 @@ jobs:
           fi
 
           if [[ -z "$ENVIRONMENT" ]]; then
-            echo "âš ï¸ KhÃ´ng xÃ¡c Ä‘á»‹nh Ä‘Æ°á»£c mÃ´i trÆ°á»ng â€” bá» qua."
+            echo "⚠️ Không xác định được môi trường — bỏ qua."
             exit 0
           fi
 
-          # Äá»c config tá»« deploy-config.json
+          # Đọc config từ deploy-config.json
           DEPLOY_METHOD=$(jq -r ".${ENVIRONMENT}.deploy_method // \"ssh\"" deploy-config.json)
           SERVER_NAME=$(jq -r ".${ENVIRONMENT}.server // empty" deploy-config.json | tr 'a-z' 'A-Z')
           BUILD_CMD=$(jq -r '.build_command // "npm run build"' deploy-config.json)
 
-          # KÃ­ch hoáº¡t tráº¡ng thÃ¡i dá»±a vÃ o deploy_method
+          # Kích hoạt trạng thái dựa vào deploy_method
           if [[ "$DEPLOY_METHOD" == "ssh" ]]; then
             echo "SHOULD_SSH=true" >> $GITHUB_ENV
           elif [[ "$DEPLOY_METHOD" == "ftp" ]]; then
@@ -72,7 +72,7 @@ jobs:
           elif [[ "$DEPLOY_METHOD" == "zip" ]]; then
             echo "SHOULD_ZIP=true" >> $GITHUB_ENV
           else
-            echo "âš ï¸ PhÆ°Æ¡ng thá»©c chÆ°a xÃ¡c Ä‘á»‹nh. Chuyá»ƒn hÆ°á»›ng máº·c Ä‘á»‹nh vá» SSH."
+            echo "⚠️ Phương thức chưa xác định. Chuyển hướng mặc định về SSH."
             echo "SHOULD_SSH=true" >> $GITHUB_ENV
           fi
 
@@ -81,54 +81,54 @@ jobs:
           echo "BUILD_CMD=$BUILD_CMD" >> $GITHUB_ENV
 
           echo ""
-          echo "â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—"
-          printf "â•‘   ðŸš€ Pipeline Deploy [%-24s]â•‘\n" "$ENVIRONMENT"
-          printf "â•‘   PhÆ°Æ¡ng thá»©c: %-30sâ•‘\n" "$DEPLOY_METHOD"
-          printf "â•‘   Server: %-35sâ•‘\n" "$SERVER_NAME"
-          echo "â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•"
+          echo "╔══════════════════════════════════════════════╗"
+          printf "║   🚀 Pipeline Deploy [%-24s]║\n" "$ENVIRONMENT"
+          printf "║   Phương thức: %-30s║\n" "$DEPLOY_METHOD"
+          printf "║   Server: %-35s║\n" "$SERVER_NAME"
+          echo "╚══════════════════════════════════════════════╝"
 
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      # ─────────────────────────────────────────────────
       # Build
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      - name: âš™ï¸ CÃ i Ä‘áº·t Node.js
+      # ─────────────────────────────────────────────────
+      - name: ⚙️ Cài đặt Node.js
         if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: ðŸ“¦ CÃ i Ä‘áº·t dependencies
+      - name: 📦 Cài đặt dependencies
         if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         run: npm install --no-package-lock
 
-      - name: ðŸ’¾ Cache WordPress download
+      - name: 💾 Cache WordPress download
         if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         uses: actions/cache@v4
         with:
           path: public
           key: wp-public-${{ hashFiles('scripts/download-wp.js', 'deploy-config.json') }}
 
-      - name: ðŸ”¨ Build dá»± Ã¡n
+      - name: 🔨 Build dự án
         if: env.SHOULD_SSH == 'true' || env.SHOULD_FTP == 'true' || env.SHOULD_ZIP == 'true'
         run: ${{ env.BUILD_CMD }}
         env:
           DEPLOY_ENV: ${{ env.ENVIRONMENT }}
 
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      # ─────────────────────────────────────────────────
       # ZIP Mode
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      - name: â„¹ï¸ Cháº¿ Ä‘á»™ ZIP (Chá»‰ táº¡o báº£n Build)
+      # ─────────────────────────────────────────────────
+      - name: ℹ️ Chế độ ZIP (Chỉ tạo bản Build)
         if: env.SHOULD_ZIP == 'true'
-        run: echo "Cháº¿ Ä‘á»™ ZIP khÃ´ng cáº§n Ä‘áº©y file qua máº¡ng. HÃ£y táº¡o Tag Ä‘á»ƒ Release code nhÃ©!"
+        run: echo "Chế độ ZIP không cần đẩy file qua mạng. Hãy tạo Tag để Release code nhé!"
 
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      # Deploy Scripts Options (CÃ i Node Packages)
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      - name: ðŸ“¦ CÃ i Ä‘áº·t thÆ° viá»‡n Deploy (FTP / Crypt)
+      # ─────────────────────────────────────────────────
+      # Deploy Scripts Options (Cài Node Packages)
+      # ─────────────────────────────────────────────────
+      - name: 📦 Cài đặt thư viện Deploy (FTP / Crypt)
         if: env.SHOULD_FTP == 'true' || env.SHOULD_SSH == 'true'
         run: npm install --no-save basic-ftp apache-crypt
 
-      - name: ðŸš€ Triá»ƒn khai qua FTP
+      - name: 🚀 Triển khai qua FTP
         if: env.SHOULD_FTP == 'true'
         run: node .github/scripts/deploy-ftp.cjs
         env:
@@ -136,10 +136,10 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           SERVER_SECRET_JSON: ${{ secrets[format('{0}_CONFIG', env.SERVER_NAME)] }}
 
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      # ─────────────────────────────────────────────────
       # SSH Deploy
-      # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      - name: ðŸš€ Triá»ƒn khai qua SSH/Rsync
+      # ─────────────────────────────────────────────────
+      - name: 🚀 Triển khai qua SSH/Rsync
         if: env.SHOULD_SSH == 'true'
         run: bash .github/scripts/deploy-ssh.sh
         env:
