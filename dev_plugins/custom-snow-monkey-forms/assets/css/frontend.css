@@ -1,0 +1,30 @@
+.csmf-is-hidden[hidden] {
+	display: none !important;
+}
+
+.csmf-error-messages {
+	margin-top: .5rem;
+	color: #b32d2e;
+	font-size: .875em;
+	line-height: 1.6;
+}
+
+.csmf-error-messages ul {
+	margin: 0;
+	padding-left: 1.4em;
+}
+
+.csmf-error-messages li + li {
+	margin-top: .15em;
+}
+
+.csmf-ready [aria-invalid="true"] {
+	outline: 2px solid #b32d2e;
+	outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.csmf-ready .smf-item {
+		transition: opacity .16s ease;
+	}
+}
