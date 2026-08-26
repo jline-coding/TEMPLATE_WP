@@ -76,6 +76,7 @@ const OUT_PUBLIC = resolve(ROOT, SOURCE_FOLDER_NAME);
 const OUT_THEME = resolve(OUT_PUBLIC, 'wp-content', 'themes', THEME_NAME);
 const OUT_ASSETS = resolve(OUT_THEME, 'assets');
 const PLUGINS_SRC = resolve(ROOT, 'plugins');
+const DEV_PLUGINS_SRC = resolve(ROOT, 'dev_plugins');
 const PLUGINS_DEST = resolve(OUT_PUBLIC, 'wp-content', 'plugins');
 
 // Source sub-directories (all inside src/)
@@ -432,6 +433,39 @@ function cleanStalePlugins(srcFiles) {
 }
 
 // ─────────────────────────────────────────────
+// 2b. Dev Plugins Copy (dev_plugins/ → public/wp-content/plugins/)
+//     Plugin tự code, watch live trong dev mode.
+// ─────────────────────────────────────────────
+function buildCopyDevPlugins() {
+  if (!existsSync(DEV_PLUGINS_SRC)) return;
+  ensureDir(PLUGINS_DEST);
+
+  const files = walkSync(DEV_PLUGINS_SRC);
+  if (files.length === 0) return;
+
+  let count = 0;
+  for (const file of files) {
+    const rel = relative(DEV_PLUGINS_SRC, file);
+    const dest = resolve(PLUGINS_DEST, rel);
+    if (isNewer(file, dest)) {
+      ensureDir(dirname(dest));
+      copyFileSync(file, dest);
+      count++;
+    }
+  }
+
+  const entries = readdirSync(DEV_PLUGINS_SRC).filter(
+    e => statSync(resolve(DEV_PLUGINS_SRC, e)).isDirectory() || e.endsWith('.php')
+  );
+
+  if (count > 0) {
+    console.log(`[dev_plugins] ✓ Copied ${count} file(s) from: ${entries.join(', ')}`);
+  } else {
+    console.log(`[dev_plugins] ✓ Up to date (${entries.join(', ')})`);
+  }
+}
+
+// ─────────────────────────────────────────────
 // 3. SCSS → CSS (with import cache & parallel compile)
 // ─────────────────────────────────────────────
 const postcssPlugins = [
@@ -689,6 +723,9 @@ async function fullBuild() {
   // 2. Copy plugins to public/wp-content/plugins/
   buildCopyPlugins();
 
+  // 2b. Copy dev_plugins (custom plugins đang phát triển)
+  buildCopyDevPlugins();
+
   // 3. Compile SCSS → CSS (parallel)
   await buildScss();
 
@@ -866,39 +903,55 @@ async function startWatch() {
     handleUnlink(filepath);
   }));
 
-  // ── Plugin watcher (plugins/**) ──
-  if (existsSync(PLUGINS_SRC)) {
-    const pluginWatcher = chokidarWatch('plugins/**', {
+  // ── Plugins (plugins/): không watch (copy 1 lần lúc build) ──
+  // Plugins bên thứ 3 chứa hàng ngàn files → chokidar không ổn định.
+
+  // ── Dev Plugins (dev_plugins/): watch live ──
+  // Plugin tự code, ít file → watch an toàn.
+  if (existsSync(DEV_PLUGINS_SRC)) {
+    const devPluginWatcher = chokidarWatch('dev_plugins/**', {
       cwd: ROOT,
       ignoreInitial: true,
-      awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 50 },
+      awaitWriteFinish: { stabilityThreshold: 200, pollInterval: 50 },
     });
 
-    pluginWatcher.on('change', debouncePerFile(async (filepath) => {
+    devPluginWatcher.on('change', debouncePerFile(async (filepath) => {
       const absPath = getAbs(filepath);
-      console.log(`[watch:plugins] changed: ${norm(filepath)}`);
-      buildCopyPlugins(absPath);
-      browserSync.reload();
-    }));
-
-    pluginWatcher.on('add', debouncePerFile(async (filepath) => {
-      const absPath = getAbs(filepath);
-      console.log(`[watch:plugins] added: ${norm(filepath)}`);
-      buildCopyPlugins(absPath);
-      browserSync.reload();
-    }));
-
-    pluginWatcher.on('unlink', debouncePerFile((filepath) => {
-      const absPath = getAbs(filepath);
-      const rel = relative(PLUGINS_SRC, absPath);
+      const rel = relative(DEV_PLUGINS_SRC, absPath);
       const dest = resolve(PLUGINS_DEST, rel);
-      try { unlinkSync(dest); } catch { /* ignore */ }
-      console.log(`[watch:plugins] removed: ${norm(rel)}`);
-      removeEmptyDirs(PLUGINS_DEST);
+      ensureDir(dirname(dest));
+      copyFileSync(absPath, dest);
+      console.log(`[dev_plugins] ${norm(rel)}`);
       browserSync.reload();
     }));
 
-    console.log('[watch] Watching plugins/ for changes...');
+    devPluginWatcher.on('add', debouncePerFile(async (filepath) => {
+      const absPath = getAbs(filepath);
+      const rel = relative(DEV_PLUGINS_SRC, absPath);
+      const dest = resolve(PLUGINS_DEST, rel);
+      ensureDir(dirname(dest));
+      copyFileSync(absPath, dest);
+      console.log(`[dev_plugins] + ${norm(rel)}`);
+      browserSync.reload();
+    }));
+
+    devPluginWatcher.on('unlink', debouncePerFile((filepath) => {
+      const absPath = getAbs(filepath);
+      const rel = relative(DEV_PLUGINS_SRC, absPath);
+      const dest = resolve(PLUGINS_DEST, rel);
+      // Chỉ xóa nếu source thực sự đã bị xóa
+      setTimeout(() => {
+        if (!existsSync(absPath)) {
+          try { unlinkSync(dest); } catch { /* ignore */ }
+          console.log(`[dev_plugins] - ${norm(rel)}`);
+          removeEmptyDirs(PLUGINS_DEST);
+          browserSync.reload();
+        }
+      }, 300);
+    }));
+
+    const devEntries = readdirSync(DEV_PLUGINS_SRC);
+    console.log(`[watch] Watching dev_plugins/ (${devEntries.length} plugin: ${devEntries.join(', ')})`);
   }
 }
 

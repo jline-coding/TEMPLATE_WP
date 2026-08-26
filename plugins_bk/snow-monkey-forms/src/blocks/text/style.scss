@@ -1,0 +1,13 @@
+@use '../../../node_modules/sass-basis/src/css/core';
+
+.smf-form {
+	.smf-text-control {
+		&__control {
+			@include core.form-control();
+		}
+	}
+}
+
+.smf-text-control {
+	line-height: 1;
+}

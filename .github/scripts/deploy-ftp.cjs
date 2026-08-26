@@ -712,7 +712,7 @@ async function runDeploy() {
                 // Kiểm tra plugins/ có thay đổi không
                 const hasPluginChanges = otherDiff.split('\n').some(line => {
                     const filePath = line.split(/\t/)[1] || '';
-                    return filePath.startsWith('plugins/');
+                    return filePath.startsWith('plugins/') || filePath.startsWith('dev_plugins/');
                 });
 
                 if (!hasNonSrcChanges && !hasPluginChanges) {

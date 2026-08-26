@@ -1,0 +1,782 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Snow Monkey Forms\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/snow-monkey-"
+"forms\n"
+"POT-Creation-Date: 2026-03-23T02:36:49+00:00\n"
+"PO-Revision-Date: 2026-03-23 11:37+0900\n"
+"Last-Translator: inc2734 <inc@2inc.org>\n"
+"Language-Team: inc2734 <inc@2inc.org>\n"
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.8\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: snow-monkey-forms.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: "
+"__;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: node_modules\n"
+"X-Poedit-SearchPathExcluded-1: vendor\n"
+"X-Poedit-SearchPathExcluded-2: tests\n"
+"X-Poedit-SearchPathExcluded-3: dist\n"
+
+#. Plugin Name of the plugin
+#: snow-monkey-forms.php snow-monkey-forms.php:280 snow-monkey-forms.php:628
+msgid "Snow Monkey Forms"
+msgstr "Snow Monkey Forms"
+
+#. Description of the plugin
+#: snow-monkey-forms.php
+msgid "The Snow Monkey Forms is a mail form plugin for the block editor."
+msgstr ""
+"Snow Monkey Forms はブロックエディターのためのメールフォームプラグインです。"
+
+#. Author of the plugin
+#: snow-monkey-forms.php
+msgid "inc2734"
+msgstr "inc2734"
+
+#. Author URI of the plugin
+#: snow-monkey-forms.php
+msgid "https://2inc.org"
+msgstr "https://2inc.org"
+
+#: App/Control/File.php:80
+msgid "Uploaded file"
+msgstr "アップロード済みのファイル"
+
+#: App/Control/File.php:134 dist/blocks/file/index.js:1
+msgid "Choose file"
+msgstr "ファイルを選択"
+
+#: App/Control/File.php:135 dist/blocks/file/index.js:1
+msgid "No file chosen"
+msgstr "選択されていません"
+
+#: App/Control/File.php:136
+msgid "Clear"
+msgstr "解除"
+
+#: App/Model/Setting.php:188
+msgid "Confirm"
+msgstr "確認画面へ"
+
+#: App/Model/Setting.php:193
+msgid "Back"
+msgstr "戻る"
+
+#: App/Model/Setting.php:198
+msgid "Send"
+msgstr "送信する"
+
+#: App/Rest/Route/View.php:73
+msgid "Invalid access."
+msgstr "無効なアクセスです。"
+
+#: App/Rest/Route/View.php:82
+msgid "There is a possibility of spamming."
+msgstr "スパム送信の可能性があります。"
+
+#: App/Rest/Route/View.php:102
+msgid "An error occurred during file upload."
+msgstr "ファイルのアップロード中にエラーが発生しました。"
+
+#: App/Rest/Route/View.php:122
+msgid "Attachment of file failed."
+msgstr "ファイルの添付に失敗しました。"
+
+#: App/Rest/Route/View.php:140
+msgid "Failed to send administrator email."
+msgstr "管理者メールの送信に失敗しました。"
+
+#: App/Rest/Route/View.php:142 App/Rest/Route/View.php:188
+#: dist/blocks/snow-monkey-form/render.php:109
+msgid "Please try again later or contact your administrator by other means."
+msgstr "後でもう一度やり直すか、他の方法で管理者に連絡してください。"
+
+#: App/Rest/Route/View.php:153
+msgid "Failed to send auto reply email."
+msgstr "自動返信メールの送信に失敗しました。"
+
+#: App/Rest/Route/View.php:186 dist/blocks/snow-monkey-form/render.php:107
+msgid "An unexpected problem has occurred."
+msgstr "予期しない問題が発生しました。"
+
+#: App/Service/ReCaptcha/Controller/Controller.php:40
+#: App/Service/ReCaptcha/Controller/Controller.php:41
+#: App/Service/ReCaptcha/Controller/Controller.php:54
+msgid "reCAPTCHA"
+msgstr "reCAPTCHA"
+
+#: App/Service/ReCaptcha/Controller/Controller.php:95
+#: App/Service/Turnstile/Controller/Controller.php:102
+msgid "Settings saved."
+msgstr "設定を保存しました。"
+
+#: App/Service/ReCaptcha/Controller/Controller.php:103
+msgid "reCAPTCHA protects your contact form from fraud and abuse."
+msgstr "reCAPTCHA は問い合わせフォームを詐欺や悪用から保護します。"
+
+#. translators: %1$s: <a> open tag, %2$s: </a> close tag.
+#: App/Service/ReCaptcha/Controller/Controller.php:112
+#, php-format
+msgid "For detail see %1$sreCAPTCHA%2$s."
+msgstr "詳細については、%1$sreCAPTCHA%2$sを参照してください。"
+
+#: App/Service/ReCaptcha/Controller/Controller.php:126
+#: App/Service/Turnstile/Controller/Controller.php:133
+msgid "Site Key"
+msgstr "Site Key"
+
+#: App/Service/ReCaptcha/Controller/Controller.php:144
+#: App/Service/Turnstile/Controller/Controller.php:151
+msgid "Secret Key"
+msgstr "Secret Key"
+
+#: App/Service/Turnstile/Controller/Controller.php:46
+#: App/Service/Turnstile/Controller/Controller.php:47
+#: App/Service/Turnstile/Controller/Controller.php:60
+msgid "Cloudflare Turnstile"
+msgstr "Cloudflare Turnstile"
+
+#: App/Service/Turnstile/Controller/Controller.php:110
+msgid ""
+"Cloudflare Turnstile protects your contact form from fraud and abuse without "
+"slowing down web experiences for real users."
+msgstr ""
+"Cloudflare Turnstileは、実際のユーザーのウェブ体験を低下させることなく、お問"
+"い合わせフォームを詐欺や不正行為から保護します。"
+
+#. translators: %1$s: <a> open tag, %2$s: </a> close tag.
+#: App/Service/Turnstile/Controller/Controller.php:119
+#, php-format
+msgid "For detail see %1$sCloudflare Turnstile%2$s."
+msgstr "詳細については、%1$sCloudflare Turnstile%2$sを参照してください。"
+
+#: App/Service/Turnstile/Controller/Controller.php:169
+msgid "Widget Position"
+msgstr "ウィジェットの位置"
+
+#: App/Service/Turnstile/Controller/Controller.php:175
+msgid "Before form"
+msgstr "フォームの前"
+
+#: App/Service/Turnstile/Controller/Controller.php:178
+msgid "After form"
+msgstr "フォームの後"
+
+#: App/Service/Turnstile/Controller/Controller.php:182
+msgid "Choose where to display the Turnstile widget relative to the form."
+msgstr "Turnstileウィジェットをフォームのどこに表示するかを選択してください。"
+
+#: App/Validation/Date.php:42
+msgid "Please enter a valid date."
+msgstr "有効な日付を入力してください。"
+
+#: App/Validation/Email.php:40
+msgid "Please enter a valid email address."
+msgstr "有効なメールアドレスを入力してください。"
+
+#: App/Validation/Month.php:42
+msgid "Please enter a valid month."
+msgstr "有効な月を入力してください。"
+
+#: App/Validation/Required.php:34
+msgid "Please enter."
+msgstr "入力してください。"
+
+#: App/Validation/Uploaded.php:35
+msgid "Upload failed."
+msgstr "アップロードに失敗しました。"
+
+#: App/Validation/Url.php:34
+msgid "Please enter a valid URL."
+msgstr "有効な URL を入力してください。"
+
+#: dist/blocks/snow-monkey-form/render.php:54
+msgid "Progress tracker"
+msgstr "プログレストラッカー"
+
+#: dist/blocks/snow-monkey-form/render.php:57
+msgctxt "progress-tracker"
+msgid "1"
+msgstr "1"
+
+#: dist/blocks/snow-monkey-form/render.php:60
+msgctxt "progress-tracker"
+msgid "Input screen"
+msgstr "入力画面"
+
+#: dist/blocks/snow-monkey-form/render.php:61
+#: dist/blocks/snow-monkey-form/render.php:72
+#: dist/blocks/snow-monkey-form/render.php:87
+msgid "This is the screen you are currently viewing."
+msgstr "現在表示されている画面です。"
+
+#: dist/blocks/snow-monkey-form/render.php:68
+#: dist/blocks/snow-monkey-form/render.php:82
+msgctxt "progress-tracker"
+msgid "2"
+msgstr "2"
+
+#: dist/blocks/snow-monkey-form/render.php:71
+msgctxt "progress-tracker"
+msgid "Confirm screen"
+msgstr "確認画面"
+
+#: dist/blocks/snow-monkey-form/render.php:80
+msgctxt "progress-tracker"
+msgid "3"
+msgstr "3"
+
+#: dist/blocks/snow-monkey-form/render.php:86
+msgctxt "progress-tracker"
+msgid "Complete screen"
+msgstr "完了画面"
+
+#: snow-monkey-forms.php:296
+msgctxt "form-field-label"
+msgid "Name"
+msgstr "お名前"
+
+#: snow-monkey-forms.php:316
+msgctxt "form-field-label"
+msgid "Email"
+msgstr "Eメール"
+
+#: snow-monkey-forms.php:336
+msgctxt "form-field-label"
+msgid "Message"
+msgstr "メッセージ"
+
+#: snow-monkey-forms.php:364
+msgid "Complete !"
+msgstr "完了しました。"
+
+#: snow-monkey-forms.php:452
+msgid "Admin notification"
+msgstr "管理者通知"
+
+#: snow-monkey-forms.php:527
+msgid "Automatic reply notification"
+msgstr "自動返信通知"
+
+#: dist/blocks/checkboxes/index.js:1 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/file/index.js:1
+#: dist/blocks/month/index.js:1 dist/blocks/radio-buttons/index.js:1
+#: dist/blocks/select/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "name"
+msgstr "name"
+
+#: dist/blocks/checkboxes/index.js:1 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/file/index.js:1
+#: dist/blocks/month/index.js:1 dist/blocks/radio-buttons/index.js:1
+#: dist/blocks/select/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "Required. Input a unique machine-readable name."
+msgstr "必須。一意の機械読み取り可能な名前を入力してください。"
+
+#: dist/blocks/checkboxes/index.js:1 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/month/index.js:1
+#: dist/blocks/radio-buttons/index.js:1 dist/blocks/select/index.js:1
+#: dist/blocks/tel/index.js:1 dist/blocks/text/index.js:1
+#: dist/blocks/textarea/index.js:1 dist/blocks/url/index.js:1
+msgid "value"
+msgstr "value"
+
+#. translators: %1$s: line-break-char
+#: dist/blocks/checkboxes/index.js:4
+msgid "Optional. Initial value. Enter in the following format: value%1$s"
+msgstr "任意。初期値。次の形式で入力: value%1$s"
+
+#: dist/blocks/checkboxes/index.js:4 dist/blocks/radio-buttons/index.js:1
+#: dist/blocks/select/index.js:1
+msgid "options"
+msgstr "options"
+
+#. translators: %1$s: line-break-char
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/radio-buttons/index.js:4
+#: dist/blocks/select/index.js:4
+msgid ""
+"Required. Enter in the following format: \"value\" : \"label\"%1$s or "
+"value%1$s"
+msgstr "必須。次の形式で入力: “value” : “label”%1$s あるいは value%1$s"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/file/index.js:1
+#: dist/blocks/month/index.js:1 dist/blocks/radio-buttons/index.js:4
+#: dist/blocks/select/index.js:4 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1 hoc/with-validations.js:21
+msgid "Validation"
+msgstr "バリデーション"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/file/index.js:1
+#: dist/blocks/month/index.js:1 dist/blocks/radio-buttons/index.js:4
+#: dist/blocks/select/index.js:4 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1 hoc/with-validations.js:25
+msgid "Required"
+msgstr "必須"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/file/index.js:1
+#: dist/blocks/month/index.js:1 dist/blocks/radio-buttons/index.js:4
+#: dist/blocks/select/index.js:4 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "Attributes"
+msgstr "属性"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/radio-buttons/index.js:4
+msgid "Grouping"
+msgstr "グループ化"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/radio-buttons/index.js:4
+msgid "Enable if you want to group by fieldset and label by legend."
+msgstr ""
+"fieldset でグループ化し凡例（legend）でラベルを付けたい場合は有効化してくださ"
+"い。"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/radio-buttons/index.js:4
+msgid "Make legend invisible"
+msgstr "凡例（legend）を不可視化"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/radio-buttons/index.js:4
+msgid ""
+"When activated, the legend will not appear on the screen, but will be read "
+"by screen readers."
+msgstr ""
+"有効にすると、凡例（legend）は画面には表示されなくなりますがスクリーンリー"
+"ダーには読まれます。"
+
+#: dist/blocks/checkboxes/index.js:7
+msgid "Delimiter"
+msgstr "区切り文字"
+
+#: dist/blocks/checkboxes/index.js:7
+msgid "Optional. Character that separates each item."
+msgstr "任意。各項目を区切る文字。"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/file/index.js:1
+#: dist/blocks/item/index.js:1 dist/blocks/month/index.js:1
+#: dist/blocks/radio-buttons/index.js:4 dist/blocks/select/index.js:4
+#: dist/blocks/tel/index.js:1 dist/blocks/text/index.js:1
+#: dist/blocks/textarea/index.js:1 dist/blocks/url/index.js:1
+msgid "Block settings"
+msgstr "ブロック設定"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/radio-buttons/index.js:4
+msgid "Direction"
+msgstr "方向"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/form/input/index.js:1
+#: dist/blocks/radio-buttons/index.js:4
+msgid "Default"
+msgstr "デフォルト"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/radio-buttons/index.js:4
+msgid "Horizontal"
+msgstr "横"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/radio-buttons/index.js:4
+msgid "Vertical"
+msgstr "縦"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/file/index.js:1
+#: dist/blocks/item/index.js:1 dist/blocks/month/index.js:1
+#: dist/blocks/radio-buttons/index.js:4 dist/blocks/select/index.js:4
+#: dist/blocks/tel/index.js:1 dist/blocks/text/index.js:1
+#: dist/blocks/textarea/index.js:1 dist/blocks/url/index.js:1
+msgid "Description"
+msgstr "説明"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/date/index.js:1
+#: dist/blocks/email/index.js:1 dist/blocks/file/index.js:1
+#: dist/blocks/month/index.js:1 dist/blocks/radio-buttons/index.js:4
+#: dist/blocks/select/index.js:4 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "Description is also displayed on the confirmation screen"
+msgstr "説明を確認画面にも表示する"
+
+#: dist/blocks/checkboxes/index.js:7 dist/blocks/item/index.js:1
+#: dist/blocks/radio-buttons/index.js:4
+msgid "Label"
+msgstr "ラベル"
+
+#: dist/blocks/date/index.js:1 dist/blocks/email/index.js:1
+#: dist/blocks/month/index.js:1 dist/blocks/radio-buttons/index.js:1
+#: dist/blocks/select/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "Optional. Initial value."
+msgstr "任意。初期値。"
+
+#: dist/blocks/date/index.js:1 dist/blocks/email/index.js:1
+#: dist/blocks/file/index.js:1 dist/blocks/month/index.js:1
+#: dist/blocks/select/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "id"
+msgstr "id"
+
+#: dist/blocks/date/index.js:1 dist/blocks/email/index.js:1
+#: dist/blocks/file/index.js:1 dist/blocks/month/index.js:1
+#: dist/blocks/select/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "class"
+msgstr "class"
+
+#: dist/blocks/date/index.js:1 dist/blocks/email/index.js:1
+#: dist/blocks/file/index.js:1 dist/blocks/month/index.js:1
+#: dist/blocks/select/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "Separate multiple classes with spaces."
+msgstr "複数クラスを半角スペースで区切ります。"
+
+#: dist/blocks/date/index.js:1
+msgid "Minimum date"
+msgstr "最小の日付"
+
+#: dist/blocks/date/index.js:1
+msgid "Maximum date"
+msgstr "最大の日付"
+
+#: dist/blocks/email/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "placeholder"
+msgstr "placeholder"
+
+#: dist/blocks/email/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "maxlength"
+msgstr "maxlength"
+
+#: dist/blocks/email/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "Optional. Maximum number of characters. If 0, not restricted."
+msgstr "任意。最大文字数。0の場合、制限されません。"
+
+#: dist/blocks/email/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/url/index.js:1
+msgid "size"
+msgstr "size"
+
+#: dist/blocks/email/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/url/index.js:1
+msgid "Optional. The width of this item. If 0, not restricted."
+msgstr "任意。この項目の幅。0の場合、制限されません。"
+
+#: dist/blocks/form/complete/index.js:1
+msgid "Complete"
+msgstr "完了画面"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Form settings"
+msgstr "フォーム設定"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Use confirm page"
+msgstr "確認画面を使用する"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Use progress tracker"
+msgstr "プログレストラッカーを使用する"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Form style"
+msgstr "フォームスタイル"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Simple table"
+msgstr "Simple table"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Letter"
+msgstr "Letter"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Business"
+msgstr "Business"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Confirm button label"
+msgstr "確認ボタンのラベル"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Back button label"
+msgstr "戻るボタンのラベル"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Send button label"
+msgstr "送信ボタンのラベル"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Blocked senders"
+msgstr "送信者ブロック"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Target email"
+msgstr "対象メールアドレス"
+
+#: dist/blocks/form/input/index.js:1
+msgid ""
+"Enter the name attribute value of the installed email form field in the "
+"following format: {name}"
+msgstr ""
+"設置したEメール用フォームフィールドの name 属性値を次の形式で入力してくださ"
+"い: {name}"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Blocked email address or domain"
+msgstr "ブロックするメールアドレスまたはドメイン"
+
+#: dist/blocks/form/input/index.js:1
+msgid "If no \"@\" is included, the value is treated as a domain."
+msgstr "「@」が含まれていない場合、その値はドメインとして扱われます。"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Add"
+msgstr "追加"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Delete"
+msgstr "削除"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Help"
+msgstr "ヘルプ"
+
+#: dist/blocks/form/input/index.js:1
+msgid "You can embed a submitted value in the following formats:"
+msgstr "送信された値は次の形式で埋め込むことができます:"
+
+#: dist/blocks/form/input/index.js:1
+msgid "You can embed all submitted values ​​in the following format:"
+msgstr "送信されたすべての値を次のフォーマットで埋め込むことができます:"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Administrator email"
+msgstr "管理者宛メール"
+
+#: dist/blocks/form/input/index.js:1
+msgid "To (Email address)"
+msgstr "To（メールアドレス）"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Subject"
+msgstr "件名"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Body"
+msgstr "Body"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Reply-To (Email address)"
+msgstr "Reply-To（メールアドレス）"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Optional"
+msgstr "任意"
+
+#: dist/blocks/form/input/index.js:1
+msgid "From (Email address)"
+msgstr "From（メールアドレス）"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Sender"
+msgstr "送信者"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Auto reply email"
+msgstr "自動返信メール"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Input"
+msgstr "入力画面"
+
+#: dist/blocks/form/input/index.js:1
+msgid "Open the form settings"
+msgstr "フォーム設定を開く"
+
+#: dist/blocks/item/index.js:1
+msgid "Display label column"
+msgstr "ラベルカラムを表示する"
+
+#: dist/blocks/item/index.js:1
+msgid "label for"
+msgstr "label for"
+
+#: dist/blocks/item/index.js:1
+msgid ""
+"Add a label element and link it with a form field of your choice. Enter the "
+"id of the form field you want to link to."
+msgstr ""
+"label 要素を追加し、任意のフォーム項目に紐付けます。紐付け先のフォーム項目の "
+"id を入力します。"
+
+#: dist/blocks/month/index.js:1
+msgid "Minimum month"
+msgstr "最小の月"
+
+#: dist/blocks/month/index.js:1
+msgid "Maximum month"
+msgstr "最大の月"
+
+#: dist/blocks/select/index.js:1 dist/blocks/tel/index.js:1
+#: dist/blocks/text/index.js:1 dist/blocks/textarea/index.js:1
+#: dist/blocks/url/index.js:1
+msgid "autocomplete"
+msgstr "autocomplete"
+
+#: dist/blocks/snow-monkey-form/index.js:1
+msgid "Select a form"
+msgstr "フォームを選択してください"
+
+#: dist/blocks/textarea/index.js:1
+msgid "rows"
+msgstr "rows"
+
+#: dist/blocks/textarea/index.js:1
+msgid "Number of lines"
+msgstr "行数"
+
+#: dist/blocks/checkboxes/block.json
+msgctxt "block title"
+msgid "Checkboxes"
+msgstr "チェックボックス"
+
+#: dist/blocks/date/block.json
+msgctxt "block title"
+msgid "Date"
+msgstr "日付"
+
+#: dist/blocks/email/block.json
+msgctxt "block title"
+msgid "email"
+msgstr "email"
+
+#: dist/blocks/file/block.json
+msgctxt "block title"
+msgid "File"
+msgstr "ファイル"
+
+#: dist/blocks/form/complete/block.json
+msgctxt "block title"
+msgid "Complete page"
+msgstr "完了画面"
+
+#: dist/blocks/form/input/block.json
+msgctxt "block title"
+msgid "Form"
+msgstr "フォーム"
+
+#: dist/blocks/item/block.json
+msgctxt "block title"
+msgid "Item"
+msgstr "項目"
+
+#: dist/blocks/month/block.json
+msgctxt "block title"
+msgid "Month"
+msgstr "月"
+
+#: dist/blocks/radio-buttons/block.json
+msgctxt "block title"
+msgid "Radio buttons"
+msgstr "ラジオボタン"
+
+#: dist/blocks/select/block.json
+msgctxt "block title"
+msgid "Select"
+msgstr "セレクトボックス"
+
+#: dist/blocks/snow-monkey-form/block.json
+msgctxt "block title"
+msgid "Snow Monkey Form"
+msgstr "Snow Monkey Form"
+
+#: dist/blocks/tel/block.json
+msgctxt "block title"
+msgid "Tel"
+msgstr "Tel"
+
+#: dist/blocks/text/block.json
+msgctxt "block title"
+msgid "Text"
+msgstr "テキスト"
+
+#: dist/blocks/textarea/block.json
+msgctxt "block title"
+msgid "Textarea"
+msgstr "テキストエリア"
+
+#: dist/blocks/url/block.json
+msgctxt "block title"
+msgid "URL"
+msgstr "URL"
+
+#~ msgid "Your submission has been blocked as suspected spam."
+#~ msgstr "送信がスパムと疑われたためブロックされました。"
+
+#~ msgctxt "progress-tracker"
+#~ msgid "Input"
+#~ msgstr "入力"
+
+#~ msgctxt "progress-tracker"
+#~ msgid "Confirm"
+#~ msgstr "確認"
+
+#~ msgctxt "progress-tracker"
+#~ msgid "Complete"
+#~ msgstr "完了"
+
+#~ msgid "To"
+#~ msgstr "To"
+
+#~ msgid "values"
+#~ msgstr "values"
+
+#~ msgid "\"value\" : \"label\"\\u21B5"
+#~ msgstr "“value” : “label”\\u21B5"
+
+#~ msgid "value\\u21B5"
+#~ msgstr "value\\u21B5"
+
+#~ msgid "If 0, not restricted."
+#~ msgstr "0 の場合、制限されません。"
+
+#~ msgid "Multi checkbox"
+#~ msgstr "複数チェックボックス"
+
+#~ msgid "Multi radio"
+#~ msgstr "複数ラジオボタン"
+
+#~ msgid "Select this"
+#~ msgstr "選択してください"
+
+#~ msgid "checked"
+#~ msgstr "checked"
+
+#~ msgid "Radio"
+#~ msgstr "ラジオボタン"
+
+#~ msgid "value↵"
+#~ msgstr "value↵"
