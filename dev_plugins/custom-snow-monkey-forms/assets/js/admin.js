@@ -161,6 +161,7 @@
 		conditions: panel( 'conditions', t( 'conditions_title' ), t( 'conditions_description' ) ),
 		recipients: panel( 'recipients', t( 'recipients_title' ), t( 'recipients_description' ) ),
 		uploads: panel( 'uploads', t( 'uploads_title' ), t( 'uploads_description' ) ),
+		postal: panel( 'postal', t( 'postal_title' ), t( 'postal_description' ) ),
 		diagnostics: panel( 'diagnostics', t( 'diagnostics_title' ), t( 'diagnostics_description' ) ),
 	};
 	Object.values( panels ).forEach( ( item ) => app.appendChild( item ) );
@@ -176,6 +177,19 @@
 			checkControl( 'delete_on_uninstall', Boolean( config.delete_on_uninstall ), t( 'delete_uninstall' ) ),
 			selectControl( 'validate_on', { blur_input: t( 'timing_blur_input' ), input: t( 'timing_input' ), blur: t( 'timing_blur' ) }, config.validate_on || 'blur_input', t( 'validation_timing' ) ),
 			selectControl( 'route_mode', { first_match: t( 'route_first' ), merge_all: t( 'route_merge' ) }, config.route_mode || 'first_match', t( 'route_mode' ) ),
+		] )
+	);
+
+	const postalBody = panels.postal.querySelector( '.csmf-panel__body' );
+	const postalData = config.postal_autofill || {};
+	postalBody.append(
+		node( 'div', { class: 'csmf-settings-grid' }, [
+			checkControl( 'enabled', Boolean( postalData.enabled ), t( 'enable_postal_autofill' ) ),
+			node( 'p', { class: 'description', text: t( 'postal_help' ), style: 'grid-column: 1 / -1; margin: 0 0 10px;' } ),
+			selectControl( 'postal_field', fieldOptions( postalData.postal_field ), postalData.postal_field || '', t( 'postal_field_label' ) ),
+			selectControl( 'region_field', fieldOptions( postalData.region_field ), postalData.region_field || '', t( 'region_field_label' ) ),
+			selectControl( 'locality_field', fieldOptions( postalData.locality_field ), postalData.locality_field || '', t( 'locality_field_label' ) ),
+			selectControl( 'street_field', fieldOptions( postalData.street_field ), postalData.street_field || '', t( 'street_field_label' ) ),
 		] )
 	);
 
@@ -211,6 +225,7 @@
 
 	function collect() {
 		const result = readControls( generalBody.querySelector( '.csmf-settings-grid' ) );
+		result.postal_autofill = readControls( postalBody.querySelector( '.csmf-settings-grid' ) );
 		[ 'validations', 'field_rules', 'recipient_rules', 'uploads' ].forEach( ( section ) => {
 			result[ section ] = Array.from( app.querySelectorAll( `[data-section="${ section }"]` ) ).map( ( item ) => ( { id: item.dataset.id, ...readControls( item.querySelector( '.csmf-rule__body' ), [ 'field_rules', 'recipient_rules' ].includes( section ) ) } ) );
 		} );

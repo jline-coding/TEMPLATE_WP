@@ -275,32 +275,123 @@
 		} );
 	}
 
+	function applyPostalAutofill( instance ) {
+		const postal = instance.config.postalAutofill;
+		if ( ! postal || ! postal.enabled || ! postal.postal_field ) return;
+
+		const postalInputs = fieldElements( instance.form, postal.postal_field );
+		if ( ! postalInputs.length ) return;
+
+		let debounceTimer = null;
+		const triggerAutofill = ( value ) => {
+			if ( ! window.YubinBango || typeof window.YubinBango.get !== 'function' ) return;
+			window.YubinBango.get( value, ( address ) => {
+				if ( ! address || ( ! address.region && ! address.locality ) ) return;
+
+				// Unique field targets
+				const fieldTargets = new Map();
+				const selectedFields = [ postal.region_field, postal.locality_field, postal.street_field ].filter( Boolean );
+				const uniqueSet = new Set( selectedFields );
+
+				// If all selected fields point to the same field or only one field is set, combine full address
+				if ( uniqueSet.size === 1 ) {
+					const singleField = [ ...uniqueSet ][ 0 ];
+					const fullAddress = `${ address.region || '' }${ address.locality || '' }${ address.street || '' }`.trim();
+					fieldTargets.set( singleField, fullAddress );
+				} else {
+					if ( postal.region_field ) {
+						fieldTargets.set( postal.region_field, ( fieldTargets.get( postal.region_field ) || '' ) + ( address.region || '' ) );
+					}
+					if ( postal.locality_field ) {
+						fieldTargets.set( postal.locality_field, ( fieldTargets.get( postal.locality_field ) || '' ) + ( address.locality || '' ) );
+					}
+					if ( postal.street_field ) {
+						fieldTargets.set( postal.street_field, ( fieldTargets.get( postal.street_field ) || '' ) + ( address.street || '' ) );
+					}
+				}
+
+				// Set values and dispatch change/input events
+				fieldTargets.forEach( ( val, fieldName ) => {
+					fieldElements( instance.form, fieldName ).forEach( ( element ) => {
+						element.value = val;
+						try {
+							element.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+							element.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+						} catch ( e ) {
+							const evt = document.createEvent( 'HTMLEvents' );
+							evt.initEvent( 'change', true, true );
+							element.dispatchEvent( evt );
+						}
+					} );
+					validateField( instance, fieldName );
+				} );
+			} );
+		};
+
+		postalInputs.forEach( ( input ) => {
+			if ( input._csmfPostalBound ) return;
+			input._csmfPostalBound = true;
+
+			const onInput = () => {
+				clearTimeout( debounceTimer );
+				debounceTimer = setTimeout( () => {
+					triggerAutofill( input.value );
+				}, 100 );
+			};
+
+			input.addEventListener( 'input', onInput, false );
+			input.addEventListener( 'change', onInput, false );
+			input.addEventListener( 'paste', onInput, false );
+
+			// Check if already filled
+			if ( input.value && input.value.trim().length >= 7 ) {
+				onInput();
+			}
+		} );
+	}
+
 	function bind( instance ) {
-		if ( instance.bound ) return; instance.bound = true;
+		if ( instance.bound ) return;
+		instance.bound = true;
 		instance.form.addEventListener( 'input', ( event ) => {
 			applyConditions( instance );
-			if ( instance.config.realtime && [ 'input', 'blur_input' ].includes( instance.config.validateOn ) && event.target.name ) validateField( instance, event.target.name.replace( /\[\]$/, '' ) );
+			if ( instance.config.realtime && [ 'input', 'blur_input' ].includes( instance.config.validateOn ) && event.target.name ) {
+				validateField( instance, event.target.name.replace( /\[\]$/, '' ) );
+			}
 		}, true );
 		instance.form.addEventListener( 'change', ( event ) => {
 			applyConditions( instance );
-			if ( event.target.type === 'file' ) validateFile( instance, event.target );
-			if ( instance.config.realtime && event.target.name ) validateField( instance, event.target.name.replace( /\[\]$/, '' ) );
+			if ( event.target.type === 'file' ) {
+				validateFile( instance, event.target );
+			}
+			if ( instance.config.realtime && event.target.name ) {
+				validateField( instance, event.target.name.replace( /\[\]$/, '' ) );
+			}
 		}, true );
 		instance.form.addEventListener( 'focusout', ( event ) => {
-			if ( instance.config.realtime && [ 'blur', 'blur_input' ].includes( instance.config.validateOn ) && event.target.name ) validateField( instance, event.target.name.replace( /\[\]$/, '' ) );
+			if ( instance.config.realtime && [ 'blur', 'blur_input' ].includes( instance.config.validateOn ) && event.target.name ) {
+				validateField( instance, event.target.name.replace( /\[\]$/, '' ) );
+			}
 		}, true );
 		instance.form.addEventListener( 'submit', ( event ) => {
 			applyConditions( instance );
 			if ( ! validateForm( instance ) ) {
-				event.preventDefault(); event.stopImmediatePropagation();
-				if ( instance.config.focusFirstError ) instance.form.querySelector( '[aria-invalid="true"]' )?.focus();
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				if ( instance.config.focusFirstError ) {
+					instance.form.querySelector( '[aria-invalid="true"]' )?.focus();
+				}
 			}
 		}, true );
-		[ 'smf.input', 'smf.back', 'smf.invalid' ].forEach( ( name ) => instance.form.addEventListener( name, () => setTimeout( () => refresh( instance ), 0 ) ) );
+		[ 'smf.input', 'smf.back', 'smf.invalid' ].forEach( ( name ) => {
+			instance.form.addEventListener( name, () => setTimeout( () => refresh( instance ), 0 ) );
+		} );
 	}
 
 	function refresh( instance ) {
-		applyUploadAttributes( instance ); applyConditions( instance );
+		applyUploadAttributes( instance );
+		applyPostalAutofill( instance );
+		applyConditions( instance );
 	}
 
 	async function loadConfiguration( form ) {

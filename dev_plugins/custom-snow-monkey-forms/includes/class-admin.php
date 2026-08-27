@@ -116,6 +116,7 @@ final class CSMF_Admin {
 						<button type="button" class="nav-tab" data-tab="conditions"><?php echo esc_html( $strings['tab_conditions'] ); ?></button>
 						<button type="button" class="nav-tab" data-tab="recipients"><?php echo esc_html( $strings['tab_recipients'] ); ?></button>
 						<button type="button" class="nav-tab" data-tab="uploads"><?php echo esc_html( $strings['tab_uploads'] ); ?></button>
+						<button type="button" class="nav-tab" data-tab="postal"><?php echo esc_html( $strings['tab_postal'] ); ?></button>
 						<button type="button" class="nav-tab" data-tab="diagnostics"><?php echo esc_html( $strings['tab_diagnostics'] ); ?></button>
 					</nav>
 

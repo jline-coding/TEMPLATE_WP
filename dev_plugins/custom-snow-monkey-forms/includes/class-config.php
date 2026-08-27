@@ -25,6 +25,13 @@ final class CSMF_Config {
 			'clear_hidden'     => true,
 			'route_mode'       => 'first_match',
 			'delete_on_uninstall' => false,
+			'postal_autofill'  => array(
+				'enabled'        => false,
+				'postal_field'   => '',
+				'region_field'   => '',
+				'locality_field' => '',
+				'street_field'   => '',
+			),
 			'validations'      => array(),
 			'field_rules'      => array(),
 			'recipient_rules'  => array(),
@@ -73,6 +80,7 @@ final class CSMF_Config {
 			'hideErrorEmpty'    => $config['hide_error_empty'],
 			'focusFirstError'   => $config['focus_first_error'],
 			'clearHidden'       => $config['clear_hidden'],
+			'postalAutofill'    => $config['postal_autofill'],
 			'validations'       => $config['validations'],
 			'fieldRules'        => $config['field_rules'],
 			'uploads'           => array_map(
@@ -94,6 +102,7 @@ final class CSMF_Config {
 	 */
 	public static function sanitize( array $raw ) {
 		$defaults = self::defaults();
+		$raw_postal = isset( $raw['postal_autofill'] ) && is_array( $raw['postal_autofill'] ) ? $raw['postal_autofill'] : array();
 		$clean    = array(
 			'enabled'             => ! empty( $raw['enabled'] ),
 			'realtime'            => ! empty( $raw['realtime'] ),
@@ -103,6 +112,13 @@ final class CSMF_Config {
 			'clear_hidden'        => ! empty( $raw['clear_hidden'] ),
 			'route_mode'          => in_array( $raw['route_mode'] ?? '', array( 'first_match', 'merge_all' ), true ) ? $raw['route_mode'] : $defaults['route_mode'],
 			'delete_on_uninstall' => ! empty( $raw['delete_on_uninstall'] ),
+			'postal_autofill'     => array(
+				'enabled'        => ! empty( $raw_postal['enabled'] ),
+				'postal_field'   => self::field_name( $raw_postal['postal_field'] ?? '' ),
+				'region_field'   => self::field_name( $raw_postal['region_field'] ?? '' ),
+				'locality_field' => self::field_name( $raw_postal['locality_field'] ?? '' ),
+				'street_field'   => self::field_name( $raw_postal['street_field'] ?? '' ),
+			),
 			'validations'         => array(),
 			'field_rules'         => array(),
 			'recipient_rules'     => array(),

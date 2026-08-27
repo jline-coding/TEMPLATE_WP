@@ -12,6 +12,7 @@ final class CSMF_Integration {
 	private $hidden_cache = array();
 
 	public function __construct() {
+		add_filter( 'snow_monkey_forms/form/attributes', array( $this, 'filter_form_attributes' ), 20, 2 );
 		add_filter( 'snow_monkey_forms/control/attributes', array( $this, 'filter_control_attributes' ), 20, 2 );
 		add_filter( 'snow_monkey_forms/spam/validate', array( $this, 'validate_submission' ), 20, 3 );
 		add_filter( 'snow_monkey_forms/administrator_mailer/args', array( $this, 'administrator_mail_args' ), 20, 3 );
@@ -19,7 +20,26 @@ final class CSMF_Integration {
 	}
 
 	/**
-	 * Make core required/file validation agree with conditional visibility.
+	 * Automatically add h-adr class to the form if postal autofill is enabled.
+	 *
+	 * @param array $attributes Form attributes.
+	 * @param object $setting   Snow Monkey Forms Setting.
+	 * @return array
+	 */
+	public function filter_form_attributes( $attributes, $setting ) {
+		$form_id = absint( $setting->get( 'form_id' ) );
+		$config  = CSMF_Config::get( $form_id );
+		if ( ! empty( $config['enabled'] ) && ! empty( $config['postal_autofill']['enabled'] ) ) {
+			$class = isset( $attributes['class'] ) ? (string) $attributes['class'] : '';
+			if ( false === strpos( $class, 'h-adr' ) ) {
+				$attributes['class'] = trim( $class . ' h-adr' );
+			}
+		}
+		return $attributes;
+	}
+
+	/**
+	 * Make core required/file validation agree with conditional visibility and postal auto-fill.
 	 *
 	 * @param array $attributes Control attributes.
 	 * @param object $setting   Snow Monkey Forms Setting.
@@ -43,6 +63,29 @@ final class CSMF_Integration {
 				$attributes['validations']             = isset( $attributes['validations'] ) && is_array( $attributes['validations'] ) ? $attributes['validations'] : array();
 				$attributes['validations']['uploaded'] = empty( $hidden[ $name ] ) && $upload['required'];
 				break;
+			}
+		}
+
+		// Attach YubinBango Microformats classes
+		if ( ! empty( $config['postal_autofill']['enabled'] ) ) {
+			$postal = $config['postal_autofill'];
+			$add_class = '';
+			if ( $postal['postal_field'] && $name === $postal['postal_field'] ) {
+				$add_class = 'p-postal-code';
+			} elseif ( $postal['region_field'] && $name === $postal['region_field'] ) {
+				$add_class = 'p-region';
+			} elseif ( $postal['locality_field'] && $name === $postal['locality_field'] ) {
+				$add_class = 'p-locality';
+			} elseif ( $postal['street_field'] && $name === $postal['street_field'] ) {
+				$add_class = 'p-street-address';
+			}
+
+			if ( $add_class ) {
+				$current_class = isset( $attributes['controlClass'] ) ? (string) $attributes['controlClass'] : ( isset( $attributes['class'] ) ? (string) $attributes['class'] : '' );
+				if ( false === strpos( $current_class, $add_class ) ) {
+					$attributes['controlClass'] = trim( $current_class . ' ' . $add_class );
+					$attributes['class']        = $attributes['controlClass'];
+				}
 			}
 		}
 

@@ -56,11 +56,18 @@ final class CSMF_Plugin {
 
 	/** Enqueue the small runtime. */
 	public function enqueue_frontend() {
-		$script = CSMF_PATH . 'assets/js/frontend.js';
-		$style  = CSMF_PATH . 'assets/css/frontend.css';
+		$script    = CSMF_PATH . 'assets/js/frontend.js';
+		$yubinbango = CSMF_PATH . 'assets/js/yubinbango.js';
+		$style     = CSMF_PATH . 'assets/css/frontend.css';
 
 		wp_enqueue_style( 'custom-snow-monkey-forms', CSMF_URL . 'assets/css/frontend.css', array( 'snow-monkey-forms' ), file_exists( $style ) ? filemtime( $style ) : CSMF_VERSION );
-		wp_enqueue_script( 'custom-snow-monkey-forms', CSMF_URL . 'assets/js/frontend.js', array( 'snow-monkey-forms' ), file_exists( $script ) ? filemtime( $script ) : CSMF_VERSION, true );
+
+		if ( file_exists( $yubinbango ) ) {
+			wp_enqueue_script( 'yubinbango', CSMF_URL . 'assets/js/yubinbango.js', array(), filemtime( $yubinbango ), true );
+		}
+
+		$dependencies = file_exists( $yubinbango ) ? array( 'snow-monkey-forms', 'yubinbango' ) : array( 'snow-monkey-forms' );
+		wp_enqueue_script( 'custom-snow-monkey-forms', CSMF_URL . 'assets/js/frontend.js', $dependencies, file_exists( $script ) ? filemtime( $script ) : CSMF_VERSION, true );
 		$is_vi = 'vi' === CSMF_I18n::get_language();
 		wp_localize_script(
 			'custom-snow-monkey-forms',
