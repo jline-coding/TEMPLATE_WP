@@ -1,0 +1,1268 @@
+@use "sass:math";
+@use "../../global" as *;
+
+/* ==========================================================================
+   Snow Monkey Forms Styling
+   Exact style parity with .c-form and Mailform Pro (#mailformpro / #mfp_confirm_table)
+   ========================================================================== */
+
+.snow-monkey-form {
+    max-width: 100%;
+    margin: 0 auto;
+    position: relative;
+    font-family: $font-family-base;
+    color: var(--base);
+
+    // ==========================================
+    // 1. Progress Tracker (Input -> Confirm -> Complete)
+    // ==========================================
+    .smf-progress-tracker {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 35px;
+        padding: 0;
+        list-style: none;
+        max-width: 600px;
+        width: 100%;
+
+        @include mq(md) {
+            margin-bottom: 50px;
+        }
+
+        &__item {
+            display: flex;
+            align-items: center;
+            position: relative;
+            flex: 1;
+            font-size: rem(13);
+            font-weight: 500;
+            color: var(--gray);
+            justify-content: center;
+
+            @include mq(md) {
+                font-size: rem(15);
+            }
+
+            &:not(:last-child)::after {
+                content: "";
+                position: absolute;
+                right: -10px;
+                top: 50%;
+                width: 6px;
+                height: 6px;
+                border-top: 2px solid var(--gray);
+                border-right: 2px solid var(--gray);
+                transform: translateY(-50%) rotate(45deg);
+
+                @include mq(md) {
+                    right: -15px;
+                    width: 8px;
+                    height: 8px;
+                }
+            }
+
+            &[data-state="active"],
+            &.is-active,
+            &.active {
+                color: var(--base);
+                font-weight: 700;
+
+                .smf-progress-tracker__number {
+                    background-color: var(--base);
+                    color: #fff;
+                    border-color: var(--base);
+                }
+            }
+
+            &[data-state="complete"],
+            &.is-complete {
+                color: var(--base);
+
+                .smf-progress-tracker__number {
+                    background-color: var(--base);
+                    color: #fff;
+                    border-color: var(--base);
+                }
+            }
+        }
+
+        &__number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 1px solid var(--gray);
+            background-color: #fff;
+            margin-right: 6px;
+            font-size: rem(12);
+            line-height: 1;
+
+            @include mq(md) {
+                width: 26px;
+                height: 26px;
+                margin-right: 8px;
+                font-size: rem(13);
+            }
+        }
+    }
+
+    // ==========================================
+    // 2. Form Rows / Items (.smf-item) - Matches .c-form__item
+    // ==========================================
+    .smf-item {
+        display: grid;
+        border-top: 1px solid var(--gray);
+        grid-gap: 20px;
+        padding: 20px 0;
+        margin: 0;
+
+        @include mq(md) {
+            padding: 20px 0;
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        &:last-of-type,
+        &:last-child {
+            border-bottom: 1px solid var(--gray);
+        }
+
+        // --- Label Column (Matches .c-form__ttl & .c-form__head) ---
+        &__label {
+            flex-shrink: 0;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+            padding-top: 0.75em;
+            font-size: rem(16);
+            font-weight: 500;
+            line-height: 1.6;
+            color: var(--base);
+            margin: 0;
+
+            @include mq(md) {
+                width: clamped(220, 320);
+            }
+
+            label {
+                font-weight: 500;
+                font-size: inherit;
+                line-height: inherit;
+                color: inherit;
+                margin: 0;
+                display: contents;
+            }
+        }
+
+        // Required badge (Matches .c-form__rq)
+        .smf-badge,
+        .smf-badge--required {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            border: 1px solid var(--red);
+            background-color: var(--red);
+            padding: 0.15em 0.2em 0.3em;
+            @extend %fz-12;
+            line-height: 1;
+            letter-spacing: 0em;
+            color: #fff;
+            position: relative;
+            top: 0.5em;
+            border-radius: 0;
+            font-weight: 400;
+        }
+
+        // Optional badge
+        .smf-badge--optional {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            border: 1px solid var(--gray);
+            background-color: #f5f5f5;
+            padding: 0.15em 0.2em 0.3em;
+            @extend %fz-12;
+            line-height: 1;
+            letter-spacing: 0em;
+            color: var(--base);
+            position: relative;
+            top: 0.5em;
+            border-radius: 0;
+            font-weight: 400;
+        }
+
+        // --- Controls Column (Matches .c-form__content) ---
+        &__controls {
+            width: 100%;
+            flex: 1;
+            min-width: 0;
+        }
+
+        // Child spacing (Matches .c-form__child)
+        &__child {
+            margin-bottom: 10px;
+            @include mq(md) {
+                margin-bottom: 15px;
+            }
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        // Description / Notes (Matches .c-form__txt14 / .c-form__txt16)
+        &__description,
+        .smf-description,
+        .c-form__txt14 {
+            font-size: rem(14);
+            line-height: 1.6;
+            margin-top: 6px;
+            color: var(--base);
+            letter-spacing: 0;
+
+            @include mq(md) {
+                font-size: rem(14);
+            }
+        }
+
+        .c-form__txt16 {
+            font-size: rem(16);
+            line-height: 1.6;
+            margin-top: 6px;
+            color: var(--base);
+        }
+
+        // Validation Error message (Matches .mfp_err / .c-form error)
+        &__error,
+        .smf-error-message,
+        .smf-system-error-content,
+        .mfp_err {
+            color: var(--red);
+            font-size: rem(14);
+            line-height: 1.5;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+    }
+
+    // ==========================================
+    // 3. Text Inputs - Matches .c-input
+    // ==========================================
+    .smf-text-control,
+    .smf-email-control,
+    .smf-tel-control,
+    .smf-number-control,
+    .smf-url-control,
+    .smf-date-control,
+    .smf-password-control {
+        width: 100%;
+
+        &__control,
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="url"],
+        input[type="date"],
+        input[type="password"] {
+            font-size: rem(14);
+            font-family: $font-family-base;
+            font-weight: 400;
+            letter-spacing: 0.0em;
+            line-height: 1.6;
+            display: block;
+            border: 1px solid var(--gray);
+            background-color: #FFFFFF;
+            width: 100% !important;
+            padding: 1em;
+            outline: 0;
+            border-radius: 0;
+            color: var(--base);
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+
+            @include mq(md) {
+                font-size: rem(16);
+            }
+
+            &:focus {
+                border-color: var(--base);
+            }
+
+            &[aria-invalid="true"] {
+                border-color: var(--red);
+                background-color: #fffafa;
+            }
+
+            &::placeholder {
+                display: block;
+                font-family: $font-family-base;
+                font-weight: 400;
+                letter-spacing: 0.0em;
+                line-height: 1.6;
+                font-size: rem(14);
+                opacity: 0.5;
+
+                @include mq(md) {
+                    font-size: rem(16);
+                }
+            }
+        }
+    }
+
+    // General fallback for all inputs inside form
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="url"],
+    input[type="date"],
+    input[type="password"] {
+        font-size: rem(14);
+        font-family: $font-family-base;
+        font-weight: 400;
+        letter-spacing: 0.0em;
+        line-height: 1.6;
+        display: block;
+        border: 1px solid var(--gray);
+        background-color: #FFFFFF;
+        width: 100% !important;
+        padding: 1em;
+        outline: 0;
+        border-radius: 0;
+        color: var(--base);
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+
+        @include mq(md) {
+            font-size: rem(16);
+        }
+
+        &:focus {
+            border-color: var(--base);
+        }
+
+        &[aria-invalid="true"] {
+            border-color: var(--red);
+            background-color: #fffafa;
+        }
+
+        &::placeholder {
+            display: block;
+            font-family: $font-family-base;
+            font-weight: 400;
+            letter-spacing: 0.0em;
+            line-height: 1.6;
+            font-size: rem(14);
+            opacity: 0.5;
+
+            @include mq(md) {
+                font-size: rem(16);
+            }
+        }
+    }
+
+    // ==========================================
+    // 4. Select Control - Matches .c-select
+    // ==========================================
+    .smf-select-control {
+        width: 100%;
+        border: 1px solid var(--gray);
+        background-color: var(--white);
+        position: relative;
+        display: block;
+
+        &__toggle,
+        &__control-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        &__control,
+        select {
+            font-size: rem(14);
+            font-family: $font-family-base;
+            font-weight: 400;
+            letter-spacing: 0.0em;
+            line-height: 1.6;
+            display: block;
+            width: 100% !important;
+            padding: 1em 2em 1em 1em;
+            outline: 0;
+            border: none;
+            background: transparent;
+            color: var(--base);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border-radius: 0;
+            cursor: pointer;
+            box-sizing: border-box;
+
+            @include mq(md) {
+                font-size: rem(16);
+            }
+
+            &::placeholder {
+                display: block;
+                font-family: $font-family-base;
+                font-weight: 400;
+                letter-spacing: 0.0em;
+                line-height: 1.6;
+                font-size: rem(14);
+                opacity: 0.5;
+
+                @include mq(md) {
+                    font-size: rem(16);
+                }
+            }
+        }
+
+        // Chevron arrow matches .c-select::after
+        &::after {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-left: 2px solid var(--gray);
+            border-bottom: 2px solid var(--gray);
+            position: absolute;
+            right: 1em;
+            top: 50%;
+            transform: translateY(-50%) rotate(-45deg);
+            pointer-events: none;
+        }
+
+        &[aria-invalid="true"] {
+            border-color: var(--red);
+            background-color: #fffafa;
+        }
+    }
+
+    // ==========================================
+    // 5. Textarea Control - Matches .c-textarea
+    // ==========================================
+    .smf-textarea-control {
+        width: 100%;
+
+        &__control,
+        textarea {
+            font-size: rem(14);
+            font-family: $font-family-base;
+            font-weight: 400;
+            letter-spacing: 0.0em;
+            line-height: 1.6;
+            display: block;
+            border: 1px solid var(--gray);
+            background-color: #FFFFFF;
+            width: 100% !important;
+            padding: 1em;
+            outline: 0;
+            height: 90px !important;
+            resize: none;
+            border-radius: 0;
+            color: var(--base);
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+
+            @include mq(md) {
+                height: 120px !important;
+                font-size: rem(16);
+            }
+
+            &:focus {
+                border-color: var(--base);
+            }
+
+            &[aria-invalid="true"] {
+                border-color: var(--red);
+                background-color: #fffafa;
+            }
+
+            &::placeholder {
+                display: block;
+                font-family: $font-family-base;
+                font-weight: 400;
+                letter-spacing: 0.0em;
+                line-height: 1.6;
+                font-size: rem(14);
+                opacity: 0.5;
+
+                @include mq(md) {
+                    font-size: rem(16);
+                }
+            }
+        }
+    }
+
+    // ==========================================
+    // 6. Checkboxes - Matches .c-form__checkboxs & .c-checkbox
+    // ==========================================
+    .smf-checkboxes-control {
+        display: grid;
+        grid-gap: 10px 15px;
+        grid-template-columns: 1fr;
+        width: 100%;
+
+        @include mq(md) {
+            grid-gap: 15px 20px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        &__item {
+            width: 100%;
+            margin: 0;
+        }
+
+        &__label,
+        label {
+            position: relative;
+            padding-left: 2em;
+            font-size: rem(14);
+            letter-spacing: 0em;
+            line-height: 1.6;
+            display: block;
+            cursor: pointer;
+            color: var(--base);
+
+            @include mq(md) {
+                font-size: rem(16);
+            }
+
+            // Custom Checkbox Square
+            &::before {
+                content: "";
+                width: 22px;
+                height: 22px;
+                background-color: #fff;
+                border: 2px solid var(--gray);
+                position: absolute;
+                left: 0;
+                top: 0;
+                z-index: 0;
+                box-sizing: border-box;
+
+                @include mq(md) {
+                    width: 26px;
+                    height: 26px;
+                }
+            }
+
+            // Custom Checkmark
+            &::after {
+                content: "";
+                width: 10px;
+                height: 6px;
+                transform: rotate(-45deg);
+                border-left: 2px solid var(--gray);
+                border-bottom: 2px solid var(--gray);
+                position: absolute;
+                left: 6px;
+                top: 6px;
+                opacity: 0;
+                transition: 0.5s;
+
+                @include mq(md) {
+                    width: 12px;
+                    height: 8px;
+                    left: 7px;
+                    top: 7px;
+                    border-left: 3px solid var(--gray);
+                    border-bottom: 3px solid var(--gray);
+                }
+            }
+
+            &:has(input:checked)::after,
+            &:has(.smf-checkbox-control__control:checked)::after,
+            &:has(.smf-checkboxes-control__control:checked)::after {
+                opacity: 1;
+            }
+        }
+
+        &__control,
+        input[type="checkbox"] {
+            display: none !important;
+            opacity: 0;
+
+            &:checked + span::after,
+            &:checked + .smf-checkboxes-control__label-text::after,
+            &:checked ~ span::after {
+                opacity: 1;
+            }
+        }
+    }
+
+    // Single Checkbox (Agreement / Acceptance) - Matches .c-checkbox
+    .smf-checkbox-control {
+        width: 100%;
+        display: inline-block;
+
+        &__label,
+        label {
+            position: relative;
+            padding-left: 2em;
+            font-size: rem(14);
+            letter-spacing: 0em;
+            line-height: 1.6;
+            display: block;
+            cursor: pointer;
+            color: var(--base);
+
+            @include mq(md) {
+                font-size: rem(16);
+            }
+
+            &::before {
+                content: "";
+                width: 22px;
+                height: 22px;
+                background-color: #fff;
+                border: 2px solid var(--gray);
+                position: absolute;
+                left: 0;
+                top: 0;
+                z-index: 0;
+                box-sizing: border-box;
+
+                @include mq(md) {
+                    width: 26px;
+                    height: 26px;
+                }
+            }
+
+            &::after {
+                content: "";
+                width: 10px;
+                height: 6px;
+                transform: rotate(-45deg);
+                border-left: 2px solid var(--gray);
+                border-bottom: 2px solid var(--gray);
+                position: absolute;
+                left: 6px;
+                top: 6px;
+                opacity: 0;
+                transition: 0.5s;
+
+                @include mq(md) {
+                    width: 12px;
+                    height: 8px;
+                    left: 7px;
+                    top: 7px;
+                    border-left: 3px solid var(--gray);
+                    border-bottom: 3px solid var(--gray);
+                }
+            }
+
+            &:has(input:checked)::after,
+            &:has(.smf-checkbox-control__control:checked)::after {
+                opacity: 1;
+            }
+        }
+
+        &__control,
+        input[type="checkbox"] {
+            display: none !important;
+            opacity: 0;
+
+            &:checked + span::after,
+            &:checked ~ span::after {
+                opacity: 1;
+            }
+        }
+    }
+
+    // ==========================================
+    // 7. Radio Buttons - Matches .c-form__radios & .c-radio
+    // ==========================================
+    .smf-radio-buttons-control,
+    .smf-radio-control {
+        display: grid;
+        grid-gap: 10px 15px;
+        grid-template-columns: 1fr;
+        width: 100%;
+
+        @include mq(md) {
+            grid-gap: 15px 20px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        &__item {
+            width: 100%;
+            margin: 0;
+        }
+
+        &__label,
+        label {
+            position: relative;
+            padding-left: 30px;
+            font-size: rem(14);
+            line-height: 1.6;
+            cursor: pointer;
+            display: block;
+            color: var(--base);
+
+            @include mq(md) {
+                padding-left: 36px;
+                font-size: rem(16);
+            }
+
+            // Radio Outer Circle
+            &::before {
+                content: "";
+                width: 22px;
+                height: 22px;
+                background-color: #fff;
+                border: 2px solid var(--gray);
+                border-radius: 100px;
+                position: absolute;
+                left: 0;
+                top: 0.1em;
+                z-index: 0;
+                box-sizing: border-box;
+
+                @include mq(md) {
+                    width: 26px;
+                    height: 26px;
+                }
+            }
+
+            // Radio Inner Bullet
+            &::after {
+                content: "";
+                width: 10px;
+                height: 10px;
+                aspect-ratio: 1/1;
+                background-color: var(--gray);
+                border-radius: 100px;
+                position: absolute;
+                left: 6px;
+                top: 7px;
+                opacity: 0;
+                transition: 0.5s;
+
+                @include mq(md) {
+                    left: 7px;
+                    top: 9px;
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+
+            &:has(input:checked)::after,
+            &:has(.smf-radio-button-control__control:checked)::after,
+            &:has(.smf-radio-buttons-control__control:checked)::after {
+                opacity: 1;
+            }
+        }
+
+        &__control,
+        input[type="radio"] {
+            display: none !important;
+            opacity: 0;
+
+            &:checked + span::after,
+            &:checked + .smf-radio-buttons-control__label-text::after,
+            &:checked ~ span::after {
+                opacity: 1;
+            }
+        }
+    }
+
+    // ==========================================
+    // 8. File Upload Control - Matches .c-file
+    // ==========================================
+    .smf-file-control {
+        font-size: rem(14);
+        border: 1px solid var(--gray);
+        display: inline-flex;
+        align-items: stretch;
+        text-align: center;
+        cursor: pointer;
+
+        @include mq(md) {
+            font-size: rem(16);
+        }
+
+        &__inner {
+            display: block;
+            padding: 0.5em 2em;
+            cursor: pointer;
+        }
+
+        &__control,
+        input[type="file"] {
+            display: none !important;
+        }
+
+        &__content {
+            word-break: break-all;
+            color: var(--base);
+            pointer-events: none;
+        }
+
+        &__clear {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1/1;
+            padding: 1em;
+            font-size: 1em;
+            cursor: pointer;
+            color: var(--red);
+            border-left: 1px solid var(--gray);
+            line-height: 1;
+            transition: 0.3s;
+
+            &:hover {
+                background-color: var(--gray);
+            }
+        }
+    }
+
+    // ==========================================
+    // 9. Privacy Policy / Acceptance - Matches .c-form-pravicy & .c-form-verify
+    // ==========================================
+    .smf-acceptance-control,
+    .smf-agreement-control,
+    .c-form-verify {
+        display: flex;
+        justify-content: center;
+        margin: 30px 0 0;
+
+        @include mq(md) {
+            margin: 40px 0 0;
+        }
+
+        &__inner,
+        .smf-checkbox-control,
+        .smf-checkboxes-control__item {
+            width: auto;
+            max-width: 100%;
+        }
+    }
+
+    // Privacy Policy Box (Matches .c-form-pravicy)
+    .c-form-pravicy {
+        padding: 50px 0;
+
+        @include mq(md) {
+            padding: 58px 0;
+        }
+
+        &__title {
+            text-align: center;
+            @extend %fz-24;
+            font-weight: 500;
+            letter-spacing: 0em;
+            line-height: 1.6;
+            display: block;
+            margin-bottom: 20px;
+
+            @include mq(md) {
+                margin-bottom: 25px;
+            }
+        }
+
+        &__inner {
+            padding: 20px 5px 20px 20px;
+            margin: 0 auto 30px;
+            max-height: 216px;
+            overflow: auto;
+            position: relative;
+            border: 1px solid var(--base);
+
+            @include mq(md) {
+                padding: 40px 20px 40px 40px;
+                max-height: 300px;
+                margin-bottom: 46px;
+            }
+
+            &::after {
+                content: "";
+                width: calc(100% - 20px);
+                height: 16px;
+                background-color: #fff;
+                position: absolute;
+                left: 0;
+                bottom: 2px;
+                pointer-events: none;
+                display: none;
+
+                @include mq(md) {
+                    display: block;
+                    height: clamped(16);
+                    width: calc(100% - 25px);
+                }
+            }
+
+            .mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar {
+                width: 8px;
+                background-color: var(--base);
+                border-radius: 9px;
+
+                @include mq(md) {
+                    width: 10px;
+                }
+            }
+
+            .mCSB_scrollTools .mCSB_draggerRail {
+                opacity: 0;
+            }
+
+            .mCSB_inside > .mCSB_container {
+                margin-right: 20px;
+
+                @include mq(md) {
+                    margin-right: 20px;
+                }
+            }
+        }
+
+        &__item {
+            margin-bottom: 20px;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+    }
+
+    // ==========================================
+    // 10. Action Buttons (Input Mode) - Matches .c-form__btns
+    // ==========================================
+    .smf-action {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 10px 20px;
+        padding-top: 0px;
+        margin-top: 30px;
+        border: none;
+
+        @include mq(md) {
+            padding-top: 49px;
+            margin-top: 0;
+        }
+
+        &__item {
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+
+        // Button Styles matching .c-form__btns button
+        .smf-button-control__control,
+        button,
+        input[type="submit"],
+        input[type="button"] {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 260px;
+            background-color: var(--base);
+            padding: 1em 1em;
+            position: relative;
+            @extend %fz-20;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            line-height: 1.4;
+            color: #fff;
+            min-height: 50px;
+            border: none;
+            outline: 0;
+            cursor: pointer;
+            text-decoration: none;
+            border-radius: 0;
+            transition: opacity 0.3s, background-color 0.3s;
+
+            @include mq(md) {
+                min-height: 64px;
+                width: clamped(300);
+            }
+
+            // Arrow triangle on the right
+            &::after {
+                content: "";
+                width: 0.5em;
+                height: 0.5em;
+                background-color: #fff;
+                clip-path: polygon(0 0, 0% 100%, 100% 50%);
+                position: relative;
+                flex-shrink: 0;
+            }
+
+            &:hover {
+                opacity: 0.85;
+            }
+        }
+    }
+
+    // ==========================================
+    // 11. Confirmation Screen - EXACT MATCH WITH #mfp_confirm_table & .mfp_buttons
+    // ==========================================
+    &[data-screen="confirm"],
+    &.is-confirm {
+        position: relative;
+        width: 100%;
+        display: block;
+        margin: 0 auto;
+        max-width: 1050px;
+        padding: 60px 0 20px;
+
+        @include mq(md) {
+            padding: 79px 0 22px 0;
+        }
+
+        // Hide badges, hints, descriptions, errors, and privacy policy in confirm screen
+        .smf-badge,
+        .smf-badge--required,
+        .smf-badge--optional,
+        .c-form__rq,
+        .smf-item__description,
+        .smf-description,
+        .c-form__txt14,
+        .c-form__txt16,
+        .smf-item__error,
+        .smf-error-message,
+        .smf-system-error-content,
+        .mfp_err,
+        .c-form-pravicy,
+        .c-form-verify,
+        .smf-acceptance-control,
+        .smf-agreement-control {
+            display: none !important;
+        }
+
+        // Each confirmed row (Matches #mfp_confirm_table tr)
+        .smf-item {
+            display: grid;
+            grid-gap: 0;
+            position: relative;
+            padding: 0;
+            margin: 0;
+            border: none !important;
+
+            @include mq(md) {
+                display: flex;
+                gap: 20px;
+            }
+
+            // Row top border line (Matches tr::before in #mfp_confirm_table)
+            &::before {
+                content: "";
+                width: 100%;
+                height: 1px;
+                background-color: var(--gray);
+                position: absolute;
+                left: 0;
+                top: -1px;
+                z-index: 0;
+                pointer-events: none;
+            }
+
+            &:last-of-type,
+            &:last-child {
+                &::after {
+                    content: "";
+                    width: 100%;
+                    height: 1px;
+                    background-color: var(--gray);
+                    position: absolute;
+                    left: 0;
+                    bottom: 0;
+                    z-index: 0;
+                    pointer-events: none;
+                }
+            }
+
+            // Label column in confirm mode (Matches #mfp_confirm_table th)
+            &__label {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: flex-start;
+                justify-content: space-between;
+                width: 100%;
+                font-family: $font-family-base;
+                @extend %fz-16;
+                letter-spacing: 0.04em;
+                line-height: 1.6;
+                padding: 2em 0 2em 0;
+                position: relative;
+                flex-shrink: 0;
+                margin-bottom: -40px;
+                font-weight: 500;
+                color: var(--base);
+
+                @include mq(md) {
+                    width: clamped(220, 300);
+                    margin-bottom: 0;
+                }
+
+                label {
+                    font-weight: 500;
+                    font-size: inherit;
+                    line-height: inherit;
+                    color: inherit;
+                    margin: 0;
+                }
+            }
+
+            // Value column in confirm mode (Matches #mfp_confirm_table td)
+            &__controls {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: flex-start;
+                justify-content: flex-start;
+                width: 100% !important;
+                font-family: $font-family-base;
+                @extend %fz-16;
+                letter-spacing: 0.02em;
+                line-height: 1.6;
+                padding: 2em 0 2em 0;
+                position: relative;
+                font-weight: 400;
+                color: #0C377D !important; // Exact color from Mailform Pro confirm screen
+                gap: 20px;
+                word-break: break-word;
+
+                @include mq(md) {
+                    gap: clamped(20, 40);
+                }
+
+                * {
+                    color: #0C377D !important;
+                }
+
+                // Uploaded Images (Matches #mfp_confirm_table td img)
+                img {
+                    width: calc(50% - 10px) !important;
+                    height: auto !important;
+                    max-width: 100% !important;
+                    min-width: 0 !important;
+                    min-height: 0 !important;
+                    max-height: 100% !important;
+                    display: block !important;
+                    margin: 5px 0 5px 0 !important;
+                    box-shadow: none !important;
+                    border: none !important;
+
+                    @include mq(md) {
+                        width: calc(50% - clamped(10, 20)) !important;
+                        margin: 11px 0 12px 0 !important;
+                    }
+                }
+            }
+        }
+
+        // Action buttons in confirm mode (Matches .mfp_buttons)
+        .smf-action {
+            display: flex;
+            flex-direction: row-reverse;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px 20px;
+            padding-top: 60px;
+            margin-top: 0;
+
+            @include mq(md) {
+                gap: 10px 40px;
+            }
+
+            &__item {
+                margin: 0;
+            }
+
+            .smf-button-control__control,
+            button,
+            input[type="submit"],
+            input[type="button"] {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 260px;
+                background-color: var(--base);
+                padding: 1em 1em;
+                position: relative;
+                @extend %fz-20;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                line-height: 1.4;
+                color: #fff;
+                min-height: 50px;
+                border: none;
+                cursor: pointer;
+                border-radius: 0;
+                transition: opacity 0.3s;
+
+                @include mq(md) {
+                    min-height: 64px;
+                    width: clamped(300);
+                }
+
+                // Send button arrow (right arrow)
+                &::after {
+                    content: "";
+                    width: 0.5em;
+                    height: 0.5em;
+                    background-color: #fff;
+                    clip-path: polygon(0 0, 0% 100%, 100% 50%);
+                    position: relative;
+                }
+
+                &:hover {
+                    opacity: 0.85;
+                }
+
+                // Cancel / Back button (Matches #mfp_button_cancel in .mfp_buttons)
+                &[data-action="back"],
+                &.is-back {
+                    flex-direction: row-reverse;
+                    background-color: var(--base);
+
+                    &::after {
+                        transform: rotate(180deg);
+                    }
+                }
+            }
+        }
+    }
+
+    // ==========================================
+    // 12. Complete Screen Mode ([data-screen="complete"])
+    // ==========================================
+    &[data-screen="complete"],
+    &.is-complete {
+        text-align: center;
+        padding: 40px 0;
+
+        @include mq(md) {
+            padding: 60px 0;
+        }
+
+        h2, h3, .smf-complete-title {
+            @extend %fz-24;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--base);
+
+            @include mq(md) {
+                margin-bottom: 30px;
+            }
+        }
+
+        p, .smf-complete-text {
+            @extend %fz-16;
+            line-height: 1.8;
+            color: var(--base);
+        }
+    }
+}

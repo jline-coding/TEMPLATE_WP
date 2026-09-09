@@ -1,5 +1,6 @@
 @use "sass:math";
 @use "../../global" as *;
+@forward "snow_monkey_forms";
 
 .c-input{
     font-size: rem(14);

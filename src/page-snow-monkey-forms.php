@@ -1,4 +1,10 @@
 <?php 
+AssetManager::css([
+    'contact'
+]);
+AssetManager::js([
+    'contact'
+]);
 get_header();
 ?>
 <!-- ↓↓ main ↓↓ -->
