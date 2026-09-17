@@ -20,9 +20,9 @@ component > btn
     letter-spacing: 0.1em;
     line-height: 1;
     z-index: 9;
-    background: var(--green);
+    background: var(--white);
     border-radius: 40px;
-    border: 2px solid var(--white);
+    border: 2px solid var(--base);
 
     @include mq(md) {
         right: 60px;
@@ -30,7 +30,7 @@ component > btn
         width: 60px;
         height: 60px;
         border-radius: 60px;
-        border: 3px solid var(--white);
+        border: 3px solid var(--base);
     }
 
     &::before {
@@ -40,7 +40,7 @@ component > btn
         content: "";
         width: 12px;
         height: 3px;
-        background: var(--white);
+        background: var(--base);
         transform: translateY(-50%) rotate(-45deg);
         pointer-events: none;
 
@@ -59,7 +59,7 @@ component > btn
         height: 3px;
         transform: translateY(-50%) rotate(45deg);
         pointer-events: none;
-        background: var(--white);
+        background: var(--base);
 
         @include mq(md) {
             right: 15px;

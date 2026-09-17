@@ -6,4 +6,14 @@ component > footer
 ------------------------------
 */
 
-.c-footer {}
+.c-footer {
+    height: 120px;
+    width: 100%;
+    background-color: var(--base);
+    color: var(--white);
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}

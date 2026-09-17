@@ -45,7 +45,7 @@ class AssetManager
             wp_enqueue_script(
                 $asset,
                 get_theme_file_uri("/assets/js/{$asset}.js"),
-                [],
+                ['jquery'],
                 self::get_version($file_path),
                 ['in_footer' => true, 'strategy' => 'defer']
             );

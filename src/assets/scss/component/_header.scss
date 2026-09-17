@@ -6,7 +6,16 @@ component > header
 ------------------------------
 */
 
-.c-header {}
+.c-header {
+    height: 120px;
+    width: 100%;
+    background-color: var(--base);
+    color: var(--white);
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+}
 
 .c-toggle {
     position: absolute;
@@ -16,7 +25,7 @@ component > header
     width: 60px;
     height: 60px;
     cursor: pointer;
-    background-color: var(--green);
+    background-color: var(--base);
     border-radius: 0 0 0 5px;
     z-index: 11;
 

@@ -69,9 +69,15 @@
         border-left: 2px solid var(--gray);
         border-bottom: 2px solid var(--gray);
         position: absolute;
-        right: 1em;
+        right: 1.2em;
         top: 50%;
-        transform: translateY(-50%) rotate(-45deg);
+        transform: translateY(-70%) rotate(-45deg);
+        pointer-events: none;
+        transition: transform 0.3s ease;
+    }
+
+    &.is-active::after {
+        transform: translateY(-30%) rotate(135deg);
     }
 
     .wpcf7-select{
@@ -406,10 +412,13 @@
     width: 100% !important;
     padding: 1em;
     outline: 0;
-    height: 90px !important;
+    height: 120px !important;
+    min-height: 120px !important;
     resize: none;
+    box-sizing: border-box;
     @include mq(md) {
         height: 120px !important;
+        min-height: 120px !important;
         font-size: rem(16);
     }
     &::placeholder{
