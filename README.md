@@ -160,3 +160,5 @@ File `.env` dùng để thiết lập cấu hình chạy tại máy tính của 
 | `PROXY_URL` | URL trang web của máy chủ ảo (Local Server) mà dự án đang chạy. Định nghĩa này dùng để công cụ BrowserSync bọc proxy hỗ trợ live-reload. | **Laragon (Win)**: `my-project.test`<br>**XAMPP**: `localhost/my-project`<br>**MAMP**: `localhost:8888/my-project` |
 | `WEB_ROOT` | Đường dẫn vật lý tuyệt đối kết nối đến thư mục gốc lưu trữ web của Local Server (Thư mục root). Dùng để bổ trợ việc khai thông cho lệnh `npm run link` tạo định tuyến tắt thành công. | **Laragon (Win)**: `C:\laragon\www`<br>**XAMPP (Win)**: `C:\xampp\htdocs`<br>**XAMPP (macOS)**: `/Applications/XAMPP/xamppfiles/htdocs`<br>**XAMPP (Linux)**: `/opt/lampp/htdocs`<br>**MAMP (macOS)**: `/Applications/MAMP/htdocs` |
 
+npm run plugins:pull
+
