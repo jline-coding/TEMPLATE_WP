@@ -14,6 +14,7 @@
     let scroll_pos1 = 0;
     // Inview
     const movement = new inview.observer({
+        class: 'js-inview',
         aniDelay: 300,
         optionView: { bottom: -50 },
     });

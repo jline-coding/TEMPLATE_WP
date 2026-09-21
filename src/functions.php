@@ -51,8 +51,8 @@ function convert_title_br($title) {
     if (empty($title)) return '';
     $title = esc_html($title);
     $title = str_replace('[br]',    '<br>',                              $title);
-    $title = str_replace('[br-pc]', '<br class="u-br-pc">',             $title);
-    $title = str_replace('[br-sp]', '<br class="u-br-sp">',             $title);
+    $title = str_replace('[br-pc]', '<br class="is-pc">',       $title);
+    $title = str_replace('[br-sp]', '<br class="is-sp">',       $title);
     return $title;
 }
 
