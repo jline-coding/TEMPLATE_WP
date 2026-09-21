@@ -90,7 +90,7 @@ function add_cf7_template_import_button() {
         
         <script>
         (function() {
-            var i18n = {
+            const i18n = {
                 missingName: "<?php echo esc_js(__('Missing Form Name!', 'cf7-template-importer')); ?>",
                 missingFile: "<?php echo esc_js(__('Missing Template File!', 'cf7-template-importer')); ?>",
                 missingClass: "<?php echo esc_js(__('Missing CSS Class!', 'cf7-template-importer')); ?>",
@@ -103,14 +103,14 @@ function add_cf7_template_import_button() {
             // Load Select2 library to add quick search to Select tag
             if (typeof jQuery !== 'undefined') {
                 if (!document.getElementById('select2-css')) {
-                    var link = document.createElement('link');
+                    const link = document.createElement('link');
                     link.id = 'select2-css';
                     link.rel = 'stylesheet';
                     link.href = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css';
                     document.head.appendChild(link);
                 }
                 if (typeof jQuery.fn.select2 === 'undefined') {
-                    var script = document.createElement('script');
+                    const script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js';
                     script.onload = function() {
                         jQuery('#cf7-template-file').select2();
@@ -123,30 +123,30 @@ function add_cf7_template_import_button() {
             }
 
             // Move panel to the best position in wp-admin (under page title)
-            var headerEnd = document.querySelector('.wp-header-end');
-            var panel = document.getElementById('cf7-template-importer-panel');
+            const headerEnd = document.querySelector('.wp-header-end');
+            const panel = document.getElementById('cf7-template-importer-panel');
             if (headerEnd && panel) {
                 headerEnd.parentNode.insertBefore(panel, headerEnd.nextSibling);
             }
             
             // Manage state using Database (AJAX)
-            var checkbox = document.getElementById('show_cf7_importer');
+            const checkbox = document.getElementById('show_cf7_importer');
             if (checkbox && panel) {
                 checkbox.addEventListener('change', function() {
-                    var isChecked = this.checked;
+                    const isChecked = this.checked;
                     panel.style.display = isChecked ? 'flex' : 'none';
                     
-                    var fd = new FormData();
+                    const fd = new FormData();
                     fd.append('action', 'save_cf7_importer_state');
                     fd.append('state', isChecked ? 1 : 0);
                     fetch(ajaxurl, { method: 'POST', body: fd });
                 });
             }
             
-            var input = document.getElementById('cf7-template-title');
-            var inputFile = document.getElementById('cf7-template-file');
-            var inputClass = document.getElementById('cf7-template-class');
-            var btn = document.getElementById('cf7-import-btn');
+            const input = document.getElementById('cf7-template-title');
+            const inputFile = document.getElementById('cf7-template-file');
+            const inputClass = document.getElementById('cf7-template-class');
+            const btn = document.getElementById('cf7-import-btn');
             
             if (!btn) return;
 
@@ -166,9 +166,9 @@ function add_cf7_template_import_button() {
                 
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
-                    var title = input.value.trim();
-                    var className = inputClass.value.trim();
-                    var fileName = inputFile.value.trim();
+                    const title = input.value.trim();
+                    const className = inputClass.value.trim();
+                    const fileName = inputFile.value.trim();
                     
                     if (!title) {
                         alert(i18n.missingName);
@@ -189,7 +189,7 @@ function add_cf7_template_import_button() {
                     inputClass.disabled = true;
                     inputFile.disabled = true;
                     
-                    var formData = new FormData();
+                    const formData = new FormData();
                     formData.append('action', 'import_default_cf7');
                     formData.append('_wpnonce', '<?php echo wp_create_nonce("import_cf7_nonce"); ?>');
                     formData.append('form_title', title);

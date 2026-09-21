@@ -56,9 +56,9 @@ function custom_cf7_redirect_and_cookie() {
     <script>
     document.addEventListener('wpcf7mailsent', function(event) {
 
-        var currentPath = window.location.pathname;
-        var redirectUrl = '';
-        var cookieName = '';
+        const currentPath = window.location.pathname;
+        let redirectUrl = '';
+        let cookieName = '';
 
         if (/\/contactform7\//.test(currentPath) && !/\/thanks/.test(currentPath)) {
             redirectUrl = '<?php echo esc_url($home); ?>/contactform7/thanks/';
@@ -66,7 +66,7 @@ function custom_cf7_redirect_and_cookie() {
         }
 
         if (redirectUrl !== '') {
-            var expires = new Date();
+            const expires = new Date();
             expires.setTime(expires.getTime() + (5 * 60 * 1000));
             document.cookie = cookieName + '=true; expires=' + expires.toUTCString() + '; path=/; SameSite=Lax';
             window.location.href = redirectUrl;
