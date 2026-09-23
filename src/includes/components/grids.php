@@ -1,0 +1,58 @@
+<div class="p-component__item">
+    <!-- Grid 2 Columns (Bố cục lưới 2 cột) -->
+    <div class="l-grid">
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+    </div>
+
+    <!-- Grid 3 Columns (Bố cục lưới 3 cột) -->
+    <div class="l-grid l-grid--cl3">
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+    </div>
+
+    <!-- Grid 4 Columns (Bố cục lưới 4 cột) -->
+    <div class="l-grid l-grid--cl4">
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-grid__item">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+    </div>
+</div>

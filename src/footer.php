@@ -1,14 +1,34 @@
         <footer class="c-footer">
             <div class="l-container">
-                footer 123123
-                <p class="c-footer__copy">© <?php echo date('Y'); ?></p>
+                <div class="c-footer__inner">
+                    <div class="c-footer-logo">
+                        <a href="<?php echo esc_url(home_url('/')); ?>" class="c-footer-logo__link">
+                            <img src="<%= assetsDir %>assets/images/common/img_logo.webp" alt="">
+                        </a>
+                    </div>
+                    <ul class="c-footer-list">
+                        <li class="c-footer-list__item">
+                            <a href="<?php echo esc_url(home_url('/')); ?>" class="c-footer-link">リンク</a>
+                        </li>
+                        <li class="c-footer-list__item">
+                            <a href="<?php echo esc_url(home_url('/')); ?>" class="c-footer-link">リンク</a>
+                        </li>
+                        <li class="c-footer-list__item">
+                            <a href="<?php echo esc_url(home_url('/')); ?>" class="c-footer-link">リンク</a>
+                        </li>
+                        <li class="c-footer-list__item">
+                            <a href="<?php echo esc_url(home_url('/')); ?>" class="c-footer-link">リンク</a>
+                        </li>
+                    </ul>
+                </div>
+                <p class="c-footer-copy">J-line Corporation ©copyright</p>
             </div>
-            <a href="#wrapper" class="c-totop">totop</a>
+            <a href="#wrapper" class="c-totop">pagetop</a>
         </footer>
-        <div data-gdpr="wrap" id="cookiewrap">
-            <div class="inner">
-                <p class="close"><a href="javascript:void(0)" data-gdpr="button" style="display: inline-block;">同意する</a></p>
-                <p class="txt">当サイトではCookieを使用します。Cookieの使用に関する詳細は「<a href="<?php echo is_page('privacy') ? "#ttl_policy" : esc_url(home_url('/privacy/#ttl_policy')); ?>">プライバシーポリシー</a>」をご覧ください。</p>
+        <div data-gdpr="wrap" id="cookiewrap" class="c-cookiewrap">
+            <div class="c-cookiewrap__inner">
+                <p class="c-cookiewrap__close"><a href="javascript:void(0)" data-gdpr="button" >同意する</a></p>
+                <p class="c-cookiewrap__txt">当サイトではCookieを使用します。Cookieの使用に関する詳細は「<a href="" class="c-cookiewrap__link">プライバシーポリシー</a>」をご覧ください。</p>
             </div>      
         </div>
         <!-- script -->  

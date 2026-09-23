@@ -1,0 +1,105 @@
+<div class="p-component__item">
+    <!-- Flex Standard (2 cột: Cột trái 400px, Cột phải nội dung) -->
+    <div class="l-flex">
+        <div class="l-flex__left">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-flex__right">
+            <h2 class="c-ttl24">ダミーテキスト。</h2>
+            <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+        </div>
+    </div>
+
+    <!-- Flex Reverse (2 cột: Đảo vị trí cột ảnh sang phải) -->
+    <div class="l-flex l-flex--reverse">
+        <div class="l-flex__left">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-flex__right">
+            <h2 class="c-ttl24">ダミーテキスト。</h2>
+            <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+        </div>
+    </div>
+
+    <!-- Flex Middle (2 cột: Căn giữa theo chiều dọc) -->
+    <div class="l-flex l-flex--middle">
+        <div class="l-flex__left">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-flex__right">
+            <h2 class="c-ttl24">ダミーテキスト。</h2>
+            <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+        </div>
+    </div>
+
+    <!-- Flex Reverse Middle (2 cột: Đảo ảnh sang phải + Căn giữa dọc) -->
+    <div class="l-flex l-flex--reverse l-flex--middle">
+        <div class="l-flex__left">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-flex__right">
+            <h2 class="c-ttl24">ダミーテキスト。</h2>
+            <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+        </div>
+    </div>
+
+    <!-- Flex Equal 50/50 (2 cột chia đều 50% - 50%) -->
+    <div class="l-flex l-flex--equal">
+        <div class="l-flex__left">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-flex__right">
+            <h2 class="c-ttl24">ダミーテキスト。</h2>
+            <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+        </div>
+    </div>
+
+    <!-- Flex Equal 50/50 Reverse (2 cột 50% - 50% đảo ảnh sang phải) -->
+    <div class="l-flex l-flex--equal l-flex--reverse">
+        <div class="l-flex__left">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-flex__right">
+            <h2 class="c-ttl24">ダミーテキスト。</h2>
+            <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+        </div>
+    </div>
+
+    <!-- Flex Equal 50/50 Middle (2 cột 50% - 50% căn giữa dọc) -->
+    <div class="l-flex l-flex--equal l-flex--middle">
+        <div class="l-flex__left">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-flex__right">
+            <h2 class="c-ttl24">ダミーテキスト。</h2>
+            <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+        </div>
+    </div>
+
+    <!-- Flex Equal 50/50 Reverse Middle (2 cột 50% - 50% đảo ảnh phải + Căn giữa dọc) -->
+    <div class="l-flex l-flex--equal l-flex--reverse l-flex--middle">
+        <div class="l-flex__left">
+            <figure>
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+            </figure>
+        </div>
+        <div class="l-flex__right">
+            <h2 class="c-ttl24">ダミーテキスト。</h2>
+            <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+        </div>
+    </div>
+</div>

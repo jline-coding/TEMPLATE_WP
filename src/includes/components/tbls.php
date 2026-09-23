@@ -1,0 +1,89 @@
+<div class="p-component__item">
+    <!-- Table Standard (Bảng thông tin 2 cột - Tiêu đề căn đỉnh) -->
+    <div class="l-tbl">
+        <div class="l-tbl__item">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+        <div class="l-tbl__item">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+        <div class="l-tbl__item">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+        <div class="l-tbl__item">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+        <div class="l-tbl__item">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Middle (Bảng thông tin 2 cột - Tiêu đề căn giữa hàng dọc) -->
+    <div class="l-tbl">
+        <div class="l-tbl__item l-tbl__item--middle">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+        <div class="l-tbl__item l-tbl__item--middle">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+        <div class="l-tbl__item l-tbl__item--middle">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+        <div class="l-tbl__item l-tbl__item--middle">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+        <div class="l-tbl__item l-tbl__item--middle">
+            <div class="l-tbl__left">
+                <h2 class="c-ttl16">ダミーテキスト。</h2>
+            </div>
+            <div class="l-tbl__right">
+                <p class="c-txt16">ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。ダミーテキスト。</p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,55 +1,61 @@
-(function($){
-    $(window).on("load",function(){
+(function ($) {
+    const $window = $(window);
+    const $document = $(document);
+
+    $window.on("load", function () {
         $(".js-mCustomScrollbar").mCustomScrollbar();
     });
 
-    $(function() {
+    $(function () {
+        const selectSelector = '.c-select, .smf-select-control';
 
         // Toggle .is-active on select wrappers (.c-select and .smf-select-control)
-        $(document).on('click', '.c-select, .smf-select-control', function (e) {
+        $document.on('click', selectSelector, function (e) {
             e.stopPropagation();
             const $this = $(this);
-            $('.c-select, .smf-select-control').not($this).removeClass('is-active');
+            $(selectSelector).not($this).removeClass('is-active');
             $this.toggleClass('is-active');
         });
 
-        $(document).on('click', function () {
-            $('.c-select, .smf-select-control').removeClass('is-active');
+        $document.on('click', function () {
+            $(selectSelector).removeClass('is-active');
         });
 
-        $(document).on('change blur', '.c-select select, .smf-select-control select', function () {
-            $(this).closest('.c-select, .smf-select-control').removeClass('is-active');
+        $document.on('change blur', '.c-select select, .smf-select-control select', function () {
+            $(this).closest(selectSelector).removeClass('is-active');
         });
 
         const defaultText = '添付する';
 
-        $('.js-file input[type="file"]').on('change', function() {
-            const file = $(this)[0].files[0];
-            const $wrapper = $(this).closest('.js-file');
+        $('.js-file input[type="file"]').on('change', function () {
+            const file = this.files[0];
+            const $this = $(this);
+            const $wrapper = $this.closest('.js-file');
             const $content = $wrapper.find('.js-file__content');
             const $clearBtn = $wrapper.find('.js-file-clear');
 
             if (file) {
                 $content.text(file.name).addClass('is-active');
-                $clearBtn.show();
+                $clearBtn.css('display', 'inline-flex');
             } else {
                 $content.text(defaultText).removeClass('is-active');
                 $clearBtn.hide();
             }
         });
 
-        $('.js-file-clear').on('click', function() {
-            const $wrapper = $(this).closest('.js-file');
+        $('.js-file-clear').on('click', function () {
+            const $this = $(this);
+            const $wrapper = $this.closest('.js-file');
             const $input = $wrapper.find('input[type="file"]');
             const $content = $wrapper.find('.js-file__content');
 
             $input.val('');
             $content.text(defaultText).removeClass('is-active');
-            $(this).hide();
+            $this.hide();
         });
     });
    
-    $(function() {
+    $(function () {
         if (typeof $.fn.datepicker !== 'undefined' && $.datepicker) {
             $.datepicker.regional['ja'] = {
                 closeText: '閉じる',
@@ -73,8 +79,9 @@
 
             $.datepicker.setDefaults($.datepicker.regional['ja']);
 
-            if ($('.js-datepicker').length) {
-                $('.js-datepicker').datepicker();
+            const $datePicker = $('.js-datepicker');
+            if ($datePicker.length) {
+                $datePicker.datepicker();
             }
         }
     });

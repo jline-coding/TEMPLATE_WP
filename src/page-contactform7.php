@@ -6,11 +6,11 @@ get_header();
     <div class="p-contact__inner">
         <div class="l-container">
             <div class="c-form h-adr">
-                <span class="p-country-name" style="display:none;">Japan</span>
+                <span class="p-country-name">Japan</span>
                 <div class="c-form__body">
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">氏名<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">氏名<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
                             <input class="c-input" type="text" name="your-name" placeholder="ダミーテキストが入ります。" required="required">
@@ -19,7 +19,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">フリガナ<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">フリガナ<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
                             <input class="c-input" type="text" name="your-name-kana" placeholder="ダミーテキストが入ります。" required="required">
@@ -27,7 +27,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">都道府県<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">都道府県<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
                             <div class="c-select">
@@ -46,7 +46,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">ダミーテキスト1<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">ダミーテキスト1<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
                             <div class="c-form__checkboxs">
@@ -67,7 +67,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">ダミーテキスト2<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">ダミーテキスト2<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
                             <div class="c-form__radios">
@@ -88,7 +88,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">生年月日</span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">生年月日</span>
                         </div>
                         <div class="c-form__content">
                             <input class="c-input" type="text" name="your-birthday" aria-invalid="false" placeholder="ダミーテキストが入ります。">
@@ -96,7 +96,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">メールアドレス<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">メールアドレス<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
                             <input class="c-input" type="email" name="your-email" placeholder="ダミーテキストが入ります。" required="required">
@@ -104,7 +104,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">メールアドレス（確認）<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">メールアドレス（確認）<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
                             <input class="c-input" type="email" name="your-email-re" placeholder="ダミーテキストが入ります。" required="required">
@@ -112,7 +112,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">電話番号</span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">電話番号</span>
                         </div>
                         <div class="c-form__content">
                             <input class="c-input" type="tel" name="your-tel" placeholder="ダミーテキストが入ります。">
@@ -120,7 +120,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">郵便番号<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">郵便番号<span class="c-form__rq">必須</span></span>
                             <p class="c-form__txt16 c-txt16">ダミーテキストが入ります。ダミーテキストが入ります。</p>
                         </div>
                         <div class="c-form__content">
@@ -130,7 +130,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">住所<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">住所<span class="c-form__rq">必須</span></span>
                         </div>
                         <div class="c-form__content">
                             <div class="c-form__child">
@@ -140,7 +140,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">番地・建物名</span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">番地・建物名</span>
                         </div>
                         <div class="c-form__content">
                             <div class="c-form__child">
@@ -150,7 +150,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">備考</span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">備考</span>
                             <p class="c-form__txt16 c-txt16">ダミーテキストが入ります。ダミーテキストが入ります。</p>
                         </div>
                         <div class="c-form__content">
@@ -159,7 +159,7 @@ get_header();
                     </div>
                     <div class="c-form__item">
                         <div class="c-form__ttl">
-                            <span class="c-form__head c-txt16 u-fw--500 wpf-title">添付ファイル<span class="c-form__rq">必須</span></span>
+                            <span class="c-form__head c-txt16 u-fw--500 c-wpf-title">添付ファイル<span class="c-form__rq">必須</span></span>
                             <p class="c-form__txt16 c-txt16">ダミーテキストが入ります。ダミーテキストが入ります。</p>
                         </div>
                         <div class="c-form__content">
@@ -168,7 +168,7 @@ get_header();
                                     <input id="file_01" type="file" name="your-file" accept=".jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx" required="required">
                                     <span class="c-file__content js-file__content">添付する</span>
                                 </label>
-                                <span class="c-file__clear js-file-clear" style="display: none;">×</span>
+                                <span class="c-file__clear js-file-clear">×</span>
                             </div>
                             <p class="c-form__txt16 c-txt16">※アップロード可能なファイル形式:.jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx</p>
                         </div>
@@ -198,7 +198,7 @@ get_header();
                         </div>
                     </div>
                     <div class="c-form-verify">
-                        <div class="c-form-verify__inner c-checkbox wpf-acceptance">
+                        <div class="c-form-verify__inner c-checkbox c-wpf-acceptance">
                             <label><input type="checkbox" required="required" name="your-consent" value="同意する">ダミーテキストが入ります。ダミーテキストが入ります。</label>
                         </div>
                     </div>

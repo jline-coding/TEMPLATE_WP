@@ -11,7 +11,8 @@
     "wp:download": "node scripts/download-wp.js",
     "link": "node scripts/link.js",
     "clean": "node scripts/clean.js",
-    "plugins:pull": "node scripts/plugins-pull.js"
+    "plugins:pull": "node scripts/plugins-pull.js",
+    "snippets": "node scripts/sync-snippets.js"
   },
   "keywords": [
     "wordpress",

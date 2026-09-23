@@ -1,4 +1,15 @@
 (function ($) {
+    const $window = $(window);
+    const $body = $('body');
+    const $htmlBody = $('html, body');
+    const $header = $('.c-header');
+    const $totop = $('.c-totop');
+    const $toggle = $('.c-toggle');
+    const $gnavi = $('.c-gnavi');
+    const $gnaviSubParent = $('.c-gnavi-list__item.is-sub');
+    const $gnaviSubLink = $gnaviSubParent.children('.c-gnavi-link');
+    const $gnaviSub = $gnaviSubParent.children('.c-gnavi-sub');
+
     // jQuery 4 compatibility polyfill for Slick.js
     // $.type() was removed in jQuery 4, Slick still depends on it
     if (typeof $.type === 'undefined') {
@@ -25,15 +36,15 @@
     // Helper: Body lock/unlock (Modal)
     // =============================
     function addFixedBodyModal() {
-        scroll_pos1 = $(window).scrollTop();
-        $('body')
+        scroll_pos1 = $window.scrollTop();
+        $body
             .addClass('overflow_modal')
             .css({ top: -scroll_pos1 + 'px' });
     }
 
     function removeFixedBodyModal() {
-        $('body').removeClass('overflow_modal').css({ top: '' });
-        $(window).scrollTop(scroll_pos1);
+        $body.removeClass('overflow_modal').css({ top: '' });
+        $window.scrollTop(scroll_pos1);
     }
 
     // =============================
@@ -51,15 +62,15 @@
     // Scroll Behavior
     // =============================
     function handleScroll() {
-        const scrollTop = $(window).scrollTop();
+        const scrollTop = $window.scrollTop();
 
         // Header active & ToTop visibility
         if (scrollTop > 50) {
-            $(".c-totop").css("transform", "translateY(0)");
-            $(".c-header").addClass("active");
+            $totop.css("transform", "translateY(0)");
+            $header.addClass("active");
         } else {
-            $(".c-totop").removeAttr("style");
-            $(".c-header").removeClass("active");
+            $totop.removeAttr("style");
+            $header.removeClass("active");
         }
     }
 
@@ -69,30 +80,60 @@
     $(function () {
         // Smooth anchor scroll
         $('a[href^="#"]').on('click', function (e) {
-            const hash = $(this).attr("href");
+            const $this = $(this);
+            const hash = $this.attr("href");
             if (hash === "#") return;
-            const target = $(hash);
-            if (target.length) {
+            const $target = $(hash);
+            if ($target.length) {
                 e.preventDefault();
-                const offset = target.offset().top - ($('.c-header').outerHeight() + 30);
-                $('html, body').animate({ scrollTop: offset }, 600);
+                const offset = $target.offset().top - ($header.outerHeight() + 30);
+                $htmlBody.animate({ scrollTop: offset }, 600);
             }
         });
 
         // Auto scroll to anchor if URL has hash
         const hash = location.hash;
-        if (hash && $(hash).length) {
-            const offset = $(hash).offset().top - ($('.c-header').outerHeight() + 30);
-            $('html, body').animate({ scrollTop: offset }, 600);
+        if (hash && hash !== '#') {
+            const $target = $(hash);
+            if ($target.length) {
+                const offset = $target.offset().top - ($header.outerHeight() + 30);
+                $htmlBody.animate({ scrollTop: offset }, 600);
+            }
         }
 
         // Menu toggle
-        $(".c-toggle").on("click", function () {
-            const isActive = $(this).hasClass("active");
-            $(this).toggleClass("active");
+        $toggle.on("click", function () {
+            const $this = $(this);
+            const isActive = $this.hasClass("active");
+            $this.toggleClass("active");
 
-            $(".c-gnavi").stop().slideToggle("fast");
-            isActive ? removeFixedBodyModal() : addFixedBodyModal();
+            $gnavi.stop().slideToggle("fast");
+            if (isActive) {
+                removeFixedBodyModal();
+                $gnaviSubParent.removeClass("is-open");
+                $gnaviSub.hide();
+            } else {
+                addFixedBodyModal();
+            }
+        });
+
+        // Submenu accordion toggle on SP
+        $gnaviSubLink.on("click", function (e) {
+            if (!window.matchMedia('(min-width: 768px)').matches) {
+                e.preventDefault();
+                const $this = $(this);
+                const $parent = $this.parent();
+                const $targetSub = $parent.children('.c-gnavi-sub');
+                const isOpen = $parent.hasClass("is-open");
+
+                // Toggle menu hiện tại
+                $parent.toggleClass("is-open", !isOpen);
+                $targetSub.stop().slideToggle(300);
+
+                // Đóng các submenu khác nếu có nhiều mục submenu
+                const $otherParents = $gnaviSubParent.not($parent).filter('.is-open');
+                $otherParents.removeClass("is-open").children('.c-gnavi-sub').stop().slideUp(300);
+            }
         });
 
         // Initial scroll state
@@ -102,7 +143,7 @@
     // =============================
     // On Window Load
     // =============================
-    $(window).on('load', function () {
+    $window.on('load', function () {
         // Init AOS
         if (typeof AOS !== 'undefined') {
             AOS.init({
@@ -146,16 +187,16 @@
     // =============================
     // On Scroll
     // =============================
-    $(window).on('scroll', debounce(handleScroll, 50));
+    $window.on('scroll', debounce(handleScroll, 50));
 
     // =============================
     // On Resize
     // =============================
-    $(window).on('resize', debounce(function () {
-        if ($(window).width() > 767) {
-            $(".c-gnavi").removeAttr("style");
-            $(".c-toggle").removeClass("active");
-            if ($('body').hasClass('overflow_modal')) {
+    $window.on('resize', debounce(function () {
+        if ($window.width() > 767) {
+            $gnavi.removeAttr("style");
+            $toggle.removeClass("active");
+            if ($body.hasClass('overflow_modal')) {
                 removeFixedBodyModal();
             }
         }

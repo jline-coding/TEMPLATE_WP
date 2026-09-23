@@ -341,8 +341,8 @@ function ajax_handle_cf7_template_import() {
 
     if (!function_exists('cf7_get_title_for_node')) {
         function cf7_get_title_for_node($node, $xpath) {
-            // Automatically find the closest preceding wpf-title tag (regardless of HTML hierarchy)
-            $title_node = $xpath->query('(ancestor::*[contains(concat(" ", normalize-space(@class), " "), " wpf-title ")] | preceding::*[contains(concat(" ", normalize-space(@class), " "), " wpf-title ")])[last()]', $node)->item(0);
+            // Automatically find the closest preceding c-wpf-title tag (regardless of HTML hierarchy)
+            $title_node = $xpath->query('(ancestor::*[contains(concat(" ", normalize-space(@class), " "), " c-wpf-title ")] | preceding::*[contains(concat(" ", normalize-space(@class), " "), " c-wpf-title ")])[last()]', $node)->item(0);
             
             if ($title_node) {
                 $clone = $title_node->cloneNode(true);
@@ -477,7 +477,7 @@ function ajax_handle_cf7_template_import() {
     $check_radio_names = array();
     foreach ($xpath->query('//input[@type="checkbox" or @type="radio"]') as $input) {
         $name = $input->getAttribute('name');
-        $is_acceptance = $xpath->query('ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " wpf-acceptance ")]', $input)->length > 0;
+        $is_acceptance = $xpath->query('ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " c-wpf-acceptance ")]', $input)->length > 0;
         if ($name && !$is_acceptance) {
             $check_radio_names[$name] = $input->getAttribute('type');
         }
@@ -604,7 +604,7 @@ function ajax_handle_cf7_template_import() {
     }
 
     // F. Process Acceptance
-    $acceptances = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " wpf-acceptance ")]');
+    $acceptances = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " c-wpf-acceptance ")]');
     foreach ($acceptances as $acc_node) {
         $input = $xpath->query('.//input[@type="checkbox"]', $acc_node)->item(0);
         if (!$input) continue;
@@ -629,7 +629,7 @@ function ajax_handle_cf7_template_import() {
         
         $textNode = $dom->createTextNode($tag);
         
-        // IMPROVEMENT: Keep wpf-acceptance container instead of deleting it
+        // IMPROVEMENT: Keep c-wpf-acceptance container instead of deleting it
         if ($acc_node->nodeName !== 'label') {
             while ($acc_node->hasChildNodes()) {
                 $acc_node->removeChild($acc_node->firstChild);

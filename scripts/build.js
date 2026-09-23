@@ -31,6 +31,7 @@ import sortMediaQueries from 'postcss-sort-media-queries';
 import sharp from 'sharp';
 import dotenv from 'dotenv';
 import { cpus } from 'os';
+import { syncSnippets } from './sync-snippets.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -545,25 +546,31 @@ async function compileScssFile(filePath) {
 }
 
 function findDependentEntries(changedPartial) {
-  const allFiles = fileCache.scssFiles.length > 0
-    ? fileCache.scssFiles
-    : walkSync(SCSS_DIR, (f) => extname(f) === '.scss');
+  if (!existsSync(SCSS_DIR)) return [];
+  const allFiles = walkSync(SCSS_DIR, (f) => extname(f) === '.scss');
   const importRegex = /@(use|import|forward)\s+['"]([^'"]+)['"]/g;
 
   function resolveImport(importPath, fromDir) {
     const clean = importPath.replace(/\.(scss|sass)$/, '');
-    const base = resolve(fromDir, clean);
-    const candidates = [];
-
-    for (const ext of ['.scss', '.sass']) {
-      candidates.push(base + ext);
-      candidates.push(join(dirname(base), '_' + basename(base) + ext));
+    const searchDirs = [fromDir];
+    if (SCSS_DIR && resolve(fromDir) !== resolve(SCSS_DIR)) {
+      searchDirs.push(SCSS_DIR);
     }
-    candidates.push(join(base, '_index.scss'));
-    candidates.push(join(base, 'index.scss'));
 
-    for (const c of candidates) {
-      if (existsSync(c)) return resolve(c);
+    for (const dir of searchDirs) {
+      const base = resolve(dir, clean);
+      const candidates = [];
+
+      for (const ext of ['.scss', '.sass']) {
+        candidates.push(base + ext);
+        candidates.push(join(dirname(base), '_' + basename(base) + ext));
+      }
+      candidates.push(join(base, '_index.scss'));
+      candidates.push(join(base, 'index.scss'));
+
+      for (const c of candidates) {
+        if (existsSync(c)) return resolve(c);
+      }
     }
     return null;
   }
@@ -637,7 +644,9 @@ function cleanStaleCss() {
   for (const f of scssEntries) {
     const rel = relative(SCSS_DIR, f);
     srcEntries.add(norm(rel.replace(/\.scss$/, '.css')));
-    srcEntries.add(norm(rel.replace(/\.scss$/, '.css.map')));
+    if (isWatch) {
+      srcEntries.add(norm(rel.replace(/\.scss$/, '.css.map')));
+    }
   }
 
   for (const f of walkSync(outCssDir)) {
@@ -742,6 +751,11 @@ async function fullBuild() {
     console.log('[clean] removed scss source from output');
   }
 
+  // 7. Sync VS Code snippets from components safely
+  try {
+    syncSnippets({ quiet: true });
+  } catch { /* ignore */ }
+
   const elapsed = Date.now() - start;
   console.log(`\n✓ Build complete in ${elapsed}ms\n`);
 }
@@ -814,6 +828,13 @@ async function startWatch() {
   async function handleChange(filepath, eventType) {
     const absPath = getAbs(filepath);
 
+    // Component source changed or added → re-sync VS Code snippets
+    if (norm(filepath).includes('/includes/components/')) {
+      try {
+        syncSnippets({ compact: true });
+      } catch { /* ignore */ }
+    }
+
     // SCSS source changed → recompile
     if (isScssSource(absPath)) {
       console.log(`[watch:scss] ${eventType}: ${norm(filepath)}`);
@@ -839,6 +860,13 @@ async function startWatch() {
   function handleUnlink(filepath) {
     const absPath = getAbs(filepath);
     const rel = relative(SRC_THEME, absPath);
+
+    // Component source deleted → re-sync VS Code snippets
+    if (norm(filepath).includes('/includes/components/')) {
+      try {
+        syncSnippets({ compact: true });
+      } catch { /* ignore */ }
+    }
 
     if (isScssSource(absPath)) {
       // Clear import cache for deleted file
@@ -882,24 +910,17 @@ async function startWatch() {
 
   watcher.on('add', debouncePerFile(async (filepath) => {
     const absPath = getAbs(filepath);
-    // Invalidate SCSS caches when a new SCSS file is added
-    // so findDependentEntries can discover it
-    if (isScssSource(absPath)) {
-      fileCache._scssFiles = null;
-      fileCache._scssEntries = null;
-      importsCache.clear();
-    }
+    // Invalidate all caches when any new file is added so it is immediately discovered
+    fileCache.invalidate();
+    importsCache.clear();
     await handleChange(filepath, 'added');
   }));
 
   watcher.on('unlink', debouncePerFile((filepath) => {
     const absPath = getAbs(filepath);
-    // Invalidate SCSS caches when a SCSS file is removed
-    if (isScssSource(absPath)) {
-      fileCache._scssFiles = null;
-      fileCache._scssEntries = null;
-      importsCache.clear();
-    }
+    // Invalidate all caches when a file is removed
+    fileCache.invalidate();
+    importsCache.clear();
     handleUnlink(filepath);
   }));
 

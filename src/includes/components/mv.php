@@ -1,0 +1,16 @@
+<div class="p-component__item">
+    <!-- Main Visual Banner (Banner đầu trang với ảnh nền và tiêu đề song ngữ) -->
+    <section class="c-mv">
+        <figure class="c-mv__bg">
+            <img src="<?php echo get_template_directory_uri(); ?>/assets/images/common/img_dummy.webp" alt="">
+        </figure>
+        <div class="l-container">
+            <div class="c-mv__inner">
+                <h1 class="c-mv-title">
+                    <span class="c-mv-title__en">title1</span>
+                    <span class="c-mv-title__jp">タイトル</span>
+                </h1>
+            </div>
+        </div>
+    </section>
+</div>

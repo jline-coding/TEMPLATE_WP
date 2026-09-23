@@ -6,7 +6,7 @@ get_header();
     <div class="p-contact__inner">
         <div class="l-container">
             <form id="mailformpro" action="<?php echo get_template_directory_uri(); ?>/contact/mailformpro/mailformpro.cgi" method="POST" class="c-form h-adr">
-                <span class="p-country-name" style="display:none;">Japan</span>
+                <span class="p-country-name">Japan</span>
                 <div class="c-form__body">
                     <div class="c-form__item">
                         <div class="c-form__ttl">
@@ -170,7 +170,7 @@ get_header();
                                     <input id="file_01" type="file" name="添付ファイル" accept=".jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx" required="required">
                                     <span class="c-file__content js-file__content">添付する</span>
                                 </label>
-                                <span class="c-file__clear js-file-clear" style="display: none;">×</span>
+                                <span class="c-file__clear js-file-clear">×</span>
                             </div>
                             <p class="c-form__txt16 c-txt16">※アップロード可能なファイル形式:.jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx</p>
                             <div id="errormsg_添付ファイル" class="mfp_err"></div>
@@ -210,7 +210,7 @@ get_header();
                     <button type="submit">入力内容を確認</button>
                 </div>
             </form>
-            <script type="text/javascript" id="mfpjs" src="<?php echo get_template_directory_uri(); ?>/contact/mailformpro/mailformpro.cgi" charset="UTF-8"></script>
+            <script type="text/javascript" id="mfpjs" src="<?php echo get_template_directory_uri(); ?>/contact/mailformpro/mailformpro.cgi" charset="UTF-8" defer></script>
         </div>
     </div>
 </main>
