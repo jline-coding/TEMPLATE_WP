@@ -206,6 +206,18 @@ function isCopyImage(filePath) {
   return isUnderDir(filePath, IMAGES_DIR) && COPY_IMG_EXTS.includes(extname(filePath).toLowerCase());
 }
 
+// --- DEV-ONLY FILES (Exclusively for local dev & component library) ---
+// These files will be available during `npm run dev`, but completely excluded during `npm run build`
+const DEV_ONLY_ENTRIES = [
+  'page-components.php',
+  'includes/components',
+];
+
+function isDevOnly(filePath) {
+  const rel = norm(relative(SRC_THEME, filePath));
+  return DEV_ONLY_ENTRIES.some(entry => rel === entry || rel.startsWith(entry + '/'));
+}
+
 /**
  * Get the destination path for a source file.
  * Maps src/X → OUT_THEME/X, but SCSS gets special output to assets/css/.
@@ -249,7 +261,7 @@ class FileCache {
   get copyableFiles() {
     if (!this._copyableFiles) {
       this._copyableFiles = this.allSrcFiles.filter(f =>
-        !isScssSource(f) && !isConvertImage(f)
+        !isScssSource(f) && !isConvertImage(f) && (isWatch || !isDevOnly(f))
       );
     }
     return this._copyableFiles;
@@ -302,8 +314,9 @@ function buildCopyFiles(changedFile) {
   if (!existsSync(SRC_THEME)) return;
 
   if (changedFile) {
-    // Skip files handled by other builders
+    // Skip files handled by other builders or dev-only in production
     if (isScssSource(changedFile) || isConvertImage(changedFile)) return;
+    if (!isWatch && isDevOnly(changedFile)) return;
 
     const rel = relative(SRC_THEME, changedFile);
     const dest = resolve(OUT_THEME, rel);
@@ -749,6 +762,22 @@ async function fullBuild() {
   if (existsSync(outScssDir)) {
     rmSync(outScssDir, { recursive: true, force: true });
     console.log('[clean] removed scss source from output');
+  }
+
+  // 6b. Remove dev-only components & page-components from production build
+  if (!isWatch) {
+    const devOnlyDestEntries = DEV_ONLY_ENTRIES.map(entry => resolve(OUT_THEME, entry));
+    let removedAny = false;
+    for (const p of devOnlyDestEntries) {
+      if (existsSync(p)) {
+        rmSync(p, { recursive: true, force: true });
+        console.log(`[production] Excluded dev-only: ${norm(relative(OUT_THEME, p))}`);
+        removedAny = true;
+      }
+    }
+    if (removedAny) {
+      removeEmptyDirs(OUT_THEME);
+    }
   }
 
   // 7. Sync VS Code snippets from components safely

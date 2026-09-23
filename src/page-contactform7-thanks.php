@@ -5,6 +5,9 @@ if (empty($_COOKIE['contact_sent'])) {
     exit;
 }
 /* Template Name: Thanks Contact form 7 */ 
+AssetManager::css([
+    'contact'
+]);
 get_header();
 ?>
 <!-- ↓↓ main ↓↓ -->

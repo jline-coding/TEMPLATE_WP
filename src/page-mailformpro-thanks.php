@@ -1,5 +1,8 @@
 <?php
 /* Template Name: Thanks Maifrom PRO */ 
+AssetManager::css([
+    'contact'
+]);
 get_header();
 ?>
 <!-- ↓↓ main ↓↓ -->
