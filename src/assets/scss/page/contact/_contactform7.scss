@@ -1,0 +1,979 @@
+@use "sass:math";
+@use "../../global" as *;
+
+/*!
+page > contact > contact form 7
+------------------------------
+*/
+
+.c-input {
+    font-size: rem(14);
+    font-family: $font-family-base;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.6;
+    display: block;
+    border: 1px solid var(--gray);
+    background-color: var(--white);
+    color: var(--base);
+    width: 100%;
+    padding: 1em;
+    outline: 0;
+    border-radius: 0;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+
+    @include mq(md) {
+        font-size: rem(16);
+    }
+
+    &:focus {
+        border-color: var(--base);
+    }
+
+    &[aria-invalid="true"],
+    &.wpcf7-not-valid {
+        border-color: var(--red);
+        background-color: #fffafa;
+    }
+
+    &::placeholder {
+        font-family: $font-family-base;
+        font-weight: 400;
+        letter-spacing: 0;
+        line-height: 1.6;
+        font-size: rem(14);
+        opacity: 0.5;
+
+        @include mq(md) {
+            font-size: rem(16);
+        }
+    }
+}
+
+.c-select {
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+
+    select,
+    .wpcf7-select {
+        font-size: rem(14);
+        font-family: $font-family-base;
+        font-weight: 400;
+        letter-spacing: 0;
+        line-height: 1.6;
+        display: block;
+        width: 100%;
+        padding: 1em 2.5em 1em 1em;
+        outline: 0;
+        border: 1px solid var(--gray);
+        background-color: var(--white);
+        color: var(--base);
+        border-radius: 0;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+
+        @include mq(md) {
+            font-size: rem(16);
+        }
+
+        &:focus {
+            border-color: var(--base);
+        }
+
+        &[aria-invalid="true"],
+        &.wpcf7-not-valid {
+            border-color: var(--red);
+            background-color: #fffafa;
+        }
+
+        &::placeholder {
+            font-family: $font-family-base;
+            font-weight: 400;
+            letter-spacing: 0;
+            line-height: 1.6;
+            font-size: rem(14);
+            opacity: 0.5;
+
+            @include mq(md) {
+                font-size: rem(16);
+            }
+        }
+    }
+
+    &::after {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-left: 2px solid var(--gray);
+        border-bottom: 2px solid var(--gray);
+        position: absolute;
+        right: 1.2em;
+        top: 25px;
+        transform: translateY(-50%) rotate(-45deg);
+        pointer-events: none;
+        transition: transform 0.3s ease;
+
+        @include mq(md) {
+            top: 29px;
+        }
+    }
+
+    &.is-active::after {
+        transform: translateY(-50%) rotate(135deg);
+    }
+}
+
+.wpcf7 .c-select {
+    border: none;
+    background-color: transparent;
+}
+
+.c-textarea {
+    font-size: rem(14);
+    font-family: $font-family-base;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.6;
+    display: block;
+    border: 1px solid var(--gray);
+    background-color: var(--white);
+    color: var(--base);
+    width: 100%;
+    padding: 1em;
+    outline: 0;
+    height: 120px;
+    min-height: 120px;
+    resize: vertical;
+    border-radius: 0;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+
+    @include mq(md) {
+        font-size: rem(16);
+    }
+
+    &:focus {
+        border-color: var(--base);
+    }
+
+    &[aria-invalid="true"],
+    &.wpcf7-not-valid {
+        border-color: var(--red);
+        background-color: #fffafa;
+    }
+
+    &::placeholder {
+        font-family: $font-family-base;
+        font-weight: 400;
+        letter-spacing: 0;
+        line-height: 1.6;
+        font-size: rem(14);
+        opacity: 0.5;
+
+        @include mq(md) {
+            font-size: rem(16);
+        }
+    }
+}
+
+.c-checkbox {
+    width: 100%;
+    display: inline-block;
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    label {
+        position: relative;
+        padding-left: 30px;
+        font-size: rem(14);
+        letter-spacing: 0;
+        line-height: 1.6;
+        display: block;
+        cursor: pointer;
+        color: var(--base);
+        user-select: none;
+
+        @include mq(md) {
+            padding-left: 36px;
+            font-size: rem(16);
+        }
+
+        &::before {
+            content: "";
+            width: 22px;
+            height: 22px;
+            background-color: var(--white);
+            border: 2px solid var(--gray);
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0;
+            box-sizing: border-box;
+            transition: border-color 0.25s ease;
+
+            @include mq(md) {
+                width: 26px;
+                height: 26px;
+            }
+        }
+
+        &::after {
+            content: "";
+            width: 10px;
+            height: 6px;
+            transform: translateY(-65%) rotate(-45deg);
+            border-left: 2px solid var(--base);
+            border-bottom: 2px solid var(--base);
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+
+            @include mq(md) {
+                width: 12px;
+                height: 8px;
+                left: 7px;
+                border-left-width: 3px;
+                border-bottom-width: 3px;
+            }
+        }
+
+        &:has(input:checked)::before {
+            border-color: var(--base);
+        }
+
+        &:has(input:checked)::after {
+            opacity: 1;
+        }
+    }
+}
+
+.wpcf7-checkbox {
+    display: grid;
+    grid-gap: 10px 15px;
+    grid-template-columns: 1fr;
+
+    @include mq(md) {
+        grid-gap: 15px 20px;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .wpcf7-list-item {
+        margin: 0;
+    }
+
+    .wpcf7-list-item-label {
+        position: relative;
+        padding-left: 30px;
+        font-size: rem(14);
+        letter-spacing: 0;
+        line-height: 1.6;
+        display: block;
+        cursor: pointer;
+        color: var(--base);
+        user-select: none;
+
+        @include mq(md) {
+            padding-left: 36px;
+            font-size: rem(16);
+        }
+
+        &::before {
+            content: "";
+            width: 22px;
+            height: 22px;
+            background-color: var(--white);
+            border: 2px solid var(--gray);
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0;
+            box-sizing: border-box;
+            transition: border-color 0.25s ease;
+
+            @include mq(md) {
+                width: 26px;
+                height: 26px;
+            }
+        }
+
+        &::after {
+            content: "";
+            width: 10px;
+            height: 6px;
+            transform: translateY(-65%) rotate(-45deg);
+            border-left: 2px solid var(--base);
+            border-bottom: 2px solid var(--base);
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+
+            @include mq(md) {
+                width: 12px;
+                height: 8px;
+                left: 7px;
+                border-left-width: 3px;
+                border-bottom-width: 3px;
+            }
+        }
+    }
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+
+        &:checked + .wpcf7-list-item-label::before {
+            border-color: var(--base);
+        }
+
+        &:checked + .wpcf7-list-item-label::after {
+            opacity: 1;
+        }
+
+        &.wpcf7-not-valid + .wpcf7-list-item-label::before {
+            border-color: var(--red);
+        }
+    }
+}
+
+.c-radio {
+    width: 100%;
+    display: inline-block;
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    label {
+        position: relative;
+        padding-left: 30px;
+        font-size: rem(14);
+        line-height: 1.6;
+        cursor: pointer;
+        display: block;
+        color: var(--base);
+        user-select: none;
+
+        @include mq(md) {
+            padding-left: 36px;
+            font-size: rem(16);
+        }
+
+        &::before {
+            content: "";
+            width: 22px;
+            height: 22px;
+            background-color: var(--white);
+            border: 2px solid var(--gray);
+            border-radius: 50%;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0;
+            box-sizing: border-box;
+            transition: border-color 0.25s ease;
+
+            @include mq(md) {
+                width: 26px;
+                height: 26px;
+            }
+        }
+
+        &::after {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background-color: var(--base);
+            border-radius: 50%;
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+
+            @include mq(md) {
+                left: 7px;
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        &:has(input:checked)::before {
+            border-color: var(--base);
+        }
+
+        &:has(input:checked)::after {
+            opacity: 1;
+        }
+    }
+}
+
+.wpcf7-radio {
+    display: grid;
+    grid-gap: 10px 15px;
+    grid-template-columns: 1fr;
+
+    @include mq(md) {
+        grid-gap: 15px 20px;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .wpcf7-list-item {
+        margin: 0;
+    }
+
+    .wpcf7-list-item-label {
+        position: relative;
+        padding-left: 30px;
+        font-size: rem(14);
+        line-height: 1.6;
+        cursor: pointer;
+        display: block;
+        color: var(--base);
+        user-select: none;
+
+        @include mq(md) {
+            padding-left: 36px;
+            font-size: rem(16);
+        }
+
+        &::before {
+            content: "";
+            width: 22px;
+            height: 22px;
+            background-color: var(--white);
+            border: 2px solid var(--gray);
+            border-radius: 50%;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0;
+            box-sizing: border-box;
+            transition: border-color 0.25s ease;
+
+            @include mq(md) {
+                width: 26px;
+                height: 26px;
+            }
+        }
+
+        &::after {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background-color: var(--base);
+            border-radius: 50%;
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+
+            @include mq(md) {
+                left: 7px;
+                width: 12px;
+                height: 12px;
+            }
+        }
+    }
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+
+        &:checked + .wpcf7-list-item-label::before {
+            border-color: var(--base);
+        }
+
+        &:checked + .wpcf7-list-item-label::after {
+            opacity: 1;
+        }
+
+        &.wpcf7-not-valid + .wpcf7-list-item-label::before {
+            border-color: var(--red);
+        }
+    }
+}
+
+.c-file {
+    font-size: rem(14);
+    border: 1px solid var(--gray);
+    background-color: var(--white);
+    display: inline-flex;
+    align-items: stretch;
+    text-align: center;
+    cursor: pointer;
+
+    @include mq(md) {
+        font-size: rem(16);
+    }
+
+    &__inner {
+        display: block;
+        padding: 0.5em 2em;
+        cursor: pointer;
+    }
+
+    input {
+        display: none;
+    }
+
+    &__content {
+        word-break: break-all;
+        color: var(--base);
+        pointer-events: none;
+    }
+
+    &__clear {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5em 1em;
+        font-size: rem(14);
+        cursor: pointer;
+        color: var(--red);
+        border-left: 1px solid var(--gray);
+        line-height: 1;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: #fff0f0;
+        }
+    }
+}
+
+.c-form {
+    max-width: 100%;
+    margin: 0 auto;
+    position: relative;
+    font-family: $font-family-base;
+    color: var(--base);
+
+    &__checkboxs,
+    &__radios {
+        display: grid;
+        grid-gap: 10px 15px;
+        grid-template-columns: 1fr;
+
+        @include mq(md) {
+            grid-gap: 15px 20px;
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    &__body {
+        position: relative;
+        z-index: 1;
+        display: grid;
+    }
+
+    &__item {
+        display: grid;
+        border-top: 1px solid var(--gray);
+        grid-gap: 20px;
+        padding: 20px 0;
+
+        @include mq(md) {
+            padding: 20px 0;
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        &:last-child,
+        &:last-of-type {
+            border-bottom: 1px solid var(--gray);
+        }
+    }
+
+    &__child {
+        margin-bottom: 10px;
+
+        @include mq(md) {
+            margin-bottom: 15px;
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    &__rq {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        border: 1px solid var(--red);
+        background-color: var(--red);
+        padding: 0.15em 0.2em 0.3em;
+        @extend %fz-12;
+        line-height: 1;
+        letter-spacing: 0;
+        color: #fff;
+        position: relative;
+        top: 0.5em;
+        border-radius: 0;
+        font-weight: 400;
+    }
+
+    &__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+        padding-top: 0.75em;
+        font-size: rem(16);
+        font-weight: 500;
+        line-height: 1.6;
+        color: var(--base);
+    }
+
+    &__ttl {
+        flex-shrink: 0;
+        position: relative;
+        width: 100%;
+
+        @include mq(md) {
+            width: clamped(220, 320);
+        }
+    }
+
+    &__content {
+        width: 100%;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    &__txt14 {
+        font-size: rem(14);
+        line-height: 1.6;
+        margin-top: 6px;
+        color: var(--base);
+    }
+
+    &__txt16 {
+        font-size: rem(16);
+        line-height: 1.6;
+        margin-top: 6px;
+        color: var(--base);
+    }
+
+    &-pravicy {
+        padding: 50px 0;
+
+        @include mq(md) {
+            padding: 58px 0;
+        }
+
+        &__title {
+            text-align: center;
+            @extend %fz-24;
+            font-weight: 500;
+            letter-spacing: 0;
+            line-height: 1.6;
+            display: block;
+            margin-bottom: 20px;
+
+            @include mq(md) {
+                margin-bottom: 25px;
+            }
+        }
+
+        &__inner {
+            padding: 20px 5px 20px 20px;
+            margin: 0 auto 30px;
+            max-height: 216px;
+            overflow: auto;
+            position: relative;
+            border: 1px solid var(--base);
+
+            @include mq(md) {
+                padding: 40px 20px 40px 40px;
+                max-height: 300px;
+                margin-bottom: 46px;
+            }
+
+            &::after {
+                content: "";
+                width: calc(100% - 20px);
+                height: 16px;
+                background-color: #fff;
+                position: absolute;
+                left: 0;
+                bottom: 2px;
+                pointer-events: none;
+                display: none;
+
+                @include mq(md) {
+                    display: block;
+                    height: clamped(16);
+                    width: calc(100% - 25px);
+                }
+            }
+
+            .mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar {
+                width: 8px;
+                background-color: var(--base);
+                border-radius: 9px;
+
+                @include mq(md) {
+                    width: 10px;
+                }
+            }
+
+            .mCSB_scrollTools .mCSB_draggerRail {
+                opacity: 0;
+            }
+
+            .mCSB_inside > .mCSB_container {
+                margin-right: 20px;
+
+                @include mq(md) {
+                    margin-right: 20px;
+                }
+            }
+        }
+
+        &__item {
+            margin-bottom: 20px;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+    }
+
+    &-verify {
+        display: flex;
+        justify-content: center;
+        margin: 30px 0 0;
+
+        @include mq(md) {
+            margin: 40px 0 0;
+        }
+
+        &__inner {
+            width: auto;
+        }
+    }
+
+    &__btns {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 10px 20px;
+        padding-top: 0;
+        position: relative;
+
+        @include mq(md) {
+            padding-top: 49px;
+            gap: 10px 40px;
+        }
+
+        button,
+        input[type="submit"],
+        .wpcf7-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 260px;
+            background-color: var(--primary);
+            color: #fff;
+            padding: 1em 1.2em;
+            position: relative;
+            @extend %fz-20;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            line-height: 1.4;
+            min-height: 50px;
+            border: 1px solid var(--primary);
+            outline: 0;
+            cursor: pointer;
+            border-radius: 0;
+            text-align: center;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+
+            @include mq(md) {
+                min-height: 64px;
+                width: clamped(300);
+
+                &:hover {
+                    background-color: #fff;
+                    color: var(--primary);
+                    border-color: var(--primary);
+                }
+            }
+        }
+
+        button {
+            justify-content: space-between;
+
+            &::after {
+                content: "";
+                width: 0.5em;
+                height: 0.5em;
+                background-color: #fff;
+                clip-path: polygon(0 0, 0% 100%, 100% 50%);
+                position: relative;
+                flex-shrink: 0;
+                margin-left: 0.5em;
+                transition: background-color 0.3s;
+            }
+
+            @include mq(md) {
+                &:hover::after {
+                    background-color: var(--primary);
+                }
+            }
+        }
+
+        input[type="submit"],
+        .wpcf7-submit {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='0,0 0,10 10,5' fill='%23ffffff'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1.2em center;
+            background-size: 0.5em 0.5em;
+
+            @include mq(md) {
+                &:hover {
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='0,0 0,10 10,5' fill='%23e60012'/%3E%3C/svg%3E");
+                }
+            }
+        }
+
+        .wpcf7-spinner {
+            position: absolute;
+            margin: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -40px;
+        }
+    }
+}
+
+/* Contact Form 7 Plugin Overrides */
+.wpcf7 {
+    position: relative;
+
+    &-form-control-wrap {
+        position: relative;
+        display: block;
+        width: 100%;
+    }
+
+    &-not-valid-tip {
+        color: var(--red);
+        font-size: rem(14);
+        line-height: 1.5;
+        margin-top: 6px;
+        font-weight: 500;
+        display: block;
+    }
+
+    &-response-output {
+        margin: 30px auto 0;
+        padding: 1em 1.5em;
+        font-size: rem(14);
+        line-height: 1.6;
+        text-align: center;
+        border: 2px solid var(--base);
+        background-color: #f9f9f9;
+        box-sizing: border-box;
+
+        @include mq(md) {
+            font-size: rem(16);
+        }
+
+        &.wpcf7-validation-errors {
+            border-color: var(--red);
+            color: var(--red);
+            background-color: #fffafa;
+        }
+
+        &.wpcf7-mail-sent-ok {
+            border-color: #2e7d32;
+            color: #2e7d32;
+            background-color: #f1f8e9;
+        }
+    }
+
+    &-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 260px;
+        background-color: var(--primary);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='0,0 0,10 10,5' fill='%23ffffff'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1.2em center;
+        background-size: 0.5em 0.5em;
+        padding: 1em 1.2em;
+        position: relative;
+        @extend %fz-20;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        line-height: 1.4;
+        color: #fff;
+        min-height: 50px;
+        border: 1px solid var(--primary);
+        outline: 0;
+        cursor: pointer;
+        border-radius: 0;
+        margin: 0 auto;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        box-sizing: border-box;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+
+        @include mq(md) {
+            min-height: 64px;
+            width: clamped(300);
+
+            &:hover {
+                background-color: #fff;
+                color: var(--primary);
+                border-color: var(--primary);
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='0,0 0,10 10,5' fill='%23e60012'/%3E%3C/svg%3E");
+            }
+        }
+    }
+
+    &-spinner {
+        position: absolute;
+        margin: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -40px;
+    }
+}

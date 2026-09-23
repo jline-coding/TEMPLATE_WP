@@ -1,10 +1,10 @@
 @use "sass:math";
 @use "../../global" as *;
 
-/* ==========================================================================
-   Snow Monkey Forms Styling
-   Exact style parity with .c-form and Mailform Pro (#mailformpro / #mfp_confirm_table)
-   ========================================================================== */
+/*!
+page > contact > snow monkey forms
+------------------------------
+*/
 
 .snow-monkey-form {
     max-width: 100%;
@@ -14,9 +14,7 @@
     color: var(--base);
     padding: 60px 0;
 
-    // ==========================================
-    // 1. Progress Tracker (Input -> Confirm -> Complete)
-    // ==========================================
+    /* 1. Progress Tracker */
     .smf-progress-tracker {
         display: flex;
         justify-content: center;
@@ -41,18 +39,17 @@
             text-align: center;
             color: #aaa;
 
-            // Horizontal connecting lines between circles
             &::before,
             &::after {
                 content: "";
                 position: absolute;
-                top: 13px; // Vertical center of the 26px circle
+                top: 13px;
                 height: 1px;
                 background-color: var(--gray);
                 z-index: 0;
 
                 @include mq(md) {
-                    top: 14px; // Vertical center of the 28px circle
+                    top: 14px;
                 }
             }
 
@@ -66,18 +63,16 @@
                 left: 50%;
             }
 
-            // Hide line before first item and line after last item
             &--input::before,
             &:first-child::before {
-                display: none !important;
+                display: none;
             }
 
             &--complete::after,
             &:last-child::after {
-                display: none !important;
+                display: none;
             }
 
-            // Number circle (.smf-progress-tracker__item__number)
             &__number {
                 position: relative;
                 z-index: 1;
@@ -102,7 +97,6 @@
                 }
             }
 
-            // Label text underneath circle (.smf-progress-tracker__item__text)
             &__text {
                 margin-top: 8px;
                 font-size: rem(12);
@@ -116,7 +110,6 @@
                 }
             }
 
-            // Active (Current) step state
             &[aria-current="true"],
             &[aria-current="step"],
             &.is-active,
@@ -124,7 +117,6 @@
                 .smf-progress-tracker__item__number {
                     background-color: var(--base);
                     color: #fff;
-                    font-weight: 700;
                 }
 
                 .smf-progress-tracker__item__text {
@@ -135,20 +127,22 @@
         }
     }
 
-    // Step progression highlight based on form data-screen
     &[data-screen="confirm"] {
         .smf-progress-tracker__item--input {
             .smf-progress-tracker__item__number {
                 background-color: var(--base);
                 color: #fff;
             }
+
             .smf-progress-tracker__item__text {
                 color: var(--base);
             }
+
             &::after {
                 background-color: var(--base);
             }
         }
+
         .smf-progress-tracker__item--confirm {
             &::before {
                 background-color: var(--base);
@@ -164,9 +158,11 @@
                 background-color: var(--base);
                 color: #fff;
             }
+
             .smf-progress-tracker__item__text {
                 color: var(--base);
             }
+
             &::before,
             &::after {
                 background-color: var(--base);
@@ -174,9 +170,7 @@
         }
     }
 
-    // ==========================================
-    // 2. Form Rows / Items (.smf-item) - Matches .c-form__item
-    // ==========================================
+    /* 2. Form Items / Rows */
     .smf-item {
         display: grid;
         border-top: 1px solid var(--gray);
@@ -196,26 +190,22 @@
             border-bottom: 1px solid var(--gray);
         }
 
-        // --- Columns (.smf-item__col) ---
-        &__col {
-            &--label {
-                flex-shrink: 0;
-                width: 100%;
+        &__col--label {
+            flex-shrink: 0;
+            width: 100%;
 
-                @include mq(md) {
-                    width: clamped(220, 320);
-                    max-width: clamped(220, 320);
-                }
-            }
-
-            &--controls {
-                width: 100%;
-                flex: 1 1 auto;
-                min-width: 0;
+            @include mq(md) {
+                width: clamped(220, 320);
+                max-width: clamped(220, 320);
             }
         }
 
-        // --- Label Column (Matches .c-form__ttl & .c-form__head) ---
+        &__col--controls {
+            width: 100%;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
         &__label {
             flex-shrink: 0;
             position: relative;
@@ -231,10 +221,6 @@
             color: var(--base);
             margin: 0;
 
-            @include mq(md) {
-                width: 100%;
-            }
-
             label {
                 font-weight: 500;
                 font-size: inherit;
@@ -245,7 +231,6 @@
             }
         }
 
-        // Required badge (Matches .c-form__rq)
         .smf-badge,
         .smf-badge--required {
             display: inline-flex;
@@ -257,7 +242,7 @@
             padding: 0.15em 0.2em 0.3em;
             @extend %fz-12;
             line-height: 1;
-            letter-spacing: 0em;
+            letter-spacing: 0;
             color: #fff;
             position: relative;
             top: 0.5em;
@@ -265,7 +250,6 @@
             font-weight: 400;
         }
 
-        // Optional badge
         .smf-badge--optional {
             display: inline-flex;
             justify-content: center;
@@ -276,7 +260,7 @@
             padding: 0.15em 0.2em 0.3em;
             @extend %fz-12;
             line-height: 1;
-            letter-spacing: 0em;
+            letter-spacing: 0;
             color: var(--base);
             position: relative;
             top: 0.5em;
@@ -284,51 +268,36 @@
             font-weight: 400;
         }
 
-        // --- Controls Column (Matches .c-form__content) ---
         &__controls {
-            width: 100% !important;
+            width: 100%;
             flex: 1 1 auto;
             min-width: 0;
         }
 
-        // Child spacing (Matches .c-form__child)
         &__child {
             margin-bottom: 10px;
+
             @include mq(md) {
                 margin-bottom: 15px;
             }
+
             &:last-child {
                 margin-bottom: 0;
             }
         }
 
-        // Description / Notes (Matches .c-form__txt14 / .c-form__txt16)
         &__description,
-        .smf-description,
-        .c-form__txt14 {
+        .smf-description {
             font-size: rem(14);
             line-height: 1.6;
             margin-top: 6px;
             color: var(--base);
             letter-spacing: 0;
-
-            @include mq(md) {
-                font-size: rem(14);
-            }
         }
 
-        .c-form__txt16 {
-            font-size: rem(16);
-            line-height: 1.6;
-            margin-top: 6px;
-            color: var(--base);
-        }
-
-        // Validation Error message (Matches .mfp_err / .c-form error)
         &__error,
         .smf-error-message,
-        .smf-system-error-content,
-        .mfp_err {
+        .smf-system-error-content {
             color: var(--red);
             font-size: rem(14);
             line-height: 1.5;
@@ -337,9 +306,7 @@
         }
     }
 
-    // ==========================================
-    // 3. Text Inputs - Matches .c-input
-    // ==========================================
+    /* 3. Text Inputs */
     .smf-text-control,
     .smf-email-control,
     .smf-tel-control,
@@ -350,22 +317,16 @@
         width: 100%;
 
         &__control,
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="number"],
-        input[type="url"],
-        input[type="date"],
-        input[type="password"] {
+        input {
             font-size: rem(14);
             font-family: $font-family-base;
             font-weight: 400;
-            letter-spacing: 0.0em;
+            letter-spacing: 0;
             line-height: 1.6;
             display: block;
             border: 1px solid var(--gray);
-            background-color: #FFFFFF;
-            width: 100% !important;
+            background-color: var(--white);
+            width: 100%;
             padding: 1em;
             outline: 0;
             border-radius: 0;
@@ -390,7 +351,7 @@
                 display: block;
                 font-family: $font-family-base;
                 font-weight: 400;
-                letter-spacing: 0.0em;
+                letter-spacing: 0;
                 line-height: 1.6;
                 font-size: rem(14);
                 opacity: 0.5;
@@ -402,70 +363,17 @@
         }
     }
 
-    // General fallback for all inputs inside form
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"],
-    input[type="number"],
-    input[type="url"],
-    input[type="date"],
-    input[type="password"] {
-        font-size: rem(14);
-        font-family: $font-family-base;
-        font-weight: 400;
-        letter-spacing: 0.0em;
-        line-height: 1.6;
-        display: block;
-        border: 1px solid var(--gray);
-        background-color: #FFFFFF;
-        width: 100% !important;
-        padding: 1em;
-        outline: 0;
-        border-radius: 0;
-        color: var(--base);
-        box-sizing: border-box;
-        transition: border-color 0.3s;
-
-        @include mq(md) {
-            font-size: rem(16);
-        }
-
-        &:focus {
-            border-color: var(--base);
-        }
-
-        &[aria-invalid="true"] {
-            border-color: var(--red);
-            background-color: #fffafa;
-        }
-
-        &::placeholder {
-            display: block;
-            font-family: $font-family-base;
-            font-weight: 400;
-            letter-spacing: 0.0em;
-            line-height: 1.6;
-            font-size: rem(14);
-            opacity: 0.5;
-
-            @include mq(md) {
-                font-size: rem(16);
-            }
-        }
-    }
-
-    // ==========================================
-    // 4. Select Control - Matches .c-select
-    // ==========================================
+    /* 4. Select Control */
     .smf-select-control {
         width: 100%;
         border: 1px solid var(--gray);
         background-color: var(--white);
         position: relative;
         display: block;
+        box-sizing: border-box;
 
         &__toggle {
-            display: none !important;
+            display: none;
         }
 
         &__control-wrapper {
@@ -478,10 +386,10 @@
             font-size: rem(14);
             font-family: $font-family-base;
             font-weight: 400;
-            letter-spacing: 0.0em;
+            letter-spacing: 0;
             line-height: 1.6;
             display: block;
-            width: 100% !important;
+            width: 100%;
             padding: 1em 2.5em 1em 1em;
             outline: 0;
             border: none;
@@ -502,7 +410,7 @@
                 display: block;
                 font-family: $font-family-base;
                 font-weight: 400;
-                letter-spacing: 0.0em;
+                letter-spacing: 0;
                 line-height: 1.6;
                 font-size: rem(14);
                 opacity: 0.5;
@@ -513,7 +421,6 @@
             }
         }
 
-        // Chevron arrow matches .c-select::after with smooth open/close animation
         &::after {
             content: "";
             width: 10px;
@@ -538,39 +445,33 @@
         }
     }
 
-    // ==========================================
-    // 5. Textarea Control - Matches .c-textarea
-    // ==========================================
+    /* 5. Textarea Control */
     .smf-textarea-control {
-        width: 100% !important;
-        display: block !important;
+        width: 100%;
+        display: block;
 
         &__control,
         textarea {
             font-size: rem(14);
             font-family: $font-family-base;
             font-weight: 400;
-            letter-spacing: 0.0em;
+            letter-spacing: 0;
             line-height: 1.6;
-            display: block !important;
+            display: block;
             border: 1px solid var(--gray);
-            background-color: #FFFFFF;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 100% !important;
+            background-color: var(--white);
+            width: 100%;
             padding: 1em;
             outline: 0;
-            height: 120px !important;
-            min-height: 120px !important;
+            height: 120px;
+            min-height: 120px;
             resize: vertical;
             border-radius: 0;
             color: var(--base);
-            box-sizing: border-box !important;
+            box-sizing: border-box;
             transition: border-color 0.3s;
 
             @include mq(md) {
-                height: 120px !important;
-                min-height: 120px !important;
                 font-size: rem(16);
             }
 
@@ -587,7 +488,7 @@
                 display: block;
                 font-family: $font-family-base;
                 font-weight: 400;
-                letter-spacing: 0.0em;
+                letter-spacing: 0;
                 line-height: 1.6;
                 font-size: rem(14);
                 opacity: 0.5;
@@ -599,64 +500,56 @@
         }
     }
 
-    // ==========================================
-    // 6. Checkboxes - Matches .c-form__checkboxs & .c-checkbox
-    // ==========================================
+    /* 6. Checkboxes Control */
     .smf-checkboxes-control {
         width: 100%;
 
         &__control {
-            display: flex !important;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 12px 24px;
+            display: grid;
+            grid-gap: 10px 15px;
+            grid-template-columns: 1fr;
             width: 100%;
 
             @include mq(md) {
-                gap: 15px 32px;
+                grid-gap: 15px 20px;
+                grid-template-columns: 1fr 1fr;
             }
         }
 
         .smf-label {
             margin: 0;
-            display: inline-flex;
-            align-items: center;
+            display: block;
 
             label {
                 cursor: pointer;
                 margin: 0;
-                display: inline-flex;
-                align-items: center;
+                display: block;
             }
         }
     }
 
-    // Shared styling for checkbox control (.smf-checkbox-control)
     .smf-checkbox-control {
         position: relative;
-        display: inline-flex;
-        align-items: center;
+        display: block;
         cursor: pointer;
 
-        // Visually hide native checkbox
         &__control,
         input[type="checkbox"] {
-            position: absolute !important;
-            opacity: 0 !important;
-            width: 0 !important;
-            height: 0 !important;
-            margin: 0 !important;
-            pointer-events: none !important;
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            margin: 0;
+            pointer-events: none;
         }
 
-        // Checkbox label text & custom square/checkmark
         &__label {
             position: relative;
             padding-left: 30px;
             font-size: rem(14);
-            letter-spacing: 0em;
+            letter-spacing: 0;
             line-height: 1.6;
-            display: inline-block;
+            display: block;
             cursor: pointer;
             color: var(--base);
             user-select: none;
@@ -666,12 +559,11 @@
                 font-size: rem(16);
             }
 
-            // Custom Checkbox Square
             &::before {
                 content: "";
                 width: 22px;
                 height: 22px;
-                background-color: #fff;
+                background-color: var(--white);
                 border: 2px solid var(--gray);
                 position: absolute;
                 left: 0;
@@ -687,7 +579,6 @@
                 }
             }
 
-            // Custom Checkmark
             &::after {
                 content: "";
                 width: 10px;
@@ -711,81 +602,67 @@
             }
         }
 
-        // Checked state
-        input[type="checkbox"]:checked + .smf-checkbox-control__label::before {
-            border-color: var(--base);
-        }
-
-        input[type="checkbox"]:checked + .smf-checkbox-control__label::after {
-            opacity: 1;
-        }
-
+        input[type="checkbox"]:checked + .smf-checkbox-control__label::before,
         &:has(input[type="checkbox"]:checked) .smf-checkbox-control__label::before {
             border-color: var(--base);
         }
 
+        input[type="checkbox"]:checked + .smf-checkbox-control__label::after,
         &:has(input[type="checkbox"]:checked) .smf-checkbox-control__label::after {
             opacity: 1;
         }
     }
 
-    // ==========================================
-    // 7. Radio Buttons - Matches .c-form__radios & .c-radio
-    // ==========================================
+    /* 7. Radio Buttons Control */
     .smf-radio-buttons-control,
     .smf-radio-control {
         width: 100%;
 
         &__control {
-            display: flex !important;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 12px 24px;
+            display: grid;
+            grid-gap: 10px 15px;
+            grid-template-columns: 1fr;
             width: 100%;
 
             @include mq(md) {
-                gap: 15px 32px;
+                grid-gap: 15px 20px;
+                grid-template-columns: 1fr 1fr;
             }
         }
 
         .smf-label {
             margin: 0;
-            display: inline-flex;
-            align-items: center;
+            display: block;
 
             label {
                 cursor: pointer;
                 margin: 0;
-                display: inline-flex;
-                align-items: center;
+                display: block;
             }
         }
 
         .smf-radio-button-control {
             position: relative;
-            display: inline-flex;
-            align-items: center;
+            display: block;
             cursor: pointer;
 
-            // Visually hide native input
             &__control,
             input[type="radio"] {
-                position: absolute !important;
-                opacity: 0 !important;
-                width: 0 !important;
-                height: 0 !important;
-                margin: 0 !important;
-                pointer-events: none !important;
+                position: absolute;
+                opacity: 0;
+                width: 0;
+                height: 0;
+                margin: 0;
+                pointer-events: none;
             }
 
-            // Radio label with custom circle & bullet
             &__label {
                 position: relative;
                 padding-left: 30px;
                 font-size: rem(14);
                 line-height: 1.6;
                 cursor: pointer;
-                display: inline-block;
+                display: block;
                 color: var(--base);
                 user-select: none;
 
@@ -794,12 +671,11 @@
                     font-size: rem(16);
                 }
 
-                // Radio Outer Circle
                 &::before {
                     content: "";
                     width: 22px;
                     height: 22px;
-                    background-color: #fff;
+                    background-color: var(--white);
                     border: 2px solid var(--gray);
                     border-radius: 50%;
                     position: absolute;
@@ -816,7 +692,6 @@
                     }
                 }
 
-                // Radio Inner Bullet
                 &::after {
                     content: "";
                     width: 10px;
@@ -838,32 +713,23 @@
                 }
             }
 
-            // Checked state
-            input[type="radio"]:checked + .smf-radio-button-control__label::before {
-                border-color: var(--base);
-            }
-
-            input[type="radio"]:checked + .smf-radio-button-control__label::after {
-                opacity: 1;
-            }
-
+            input[type="radio"]:checked + .smf-radio-button-control__label::before,
             &:has(input[type="radio"]:checked) .smf-radio-button-control__label::before {
                 border-color: var(--base);
             }
 
+            input[type="radio"]:checked + .smf-radio-button-control__label::after,
             &:has(input[type="radio"]:checked) .smf-radio-button-control__label::after {
                 opacity: 1;
             }
         }
     }
 
-    // ==========================================
-    // 8. File Upload Control - Matches .c-file
-    // ==========================================
+    /* 8. File Upload Control */
     .smf-file-control {
         font-size: rem(14);
         border: 1px solid var(--gray);
-        background-color: #fff;
+        background-color: var(--white);
         display: inline-flex;
         align-items: stretch;
         text-align: center;
@@ -885,12 +751,11 @@
 
         &__control,
         input[type="file"] {
-            display: none !important;
+            display: none;
         }
 
-        // Hide the front [ファイルを選択] button as requested
         &__label {
-            display: none !important;
+            display: none;
         }
 
         &__filename {
@@ -902,15 +767,6 @@
 
             @include mq(md) {
                 font-size: rem(16);
-            }
-
-            &--no-file {
-                color: var(--base);
-            }
-
-            &--has-file {
-                color: var(--base);
-                font-weight: 500;
             }
         }
 
@@ -927,7 +783,6 @@
             border-left: 1px solid var(--gray);
             line-height: 1;
             transition: background-color 0.3s;
-            white-space: nowrap;
 
             &:hover {
                 background-color: #fff0f0;
@@ -936,16 +791,13 @@
 
         &--set &__clear,
         &--uploaded &__clear {
-            display: inline-flex !important;
+            display: inline-flex;
         }
     }
 
-    // ==========================================
-    // 9. Privacy Policy / Acceptance - Matches .c-form-pravicy & .c-form-verify
-    // ==========================================
+    /* 9. Privacy Policy / Acceptance */
     .smf-acceptance-control,
-    .smf-agreement-control,
-    .c-form-verify {
+    .smf-agreement-control {
         display: flex;
         justify-content: center;
         margin: 30px 0 0;
@@ -962,108 +814,21 @@
         }
     }
 
-    // Privacy Policy Box (Matches .c-form-pravicy)
-    .c-form-pravicy {
-        padding: 50px 0;
-
-        @include mq(md) {
-            padding: 58px 0;
-        }
-
-        &__title {
-            text-align: center;
-            @extend %fz-24;
-            font-weight: 500;
-            letter-spacing: 0em;
-            line-height: 1.6;
-            display: block;
-            margin-bottom: 20px;
-
-            @include mq(md) {
-                margin-bottom: 25px;
-            }
-        }
-
-        &__inner {
-            padding: 20px 5px 20px 20px;
-            margin: 0 auto 30px;
-            max-height: 216px;
-            overflow: auto;
-            position: relative;
-            border: 1px solid var(--base);
-
-            @include mq(md) {
-                padding: 40px 20px 40px 40px;
-                max-height: 300px;
-                margin-bottom: 46px;
-            }
-
-            &::after {
-                content: "";
-                width: calc(100% - 20px);
-                height: 16px;
-                background-color: #fff;
-                position: absolute;
-                left: 0;
-                bottom: 2px;
-                pointer-events: none;
-                display: none;
-
-                @include mq(md) {
-                    display: block;
-                    height: clamped(16);
-                    width: calc(100% - 25px);
-                }
-            }
-
-            .mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar {
-                width: 8px;
-                background-color: var(--base);
-                border-radius: 9px;
-
-                @include mq(md) {
-                    width: 10px;
-                }
-            }
-
-            .mCSB_scrollTools .mCSB_draggerRail {
-                opacity: 0;
-            }
-
-            .mCSB_inside > .mCSB_container {
-                margin-right: 20px;
-
-                @include mq(md) {
-                    margin-right: 20px;
-                }
-            }
-        }
-
-        &__item {
-            margin-bottom: 20px;
-
-            &:last-child {
-                margin-bottom: 0;
-            }
-        }
-    }
-
-    // ==========================================
-    // 10. Action Buttons (Input Mode) - Matches .c-form__btns
-    // ==========================================
+    /* 10. Action Buttons */
     .smf-action {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 15px 30px !important;
-        padding-top: 0px !important;
-        margin-top: 30px !important;
-        border: none !important;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 10px 20px;
+        padding-top: 0;
+        margin-top: 30px;
+        border: none;
 
         @include mq(md) {
-            padding-top: 49px !important;
-            margin-top: 0 !important;
+            padding-top: 49px;
+            margin-top: 0;
+            gap: 10px 40px;
         }
 
         &__item {
@@ -1077,63 +842,63 @@
             justify-content: center;
         }
 
-        // Button Styles matching .c-form__btns button
         .smf-button-control__control,
         button,
-        input[type="submit"],
-        input[type="button"] {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            width: 260px !important;
-            background-color: var(--base) !important;
-            background-image: none !important;
-            padding: 1em 1.2em !important;
-            position: relative !important;
+        input[type="submit"] {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 260px;
+            background-color: var(--primary);
+            background-image: none;
+            padding: 1em 1.2em;
+            position: relative;
             @extend %fz-20;
-            font-weight: 700 !important;
-            letter-spacing: 0.05em !important;
-            line-height: 1.4 !important;
-            color: #fff !important;
-            min-height: 50px !important;
-            border: none !important;
-            outline: 0 !important;
-            cursor: pointer !important;
-            text-decoration: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            transition: opacity 0.3s, background-color 0.3s;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            line-height: 1.4;
+            color: #fff;
+            min-height: 50px;
+            border: 1px solid var(--primary);
+            outline: 0;
+            cursor: pointer;
+            border-radius: 0;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 
             @include mq(md) {
-                min-height: 64px !important;
-                width: clamped(300) !important;
+                min-height: 64px;
+                width: clamped(300);
+
+                &:hover {
+                    background-color: #fff;
+                    color: var(--primary);
+                    border-color: var(--primary);
+
+                    &::after {
+                        background-color: var(--primary);
+                    }
+                }
             }
 
-            // Arrow triangle on the right
             &::after {
-                content: "" !important;
-                width: 0.5em !important;
-                height: 0.5em !important;
-                background-color: #fff !important;
-                clip-path: polygon(0 0, 0% 100%, 100% 50%) !important;
-                position: relative !important;
-                flex-shrink: 0 !important;
-                margin-left: 0.5em !important;
-            }
-
-            &:hover {
-                opacity: 0.85 !important;
-            }
-
-            .smf-sending {
-                display: none !important;
+                content: "";
+                width: 0.5em;
+                height: 0.5em;
+                background-color: #fff;
+                clip-path: polygon(0 0, 0% 100%, 100% 50%);
+                position: relative;
+                flex-shrink: 0;
+                margin-left: 0.5em;
+                transition: background-color 0.3s;
             }
         }
     }
 
-    // ==========================================
-    // 11. Confirmation Screen - EXACT MATCH WITH #mfp_confirm_table & .mfp_buttons
-    // ==========================================
+    /* 11. Confirmation Screen */
     &[data-screen="confirm"],
     &.is-confirm {
         position: relative;
@@ -1144,44 +909,35 @@
         padding: 60px 0 20px;
 
         @include mq(md) {
-            padding: 79px 0 22px 0;
+            padding: 79px 0 22px;
         }
 
-        // Hide badges, hints, descriptions, errors, and privacy policy in confirm screen
         .smf-badge,
         .smf-badge--required,
         .smf-badge--optional,
-        .c-form__rq,
         .smf-item__description,
         .smf-description,
-        .c-form__txt14,
-        .c-form__txt16,
         .smf-item__error,
         .smf-error-message,
         .smf-system-error-content,
-        .mfp_err,
-        .c-form-pravicy,
-        .c-form-verify,
         .smf-acceptance-control,
         .smf-agreement-control {
-            display: none !important;
+            display: none;
         }
 
-        // Each confirmed row (Matches #mfp_confirm_table tr)
         .smf-item {
             display: grid;
             grid-gap: 0;
             position: relative;
             padding: 0;
             margin: 0;
-            border: none !important;
+            border: none;
 
             @include mq(md) {
                 display: flex;
                 gap: 20px;
             }
 
-            // Row top border line (Matches tr::before in #mfp_confirm_table)
             &::before {
                 content: "";
                 width: 100%;
@@ -1194,22 +950,19 @@
                 pointer-events: none;
             }
 
-            &:last-of-type,
-            &:last-child {
-                &::after {
-                    content: "";
-                    width: 100%;
-                    height: 1px;
-                    background-color: var(--gray);
-                    position: absolute;
-                    left: 0;
-                    bottom: 0;
-                    z-index: 0;
-                    pointer-events: none;
-                }
+            &:last-of-type::after,
+            &:last-child::after {
+                content: "";
+                width: 100%;
+                height: 1px;
+                background-color: var(--gray);
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                z-index: 0;
+                pointer-events: none;
             }
 
-            // Label column in confirm mode (Matches #mfp_confirm_table th)
             &__label {
                 display: flex;
                 flex-wrap: wrap;
@@ -1220,7 +973,7 @@
                 @extend %fz-16;
                 letter-spacing: 0.04em;
                 line-height: 1.6;
-                padding: 2em 0 2em 0;
+                padding: 2em 0;
                 position: relative;
                 flex-shrink: 0;
                 margin-bottom: -40px;
@@ -1241,21 +994,20 @@
                 }
             }
 
-            // Value column in confirm mode (Matches #mfp_confirm_table td)
             &__controls {
                 display: flex;
                 flex-wrap: wrap;
                 align-items: flex-start;
                 justify-content: flex-start;
-                width: 100% !important;
+                width: 100%;
                 font-family: $font-family-base;
                 @extend %fz-16;
                 letter-spacing: 0.02em;
                 line-height: 1.6;
-                padding: 2em 0 2em 0;
+                padding: 2em 0;
                 position: relative;
                 font-weight: 400;
-                color: #0C377D !important; // Exact color from Mailform Pro confirm screen
+                color: #0C377D;
                 gap: 20px;
                 word-break: break-word;
 
@@ -1264,129 +1016,133 @@
                 }
 
                 * {
-                    color: #0C377D !important;
+                    color: #0C377D;
                 }
 
-                // Uploaded Images (Matches #mfp_confirm_table td img)
                 img {
-                    width: calc(50% - 10px) !important;
-                    height: auto !important;
-                    max-width: 100% !important;
-                    min-width: 0 !important;
-                    min-height: 0 !important;
-                    max-height: 100% !important;
-                    display: block !important;
-                    margin: 5px 0 5px 0 !important;
-                    box-shadow: none !important;
-                    border: none !important;
+                    width: calc(50% - 10px);
+                    height: auto;
+                    max-width: 100%;
+                    min-width: 0;
+                    min-height: 0;
+                    max-height: 100%;
+                    display: block;
+                    margin: 5px 0;
+                    box-shadow: none;
+                    border: none;
 
                     @include mq(md) {
-                        width: calc(50% - clamped(10, 20)) !important;
-                        margin: 11px 0 12px 0 !important;
+                        width: calc(50% - clamped(10, 20));
+                        margin: 11px 0 12px;
                     }
                 }
             }
         }
 
-        // Action buttons in confirm mode (Matches .mfp_buttons)
         .smf-action {
-            display: flex !important;
-            flex-direction: row-reverse !important;
-            flex-wrap: wrap !important;
-            justify-content: center !important;
-            align-items: center !important;
-            gap: 15px 30px !important;
-            padding-top: 60px !important;
-            margin-top: 0 !important;
+            display: flex;
+            flex-direction: row-reverse;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px 20px;
+            padding-top: 60px;
+            margin-top: 0;
 
             @include mq(md) {
-                gap: 20px 40px !important;
+                gap: 10px 40px;
             }
 
             &__item {
                 margin: 0;
             }
 
-            .smf-button-control {
-                display: inline-flex;
-                justify-content: center;
-            }
-
             .smf-button-control__control,
             button,
-            input[type="submit"],
-            input[type="button"] {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-                width: 260px !important;
-                background-color: var(--base) !important;
-                background-image: none !important;
-                padding: 1em 1.2em !important;
-                position: relative !important;
+            input[type="submit"] {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 260px;
+                background-color: var(--primary);
+                background-image: none;
+                padding: 1em 1.2em;
+                position: relative;
                 @extend %fz-20;
-                font-weight: 700 !important;
-                letter-spacing: 0.05em !important;
-                line-height: 1.4 !important;
-                color: #fff !important;
-                min-height: 50px !important;
-                border: none !important;
-                box-shadow: none !important;
-                cursor: pointer !important;
-                border-radius: 0 !important;
-                transition: opacity 0.3s;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                line-height: 1.4;
+                color: #fff;
+                min-height: 50px;
+                border: 1px solid var(--primary);
+                cursor: pointer;
+                border-radius: 0;
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                box-sizing: border-box;
+                transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 
                 @include mq(md) {
-                    min-height: 64px !important;
-                    width: clamped(300) !important;
-                }
-
-                // Send button arrow (right arrow)
-                &::after {
-                    content: "" !important;
-                    width: 0.5em !important;
-                    height: 0.5em !important;
-                    background-color: #fff !important;
-                    clip-path: polygon(0 0, 0% 100%, 100% 50%) !important;
-                    position: relative !important;
-                    flex-shrink: 0 !important;
-                    margin-left: 0.5em !important;
-                }
-
-                &:hover {
-                    opacity: 0.85 !important;
-                }
-
-                // Cancel / Back button (Matches #mfp_button_cancel in .mfp_buttons)
-                &[data-action="back"],
-                &.is-back {
-                    flex-direction: row-reverse !important;
-                    background-color: #fff !important;
-                    color: var(--base) !important;
-                    border: 1px solid var(--gray) !important;
-
-                    &::after {
-                        background-color: var(--base) !important;
-                        transform: rotate(180deg) !important;
-                        margin-right: 0.5em !important;
-                        margin-left: 0 !important;
-                    }
+                    min-height: 64px;
+                    width: clamped(300);
 
                     &:hover {
-                        background-color: #f7f7f7 !important;
+                        background-color: #fff;
+                        color: var(--primary);
+                        border-color: var(--primary);
+
+                        &::after {
+                            background-color: var(--primary);
+                        }
                     }
                 }
 
-                .smf-sending {
-                    display: none !important;
+                &::after {
+                    content: "";
+                    width: 0.5em;
+                    height: 0.5em;
+                    background-color: #fff;
+                    clip-path: polygon(0 0, 0% 100%, 100% 50%);
+                    position: relative;
+                    flex-shrink: 0;
+                    margin-left: 0.5em;
+                    transition: background-color 0.3s;
+                }
+
+                &[data-action="back"],
+                &.is-back {
+                    flex-direction: row-reverse;
+                    background-color: #fff;
+                    background-image: none;
+                    color: var(--base);
+                    border: 1px solid var(--gray);
+
+                    &::after {
+                        background-color: var(--base);
+                        transform: rotate(180deg);
+                        margin-right: 0.5em;
+                        margin-left: 0;
+                        transition: background-color 0.3s;
+                    }
+
+                    @include mq(md) {
+                        &:hover {
+                            background-color: var(--base);
+                            color: #fff;
+                            border-color: var(--base);
+
+                            &::after {
+                                background-color: #fff;
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    // ==========================================
-    // 12. Complete Screen Mode ([data-screen="complete"])
-    // ==========================================
+    /* 12. Complete Screen */
     &[data-screen="complete"],
     &.is-complete {
         text-align: center;
@@ -1396,7 +1152,9 @@
             padding: 60px 0;
         }
 
-        h2, h3, .smf-complete-title {
+        h2,
+        h3,
+        .smf-complete-title {
             @extend %fz-24;
             font-weight: 700;
             margin-bottom: 20px;
@@ -1407,7 +1165,8 @@
             }
         }
 
-        p, .smf-complete-text {
+        p,
+        .smf-complete-text {
             @extend %fz-16;
             line-height: 1.8;
             color: var(--base);

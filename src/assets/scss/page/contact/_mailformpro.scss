@@ -1,0 +1,270 @@
+@use "sass:math";
+@use "../../global" as *;
+
+/*!
+page > contact > mailform pro
+------------------------------
+*/
+
+/* Reset & Hidden Elements */
+#mfp_warning,
+#mfp_OperationCheck,
+#mfp_phase_confirm_inner h4 {
+    display: none !important;
+}
+
+/* Validation Error Message */
+.mfp_err,
+div[id^="errormsg_"] {
+    color: var(--red);
+    font-size: rem(14);
+    line-height: 1.5;
+    margin-top: 6px;
+    font-weight: 500;
+    display: block;
+}
+
+/* Confirmation Phase Screen */
+#mfp_phase_confirm {
+    position: relative;
+    width: 100%;
+
+    #mfp_phase_confirm_inner {
+        tr {
+            td {
+                color: #0C377D;
+            }
+        }
+    }
+}
+
+#mfp_confirm_table {
+    position: relative;
+    width: 100%;
+    display: block;
+    margin: 0 auto;
+    max-width: 1050px;
+    padding: 60px 0 20px;
+    font-family: $font-family-base;
+
+    @include mq(md) {
+        padding: 79px 0 22px;
+    }
+
+    tbody {
+        display: block;
+        width: 100%;
+    }
+
+    tr {
+        display: grid;
+        grid-gap: 0;
+        position: relative;
+
+        @include mq(md) {
+            display: flex;
+            gap: 20px;
+        }
+
+        &::before {
+            content: "";
+            width: 100%;
+            height: 1px;
+            background-color: var(--gray);
+            position: absolute;
+            left: 0;
+            top: -1px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        &:last-child::after {
+            content: "";
+            width: 100%;
+            height: 1px;
+            background-color: var(--gray);
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+    }
+
+    th,
+    td {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        width: 100%;
+        font-family: $font-family-base;
+        @extend %fz-16;
+        letter-spacing: 0.04em;
+        line-height: 1.6;
+        padding: 2em 0;
+        position: relative;
+
+        @include mq(md) {
+            width: clamped(220, 300);
+        }
+    }
+
+    th {
+        flex-shrink: 0;
+        margin-bottom: -40px;
+        font-weight: 500;
+        color: var(--base);
+
+        @include mq(md) {
+            margin-bottom: 0;
+        }
+    }
+
+    td {
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        width: 100% !important;
+        gap: 20px;
+        color: #0C377D;
+
+        @include mq(md) {
+            gap: clamped(20, 40);
+        }
+
+        * {
+            color: #0C377D;
+        }
+
+        img {
+            width: calc(50% - 10px) !important;
+            height: auto !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            max-height: 100% !important;
+            display: block !important;
+            margin: 5px 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+
+            @include mq(md) {
+                width: calc(50% - clamped(10, 20)) !important;
+                margin: 11px 0 12px;
+            }
+        }
+    }
+}
+
+/* Confirmation Buttons */
+.mfp_buttons {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px 20px;
+    padding-top: 60px;
+
+    @include mq(md) {
+        gap: 10px 40px;
+    }
+
+    button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 260px;
+        background-color: var(--primary);
+        padding: 1em 1.2em;
+        position: relative;
+        @extend %fz-20;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        line-height: 1.4;
+        color: #fff;
+        min-height: 50px;
+        border: 1px solid var(--primary);
+        outline: 0;
+        cursor: pointer;
+        border-radius: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        box-sizing: border-box;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+
+        @include mq(md) {
+            min-height: 64px;
+            width: clamped(300);
+
+            &:hover {
+                background-color: #fff;
+                color: var(--primary);
+                border-color: var(--primary);
+
+                &::after {
+                    background-color: var(--primary);
+                }
+            }
+        }
+
+        &::after {
+            content: "";
+            width: 0.5em;
+            height: 0.5em;
+            background-color: #fff;
+            clip-path: polygon(0 0, 0% 100%, 100% 50%);
+            position: relative;
+            flex-shrink: 0;
+            margin-left: 0.5em;
+            transition: background-color 0.3s;
+        }
+
+        &#mfp_button_cancel {
+            flex-direction: row-reverse;
+            background-color: #fff;
+            color: var(--base);
+            border: 1px solid var(--gray);
+
+            &::after {
+                background-color: var(--base);
+                transform: rotate(180deg);
+                margin-right: 0.5em;
+                margin-left: 0;
+                transition: background-color 0.3s;
+            }
+
+            @include mq(md) {
+                &:hover {
+                    background-color: var(--base);
+                    color: #fff;
+                    border-color: var(--base);
+
+                    &::after {
+                        background-color: #fff;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* Overlay & Loading Indicator */
+#mfp_overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+#mfp_loading {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 4px;
+}
