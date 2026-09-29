@@ -106,7 +106,6 @@ component > Gnavi
                         }
                         .c-gnavi-sub{
                             opacity: 1;
-                            visibility: visible;
                             transform: translateX(-50%) translateY(0);
                             pointer-events: auto;
                         }
@@ -129,24 +128,46 @@ component > Gnavi
         margin: 8px 20px 12px;
         border-radius: 4px;
 
-        @include mq(md) {
-            display: block;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%) translateY(10px);
-            top: calc(100% + 20px);
-            width: 200px;
-            margin: 0;
-            background-color: var(--white);
-            border-radius: 6px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
-            z-index: 20;
+        // In-page search (Ctrl+F) support on SP
+        &[hidden="until-found"] {
+            display: none;
+        }
 
-            // Hover bridge ngăn chuột mất trạng thái hover qua khoảng trống
+        @supports (content-visibility: hidden) {
+            &[hidden="until-found"] {
+                display: block;
+                content-visibility: hidden;
+            }
+        }
+
+        @include mq(md) {
+            &,
+            &[hidden="until-found"] {
+                display: block !important;
+                content-visibility: visible !important;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%) translateY(10px);
+                top: calc(100% + 20px);
+                width: 200px;
+                margin: 0;
+                background-color: var(--white);
+                border-radius: 6px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease, transform 0.3s ease;
+                z-index: 20;
+
+                // Auto reveal submenu when focused or matched in in-page search
+                &:focus-within {
+                    opacity: 1 !important;
+                    transform: translateX(-50%) translateY(0) !important;
+                    pointer-events: auto !important;
+                }
+            }
+
+            // Hover bridge
             &::before{
                 content: "";
                 position: absolute;
@@ -156,7 +177,7 @@ component > Gnavi
                 height: 20px;
             }
 
-            // Tam giác caret trỏ lên mục cha
+            // Caret triangle
             &::after{
                 content: "";
                 position: absolute;
