@@ -262,13 +262,12 @@ if [ "$IS_FIRST_DEPLOY" = true ]; then
             echo '✅ Đã tạo root .htaccess (Auth + WP Permalinks) tại $TARGET_DIR/.htaccess.'; \
         fi"
 
-        # c) Tạo root index.php (bridge require sang folder_wp)
-        BRIDGE_INDEX="<?php\ndefine( 'WP_USE_THEMES', true );\nrequire __DIR__ . '/$FOLDER_WP/wp-blog-header.php';\n"
-        $SSH_CMD "if [ ! -f \"$TARGET_DIR/index.php\" ]; then \
-            echo -e '$BRIDGE_INDEX' > \"$TARGET_DIR/index.php\"; \
-            chmod 644 \"$TARGET_DIR/index.php\"; \
-            echo '✅ Đã tạo root index.php bridge → $FOLDER_WP/wp-blog-header.php.'; \
-        fi"
+        # c) Đồng bộ root index.php (bridge require sang folder_wp kèm installer redirect)
+        if [ -f "$SOURCE_FOLDER/index.php" ]; then
+            $SCP_CMD "$SOURCE_FOLDER/index.php" "$SSH_USER@$SSH_HOST:$TARGET_DIR/index.php"
+            $SSH_CMD "chmod 644 \"$TARGET_DIR/index.php\""
+            echo "✅ Đã đồng bộ root index.php bridge → $FOLDER_WP/wp-blog-header.php."
+        fi
     else
         HTACCESS_FULL="${HTACCESS_AUTH}${WP_ROOT_RULES}"
         $SSH_CMD "if [ -f \"$TARGET_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_DIR/.htaccess\"; then \
@@ -315,13 +314,12 @@ else
     fi
 
     # ── Đảm bảo root bridge index.php nếu dùng folder_wp ──
-    if [ -n "$FOLDER_WP" ]; then
-        BRIDGE_INDEX="<?php\ndefine( 'WP_USE_THEMES', true );\nrequire __DIR__ . '/$FOLDER_WP/wp-blog-header.php';\n"
-        $SSH_CMD "if [ ! -f \"$TARGET_DIR/index.php\" ]; then \
-            echo -e '$BRIDGE_INDEX' > \"$TARGET_DIR/index.php\"; \
-            chmod 644 \"$TARGET_DIR/index.php\"; \
-            echo '✅ Đã đảm bảo root index.php bridge → $FOLDER_WP/wp-blog-header.php.'; \
-        fi"
+    if [ -n "$FOLDER_WP" ] && [ -f "$SOURCE_FOLDER/index.php" ]; then
+        $SSH_CMD "if [ ! -f \"$TARGET_DIR/index.php\" ]; then exit 10; fi" || {
+            $SCP_CMD "$SOURCE_FOLDER/index.php" "$SSH_USER@$SSH_HOST:$TARGET_DIR/index.php"
+            $SSH_CMD "chmod 644 \"$TARGET_DIR/index.php\""
+            echo "✅ Đã đồng bộ root index.php bridge → $FOLDER_WP/wp-blog-header.php."
+        }
     fi
 fi
 

@@ -41,10 +41,34 @@ export function ensureRootBridgeFiles(publicDir, folderWp, options = {}) {
 // If WordPress is not yet configured, redirect directly to the installer in the subfolder
 if ( ! file_exists( __DIR__ . '/${cleanFolderWp}/wp-config.php' ) && ! file_exists( __DIR__ . '/wp-config.php' ) ) {
     if ( file_exists( __DIR__ . '/${cleanFolderWp}/wp-admin/setup-config.php' ) ) {
-        $scheme = ( ! empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] !== 'off' ) || ( isset( $_SERVER['SERVER_PORT'] ) && $_SERVER['SERVER_PORT'] == 443 ) ? 'https://' : 'http://';
+        $is_ssl = ( ! empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] !== 'off' )
+            || ( isset( $_SERVER['SERVER_PORT'] ) && $_SERVER['SERVER_PORT'] == 443 )
+            || ( ! empty( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' )
+            || ( ! empty( $_SERVER['HTTP_X_FORWARDED_SSL'] ) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on' );
+        $scheme = $is_ssl ? 'https://' : 'http://';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $uri = rtrim( dirname( $_SERVER['SCRIPT_NAME'] ?? '' ), '/\\\\' );
-        header( 'Location: ' . $scheme . $host . ( $uri ? $uri : '' ) . '/${cleanFolderWp}/wp-admin/setup-config.php' );
+
+        $doc_root = rtrim( str_replace( '\\\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? '' ), '/' );
+        $site_dir = rtrim( str_replace( '\\\\', '/', __DIR__ ), '/' );
+        $base_path = '';
+
+        if ( ! empty( $doc_root ) && strpos( $site_dir, $doc_root ) === 0 ) {
+            $base_path = substr( $site_dir, strlen( $doc_root ) );
+        }
+
+        if ( empty( $base_path ) ) {
+            $script_dir = dirname( $_SERVER['SCRIPT_NAME'] ?? '' );
+            $script_base = rtrim( str_replace( '\\\\', '/', $script_dir ), '/' );
+            if ( ! empty( $script_base ) && $script_base !== '/' ) {
+                $base_path = $script_base;
+            } else {
+                $req_path = strtok( $_SERVER['REQUEST_URI'] ?? '', '?' );
+                $base_path = preg_replace( '#/(index\\.php.*)?$#i', '', $req_path );
+            }
+        }
+        $base_path = rtrim( $base_path, '/' );
+
+        header( 'Location: ' . $scheme . $host . $base_path . '/${cleanFolderWp}/wp-admin/setup-config.php' );
         exit;
     }
 }
@@ -67,7 +91,7 @@ ${expectedRequire}
     }
   } else {
     const currentContent = readFileSync(rootIndexPhp, 'utf8');
-    if (!currentContent.includes(expectedRequire) || !currentContent.includes('setup-config.php')) {
+    if (!currentContent.includes(expectedRequire) || !currentContent.includes('HTTP_X_FORWARDED_PROTO')) {
       writeFileSync(rootIndexPhp, rootIndexContent, 'utf8');
       if (!quiet) {
         console.log(`   ✓ Đã cập nhật root index.php (bridge → ${cleanFolderWp}/wp-blog-header.php)`);
@@ -155,12 +179,33 @@ RewriteRule . index.php [L]
 // 2. Single subfolder: jlweb.jp/project/ (Admin: jlweb.jp/project/${cleanFolderWp}/wp-admin/)
 // 3. Multi-level subfolder: jlweb.jp/client/project/ (Admin: jlweb.jp/client/project/${cleanFolderWp}/wp-admin/)
 // 4. Local Laragon: project.test/
-// 5. Local BrowserSync: localhost:6868/
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://';
+$is_ssl = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+    || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on');
+$protocol = $is_ssl ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$script_dir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
-$base_path = preg_replace('#/${cleanFolderWp}(/.*)?$#', '', $script_dir);
-$base_path = rtrim(str_replace('\\\\', '/', $base_path), '/');
+
+$doc_root = rtrim(str_replace('\\\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? ''), '/');
+$site_dir = rtrim(str_replace('\\\\', '/', dirname(__DIR__)), '/');
+$base_path = '';
+
+if (!empty($doc_root) && strpos($site_dir, $doc_root) === 0) {
+    $base_path = substr($site_dir, strlen($doc_root));
+}
+
+if (empty($base_path)) {
+    $script_dir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+    $script_base = preg_replace('#/${cleanFolderWp}(/.*)?$#', '', $script_dir);
+    $script_base = rtrim(str_replace('\\\\', '/', $script_base), '/');
+    if (!empty($script_base) && $script_base !== '/') {
+        $base_path = $script_base;
+    } else {
+        $req_path = strtok($_SERVER['REQUEST_URI'] ?? '', '?');
+        $base_path = preg_replace('#/(${cleanFolderWp}|wp-admin|wp-login\\.php|index\\.php)(/.*)?$#i', '', $req_path);
+    }
+}
+$base_path = rtrim($base_path, '/');
 
 if (!defined('WP_HOME')) {
     define('WP_HOME', $protocol . $host . $base_path);
@@ -169,8 +214,8 @@ if (!defined('WP_SITEURL')) {
     define('WP_SITEURL', $protocol . $host . $base_path . '/${cleanFolderWp}');
 }
 `;
-      if (!sampleContent.includes('base_path')) {
-        sampleContent = sampleContent.replace(/\/\/ Dynamic URLs for WordPress[\s\S]*?define\('WP_HOME'[\s\S]*?\);\n/g, '');
+      if (!sampleContent.includes('DOCUMENT_ROOT')) {
+        sampleContent = sampleContent.replace(/\/\/ Dynamic URLs for WordPress[\s\S]*?define\('WP_SITEURL'[\s\S]*?\);\n/g, '');
         sampleContent = sampleContent.replace("/* That's all, stop editing!", injection + "\n/* That's all, stop editing!");
         writeFileSync(samplePath, sampleContent, 'utf8');
       }

@@ -812,34 +812,16 @@ async function runDeploy() {
                     console.error(`   ⚠️ Không thể tạo root .htaccess: ${errRoot.message}`);
                 }
 
-                // c) targetDir/index.php (root): Bridge require sang folder_wp
-                const bridgeIndexContent = [
-                    '<?php',
-                    '/**',
-                    ' * Front to the WordPress application. This file doesn\'t do anything, but loads',
-                    ' * wp-blog-header.php which does and tells WordPress to load the theme.',
-                    ' *',
-                    ' * @package WordPress',
-                    ' */',
-                    '',
-                    '/**',
-                    ' * Tells WordPress to load the WordPress theme and output it.',
-                    ' *',
-                    ' * @var bool',
-                    ' */',
-                    'define( \'WP_USE_THEMES\', true );',
-                    '',
-                    '/** Loads the WordPress Environment and Template */',
-                    `require __DIR__ . '/${config.folder_wp}/wp-blog-header.php';`,
-                    '',
-                ].join('\n');
-                try {
-                    fs.writeFileSync('/tmp/index_bridge.php', bridgeIndexContent);
-                    await client.uploadFrom('/tmp/index_bridge.php', `${targetDir}/index.php`);
-                    try { await client.send(`SITE CHMOD 644 ${targetDir}/index.php`); } catch {}
-                    console.log(`   ✅ Đã tạo root index.php bridge → ${config.folder_wp}/wp-blog-header.php`);
-                } catch (errBridge) {
-                    console.error(`   ⚠️ Không thể tạo bridge index.php: ${errBridge.message}`);
+                // c) targetDir/index.php (root): Đồng bộ file root index.php từ build output
+                const localIndexPhp = path.join(config.source_folder, 'index.php');
+                if (fs.existsSync(localIndexPhp)) {
+                    try {
+                        await client.uploadFrom(localIndexPhp, `${targetDir}/index.php`);
+                        try { await client.send(`SITE CHMOD 644 ${targetDir}/index.php`); } catch {}
+                        console.log(`   ✅ Đã đồng bộ root index.php bridge → ${config.folder_wp}/wp-blog-header.php`);
+                    } catch (errBridge) {
+                        console.error(`   ⚠️ Không thể upload bridge index.php: ${errBridge.message}`);
+                    }
                 }
             } else {
                 let htaccessContent = basicAuthBlock
