@@ -1,6 +1,6 @@
 {
   "theme_name": "original-theme",
-  "project_dir": "template_jline_wp",
+  "project_dir": "template_jline_wp_test",
   "folder_wp": "wp-bridge2026",
   "source_folder": "public",
   "build_command": "npm run clean && npm run wp:download && npm run build",

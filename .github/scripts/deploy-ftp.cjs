@@ -220,6 +220,108 @@ async function connectWithRetry(client, serverInfo, maxRetries = 3) {
 }
 
 // ─────────────────────────────────────────────
+// Universal Server Web Path & Site URL Resolver
+// ─────────────────────────────────────────────
+
+/**
+ * Tự động phân tích Web Path và Site URL từ thông tin server.
+ * Hỗ trợ mọi loại máy chủ: cPanel, Plesk, XServer, DirectAdmin, Apache, Nginx, IIS, chrooted FTP, v.v.
+ */
+function resolveServerPaths(serverInfo) {
+    const rawFtpDir = (serverInfo.ftp_dir || '').replace(/\\/g, '/');
+    const rawRootPath = (serverInfo.root_path || '').replace(/\\/g, '/');
+
+    // 1. Secret có chỉ định rõ url hoặc site_url (ưu tiên cao nhất)
+    const explicitUrl = serverInfo.url || serverInfo.site_url;
+    if (explicitUrl && explicitUrl.trim() !== '') {
+        const cleanUrl = explicitUrl.trim().replace(/\/+$/, '');
+        let explicitPath = '';
+        try {
+            const parsed = new URL(cleanUrl);
+            explicitPath = parsed.pathname.replace(/\/+$/, '');
+        } catch {}
+        return {
+            siteUrl: cleanUrl,
+            webPath: explicitPath,
+            extraSubPath: explicitPath.replace(/^\/+|\/+$/g, ''),
+        };
+    }
+
+    // 2. Secret có chỉ định rõ web_path (ví dụ: "/client" hoặc "")
+    if (serverInfo.web_path !== undefined) {
+        const cleanPath = String(serverInfo.web_path).trim().replace(/^\/+|\/+$/g, '');
+        const webPath = cleanPath ? '/' + cleanPath : '';
+        const protocol = serverInfo.protocol || (serverInfo.secure ? 'https://' : 'http://');
+        const host = (serverInfo.host || '').replace(/\/+$/, '');
+        return {
+            siteUrl: `${protocol}${host}${webPath}`,
+            webPath,
+            extraSubPath: cleanPath,
+        };
+    }
+
+    // 3. Quét danh sách các docroot chuẩn của hầu hết các hệ điều hành & hosting:
+    // - public_html (cPanel, XServer, DirectAdmin)
+    // - httpdocs (Plesk)
+    // - htdocs (XAMPP, Apache, StarServer, Hetzner)
+    // - www (Sakura Internet, Gentoo, openSUSE)
+    // - html (Ubuntu/Debian /var/www/html)
+    // - public / web (Laravel / custom hosting)
+    const WEB_ROOT_MARKERS = [
+        'public_html',
+        'httpdocs',
+        'htdocs',
+        'public',
+        'www',
+        'html',
+        'web',
+    ];
+
+    let webPath = '';
+    let foundMarker = false;
+
+    // Tìm trong ftp_dir trước
+    for (const marker of WEB_ROOT_MARKERS) {
+        const regex = new RegExp(`/(?:${marker})(?:/|$)(.*)`, 'i');
+        const match = rawFtpDir.match(regex);
+        if (match) {
+            webPath = match[1] ? '/' + match[1].replace(/^\/+|\/+$/g, '') : '';
+            foundMarker = true;
+            break;
+        }
+    }
+
+    // Nếu ftp_dir không có marker, dò trong root_path
+    if (!foundMarker && rawRootPath) {
+        for (const marker of WEB_ROOT_MARKERS) {
+            const regex = new RegExp(`/(?:${marker})(?:/|$)(.*)`, 'i');
+            const match = rawRootPath.match(regex);
+            if (match) {
+                webPath = match[1] ? '/' + match[1].replace(/^\/+|\/+$/g, '') : '';
+                foundMarker = true;
+                break;
+            }
+        }
+    }
+
+    // 4. Nếu không tìm thấy bất kỳ marker nào:
+    // Nghĩa là tài khoản FTP đã được CHROOT trực tiếp vào web root (phổ biến ở Plesk / cPanel secondary user)
+    // Khi đó chính ftp_dir là subpath web tương đối (ví dụ ftp_dir = "/client" hoặc "/")
+    if (!foundMarker) {
+        const cleanFtp = rawFtpDir.replace(/^\/+|\/+$/g, '');
+        webPath = cleanFtp ? '/' + cleanFtp : '';
+    }
+
+    webPath = webPath.replace(/\/+$/, '');
+    const extraSubPath = webPath.replace(/^\/+|\/+$/g, '');
+    const protocol = serverInfo.protocol || (serverInfo.secure ? 'https://' : 'http://');
+    const host = (serverInfo.host || '').replace(/\/+$/, '');
+    const siteUrl = `${protocol}${host}${webPath}`;
+
+    return { siteUrl, webPath, extraSubPath };
+}
+
+// ─────────────────────────────────────────────
 // WordPress-specific helpers
 // ─────────────────────────────────────────────
 
@@ -495,11 +597,12 @@ async function runDeploy() {
             }
         }
 
-        // ─── Tính Site URL (dùng chung cho extract + health check) ───
-        const rootPath = serverInfo.root_path || '';
-        const pubIdx = rootPath.indexOf('public_html');
-        const webPath = pubIdx >= 0 ? rootPath.substring(pubIdx + 'public_html'.length) : '';
-        const siteUrl = `http://${serverInfo.host}${webPath}`;
+        // ─── Tính Site URL (tương thích mọi loại Web Server / Docroot) ───
+        const { siteUrl, webPath, extraSubPath } = resolveServerPaths(serverInfo);
+        console.log(`🌐 Web Site URL: ${siteUrl}`);
+        if (extraSubPath) {
+            console.log(`📂 Web Subpath: /${extraSubPath}`);
+        }
 
         // ════════════════════════════════════════
         // CHẾ ĐỘ BẢO TRÌ (.maintenance) TRƯỚC DEPLOY
@@ -579,9 +682,10 @@ async function runDeploy() {
                 'if ($zip->open("_deploy.zip") === TRUE) {',
                 '    $zip->extractTo("./");',
                 '    $zip->close();',
+                '    $dir = __DIR__;',
                 '    @unlink("_deploy.zip");',
                 '    @unlink(__FILE__);',
-                '    echo "OK";',
+                '    echo "OK:" . $dir;',
                 '} else {',
                 '    @unlink("_deploy.zip");',
                 '    @unlink(__FILE__);',
@@ -595,11 +699,16 @@ async function runDeploy() {
             console.log(`🔧 Gọi extract: ${siteUrl}/${config.project_dir}/_extract.php`);
 
             // 3e. Gọi HTTP để giải nén
+            let serverExtractedDir = '';
             try {
                 const extractResult = await httpGet(extractUrl);
 
-                if (extractResult.body === 'OK') {
+                if (extractResult.body && extractResult.body.startsWith('OK')) {
                     console.log('✅ Giải nén thành công! (zip + script đã tự xóa)');
+                    if (extractResult.body.includes(':')) {
+                        serverExtractedDir = extractResult.body.split(':')[1].trim();
+                        console.log(`   📍 Phát hiện đường dẫn tuyệt đối máy chủ: ${serverExtractedDir}`);
+                    }
                 } else {
                     throw new Error(`Server trả về: ${extractResult.status} - ${extractResult.body}`);
                 }
@@ -622,44 +731,59 @@ async function runDeploy() {
                 'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
                 ...(config.folder_wp ? [
                     '',
+                    '# Preserve admin-ajax.php POST requests via internal rewrite',
+                    `RewriteRule ^wp-admin/admin-ajax\\.php$ ${config.folder_wp}/wp-admin/admin-ajax.php [L]`,
+                    '',
                     '# Admin & Login URLs must go to the WordPress subfolder',
-                    `RewriteRule ^wp-admin/?(.*)$ /${config.folder_wp}/wp-admin/$1 [R=301,L]`,
-                    `RewriteRule ^wp-login\\.php$ /${config.folder_wp}/wp-login.php [R=301,L]`,
+                    `RewriteRule ^wp-admin/?(.*)$ ${config.folder_wp}/wp-admin/$1 [R=301,L]`,
+                    `RewriteRule ^wp-login\\.php$ ${config.folder_wp}/wp-login.php [R=301,L]`,
                     '',
                 ] : []),
-                'RewriteBase /',
                 'RewriteRule ^index\\.php$ - [L]',
                 'RewriteCond %{REQUEST_FILENAME} !-f',
                 'RewriteCond %{REQUEST_FILENAME} !-d',
-                'RewriteRule . /index.php [L]',
+                'RewriteRule . index.php [L]',
                 '</IfModule>',
                 '# END WordPress',
             ].join('\n');
 
             let basicAuthBlock = '';
             if (hasBasicAuth) {
+                let authFilePath = '';
+                if (serverExtractedDir) {
+                    authFilePath = `${serverExtractedDir}/.htpasswd`;
+                } else if (serverInfo.root_path) {
+                    let baseRoot = serverInfo.root_path.replace(/\\/g, '/').replace(/\/+$/, '');
+                    if (extraSubPath && !baseRoot.endsWith(extraSubPath)) {
+                        authFilePath = `${baseRoot}/${extraSubPath}/${config.project_dir}/.htpasswd`;
+                    } else {
+                        authFilePath = `${baseRoot}/${config.project_dir}/.htpasswd`;
+                    }
+                } else {
+                    authFilePath = `${targetDir}/.htpasswd`;
+                }
+
                 basicAuthBlock = [
                     '# === Basic Auth ===',
                     'AuthType Basic',
                     'AuthName "Restricted Area"',
-                    `AuthUserFile ${serverInfo.root_path}/${config.project_dir}/.htpasswd`,
+                    `AuthUserFile ${authFilePath}`,
                     'Require valid-user',
                     '# ==================',
                 ].join('\n');
             }
 
             if (config.folder_wp) {
-                // WordPress permalink rules cho subfolder WP
+                // WordPress permalink rules cho subfolder WP (relative rewrite, hỗ trợ mọi cấp thư mục)
                 const wpSubRules = [
                     '# BEGIN WordPress',
                     '<IfModule mod_rewrite.c>',
                     'RewriteEngine On',
                     'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
-                    `RewriteBase /${config.folder_wp}/`,
                     'RewriteRule ^index\\.php$ - [L]',
                     'RewriteCond %{REQUEST_FILENAME} !-f',
                     'RewriteCond %{REQUEST_FILENAME} !-d',
-                    `RewriteRule . /${config.folder_wp}/index.php [L]`,
+                    'RewriteRule . index.php [L]',
                     '</IfModule>',
                     '# END WordPress',
                 ].join('\n');
@@ -978,8 +1102,7 @@ async function runDeploy() {
         // ════════════════════════════════════════
         console.log('');
         console.log('🏥 Health Check...');
-        const wpSubPath = config.folder_wp ? `${config.folder_wp}/` : '';
-        const healthUrl = `${siteUrl}/${config.project_dir}/${wpSubPath}`;
+        const healthUrl = `${siteUrl}/${config.project_dir}/`;
         try {
             const health = await httpGet(healthUrl);
             if (health.status >= 500) {

@@ -210,20 +210,37 @@ if [ "$IS_FIRST_DEPLOY" = true ]; then
     # WordPress root rewrite rules
     ADMIN_REDIRECTS=""
     if [ -n "$FOLDER_WP" ]; then
-        ADMIN_REDIRECTS="\n# Admin & Login URLs must go to the WordPress subfolder\nRewriteRule ^wp-admin/?(.*)$ /$FOLDER_WP/wp-admin/\$1 [R=301,L]\nRewriteRule ^wp-login\\.php$ /$FOLDER_WP/wp-login.php [R=301,L]\n"
+        ADMIN_REDIRECTS="\n# Preserve admin-ajax.php POST requests via internal rewrite\nRewriteRule ^wp-admin/admin-ajax\\.php$ $FOLDER_WP/wp-admin/admin-ajax.php [L]\n\n# Admin & Login URLs must go to the WordPress subfolder\nRewriteRule ^wp-admin/?(.*)$ $FOLDER_WP/wp-admin/\$1 [R=301,L]\nRewriteRule ^wp-login\\.php$ $FOLDER_WP/wp-login.php [R=301,L]\n"
     fi
-    WP_ROOT_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]${ADMIN_REDIRECTS}\nRewriteBase /\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . /index.php [L]\n</IfModule>\n# END WordPress"
+    WP_ROOT_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]${ADMIN_REDIRECTS}\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . index.php [L]\n</IfModule>\n# END WordPress"
 
     HTACCESS_AUTH=""
     if [ -n "$BASIC_AUTH_USER" ] && [ -n "$BASIC_AUTH_PASS" ]; then
         echo "🔐 Kèm cấu hình Basic Auth..."
         node -e "const fs=require('fs'); const crypt=require('apache-crypt'); fs.writeFileSync('/tmp/.htpasswd', '$BASIC_AUTH_USER:' + crypt('$BASIC_AUTH_PASS'));"
         $SCP_CMD /tmp/.htpasswd "$SSH_USER@$SSH_HOST:$TARGET_DIR/.htpasswd"
-        HTACCESS_AUTH="# === Basic Auth ===\nAuthType Basic\nAuthName \"Restricted Area\"\nAuthUserFile $ROOT_PATH/$PROJECT_DIR/.htpasswd\nRequire valid-user\n# ==================\n\n"
+
+        # Tự động lấy đường dẫn tuyệt đối chuẩn xác 100% của TARGET_DIR trên server
+        REMOTE_ABS_TARGET=$($SSH_CMD "cd \"$TARGET_DIR\" 2>/dev/null && pwd")
+        if [ -n "$REMOTE_ABS_TARGET" ]; then
+            AUTH_FILE_PATH="$REMOTE_ABS_TARGET/.htpasswd"
+        elif [ -n "$ROOT_PATH" ]; then
+            BASE_CLEAN="${TARGET_DIR_BASE#/}"
+            DOCROOT_SUB=$(echo "$BASE_CLEAN" | sed -E 's/^(public_html|httpdocs|htdocs|public|www|html|web)\/?//I')
+            if [ -n "$DOCROOT_SUB" ] && [[ "$ROOT_PATH" != *"$DOCROOT_SUB"* ]]; then
+                AUTH_FILE_PATH="$ROOT_PATH/$DOCROOT_SUB/$PROJECT_DIR/.htpasswd"
+            else
+                AUTH_FILE_PATH="$ROOT_PATH/$PROJECT_DIR/.htpasswd"
+            fi
+        else
+            AUTH_FILE_PATH="$TARGET_DIR/.htpasswd"
+        fi
+
+        HTACCESS_AUTH="# === Basic Auth ===\nAuthType Basic\nAuthName \"Restricted Area\"\nAuthUserFile $AUTH_FILE_PATH\nRequire valid-user\n# ==================\n\n"
     fi
 
     if [ -n "$FOLDER_WP" ]; then
-        WP_SUB_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\nRewriteBase /$FOLDER_WP/\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . /$FOLDER_WP/index.php [L]\n</IfModule>\n# END WordPress"
+        WP_SUB_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . index.php [L]\n</IfModule>\n# END WordPress"
 
         # a) Ghi .htaccess cho WP subfolder
         $SSH_CMD "mkdir -p \"$TARGET_WP_DIR\""

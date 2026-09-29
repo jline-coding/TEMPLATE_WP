@@ -41,7 +41,10 @@ export function ensureRootBridgeFiles(publicDir, folderWp, options = {}) {
 // If WordPress is not yet configured, redirect directly to the installer in the subfolder
 if ( ! file_exists( __DIR__ . '/${cleanFolderWp}/wp-config.php' ) && ! file_exists( __DIR__ . '/wp-config.php' ) ) {
     if ( file_exists( __DIR__ . '/${cleanFolderWp}/wp-admin/setup-config.php' ) ) {
-        header( 'Location: /${cleanFolderWp}/wp-admin/setup-config.php' );
+        $scheme = ( ! empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] !== 'off' ) || ( isset( $_SERVER['SERVER_PORT'] ) && $_SERVER['SERVER_PORT'] == 443 ) ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $uri = rtrim( dirname( $_SERVER['SCRIPT_NAME'] ?? '' ), '/\\\\' );
+        header( 'Location: ' . $scheme . $host . ( $uri ? $uri : '' ) . '/${cleanFolderWp}/wp-admin/setup-config.php' );
         exit;
     }
 }
@@ -79,16 +82,18 @@ ${expectedRequire}
 RewriteEngine On
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+# Preserve admin-ajax.php POST requests via internal rewrite
+RewriteRule ^wp-admin/admin-ajax\\.php$ ${cleanFolderWp}/wp-admin/admin-ajax.php [L]
+
 # Admin & Login URLs must go to the WordPress subfolder
-RewriteRule ^wp-admin/?(.*)$ /${cleanFolderWp}/wp-admin/$1 [R=301,L]
-RewriteRule ^wp-login\\.php$ /${cleanFolderWp}/wp-login.php [R=301,L]
+RewriteRule ^wp-admin/?(.*)$ ${cleanFolderWp}/wp-admin/$1 [R=301,L]
+RewriteRule ^wp-login\\.php$ ${cleanFolderWp}/wp-login.php [R=301,L]
 
 # Root WordPress Permalinks (Site frontend without ${cleanFolderWp})
-RewriteBase /
 RewriteRule ^index\\.php$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.php [L]
+RewriteRule . index.php [L]
 </IfModule>
 # END WordPress
 `;
@@ -96,15 +101,15 @@ RewriteRule . /index.php [L]
   if (!existsSync(rootHtaccess)) {
     writeFileSync(rootHtaccess, rootHtaccessContent, 'utf8');
     if (!quiet) {
-      console.log(`   ✓ Đã tạo root .htaccess (RewriteBase /)`);
+      console.log(`   ✓ Đã tạo root .htaccess`);
     }
   } else {
     const currentHtaccess = readFileSync(rootHtaccess, 'utf8');
     // Ensure admin redirect rules are present
-    if (!currentHtaccess.includes(`RewriteRule ^wp-admin/?(.*)$ /${cleanFolderWp}/wp-admin/$1`)) {
+    if (!currentHtaccess.includes(`RewriteRule ^wp-admin/admin-ajax\\.php$`)) {
       writeFileSync(rootHtaccess, rootHtaccessContent, 'utf8');
       if (!quiet) {
-        console.log(`   ✓ Đã cập nhật root .htaccess (kèm chuyển hướng admin sang /${cleanFolderWp}/)`);
+        console.log(`   ✓ Đã cập nhật root .htaccess (kèm hỗ trợ admin-ajax & subfolder-safe)`);
       }
     }
   }
@@ -117,11 +122,10 @@ RewriteRule . /index.php [L]
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-RewriteBase /${cleanFolderWp}/
 RewriteRule ^index\\.php$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /${cleanFolderWp}/index.php [L]
+RewriteRule . index.php [L]
 </IfModule>
 # END WordPress
 `;
@@ -131,24 +135,42 @@ RewriteRule . /${cleanFolderWp}/index.php [L]
       if (!quiet) {
         console.log(`   ✓ Đã tạo subfolder .htaccess tại ${cleanFolderWp}/.htaccess`);
       }
+    } else {
+      const currentSubHtaccess = readFileSync(subHtaccess, 'utf8');
+      if (currentSubHtaccess.includes(`RewriteBase /${cleanFolderWp}/`)) {
+        writeFileSync(subHtaccess, subHtaccessContent, 'utf8');
+        if (!quiet) {
+          console.log(`   ✓ Đã cập nhật subfolder .htaccess sang relative rewrite`);
+        }
+      }
     }
 
-    // 4. Cập nhật wp-config-sample.php với WP_SITEURL và WP_HOME
+    // 4. Cập nhật wp-config-sample.php với Universal Multi-Directory Detection
     const samplePath = join(subWpDir, 'wp-config-sample.php');
     if (existsSync(samplePath)) {
       let sampleContent = readFileSync(samplePath, 'utf8');
-      if (!sampleContent.includes('WP_SITEURL')) {
-        const injection = `// Dynamic URLs for WordPress subfolder architecture:
-// Admin: ${cleanFolderWp}/wp-admin | Site Frontend: / (Domain Root)
+      const injection = `// Dynamic URLs for WordPress subfolder architecture (Universal Multi-Directory Auto-Detection)
+// Supports:
+// 1. Root domain: jlweb.jp/ (Admin: jlweb.jp/${cleanFolderWp}/wp-admin/)
+// 2. Single subfolder: jlweb.jp/project/ (Admin: jlweb.jp/project/${cleanFolderWp}/wp-admin/)
+// 3. Multi-level subfolder: jlweb.jp/client/project/ (Admin: jlweb.jp/client/project/${cleanFolderWp}/wp-admin/)
+// 4. Local Laragon: project.test/
+// 5. Local BrowserSync: localhost:6868/
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-if (!defined('WP_SITEURL')) {
-    define('WP_SITEURL', $protocol . $host . '/${cleanFolderWp}');
-}
+$script_dir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+$base_path = preg_replace('#/${cleanFolderWp}(/.*)?$#', '', $script_dir);
+$base_path = rtrim(str_replace('\\\\', '/', $base_path), '/');
+
 if (!defined('WP_HOME')) {
-    define('WP_HOME', $protocol . $host);
+    define('WP_HOME', $protocol . $host . $base_path);
+}
+if (!defined('WP_SITEURL')) {
+    define('WP_SITEURL', $protocol . $host . $base_path . '/${cleanFolderWp}');
 }
 `;
+      if (!sampleContent.includes('base_path')) {
+        sampleContent = sampleContent.replace(/\/\/ Dynamic URLs for WordPress[\s\S]*?define\('WP_HOME'[\s\S]*?\);\n/g, '');
         sampleContent = sampleContent.replace("/* That's all, stop editing!", injection + "\n/* That's all, stop editing!");
         writeFileSync(samplePath, sampleContent, 'utf8');
       }
