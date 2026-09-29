@@ -943,7 +943,7 @@ async function runDeploy() {
 
             // Map src/ changes → theme output
             const diffLines = diffOutput.split('\n').filter(Boolean);
-            const changes = mapSrcChangesToTheme(diffLines, config.source_folder, themeName);
+            const changes = mapSrcChangesToTheme(diffLines, sourceWpDir, themeName);
 
             let uploadCount = 0;
             let deleteCount = 0;
