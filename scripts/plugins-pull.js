@@ -35,10 +35,33 @@ function resolveSourceFolder() {
   return 'public';
 }
 
+function resolveFolderWp() {
+  try {
+    const config = JSON.parse(readFileSync(resolve(ROOT, 'deploy-config.json'), 'utf8'));
+    const env = process.env.DEPLOY_ENV;
+    const raw = (env && config[env] && config[env].folder_wp !== undefined)
+      ? config[env].folder_wp
+      : config.folder_wp;
+
+    if (raw === undefined || raw === null || raw === false || raw === 'false') {
+      return '';
+    }
+    const trimmed = String(raw).trim().replace(/^[\/\\]+|[\/\\]+$/g, '');
+    if (trimmed.includes('..') || !/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+      return '';
+    }
+    return trimmed;
+  } catch { /* fallback */ }
+  return '';
+}
+
 const SOURCE_FOLDER = resolveSourceFolder();
+const FOLDER_WP = resolveFolderWp();
 const PLUGINS_SRC = resolve(ROOT, 'plugins');
 const DEV_PLUGINS_SRC = resolve(ROOT, 'dev_plugins');
-const PLUGINS_WP = resolve(ROOT, SOURCE_FOLDER, 'wp-content', 'plugins');
+const PLUGINS_WP = FOLDER_WP
+  ? resolve(ROOT, SOURCE_FOLDER, FOLDER_WP, 'wp-content', 'plugins')
+  : resolve(ROOT, SOURCE_FOLDER, 'wp-content', 'plugins');
 
 const FLAG_ALL = process.argv.includes('--all');
 const FLAG_DRY = process.argv.includes('--dry');

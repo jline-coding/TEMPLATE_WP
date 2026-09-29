@@ -39,7 +39,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: public
-          key: wp-public-${{ hashFiles('scripts/download-wp.js') }}
+          key: wp-public-${{ hashFiles('scripts/download-wp.js', 'deploy-config.json') }}
 
       - name: 🔨 Build dự án
         run: |
@@ -49,7 +49,12 @@ jobs:
       - name: 📦 Thiết lập Biến
         run: |
           SOURCE_FOLDER=$(jq -r '.source_folder // "public"' deploy-config.json)
-          THEME_DIR="${SOURCE_FOLDER}/wp-content/themes"
+          FOLDER_WP=$(jq -r '(.folder_wp // empty) | if . == null or . == false or . == "" or . == "false" then "" else . end' deploy-config.json | sed -e 's/^[ \t\/]*//' -e 's/[ \t\/]*$//')
+          if [ -n "$FOLDER_WP" ]; then
+            THEME_DIR="${SOURCE_FOLDER}/${FOLDER_WP}/wp-content/themes"
+          else
+            THEME_DIR="${SOURCE_FOLDER}/wp-content/themes"
+          fi
           
           # Lấy THEME_NAME từ deploy-config.json
           THEME_NAME=$(jq -r '.theme_name // ""' deploy-config.json)

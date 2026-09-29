@@ -32,6 +32,7 @@ import sharp from 'sharp';
 import dotenv from 'dotenv';
 import { cpus } from 'os';
 import { syncSnippets } from './sync-snippets.js';
+import { ensureRootBridgeFiles } from './wp-bridge.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -72,13 +73,38 @@ function resolveSourceFolder() {
   } catch { /* fallback */ }
   return 'public';
 }
+
+function resolveFolderWp() {
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    const env = process.env.DEPLOY_ENV;
+    const raw = (env && config[env] && config[env].folder_wp !== undefined)
+      ? config[env].folder_wp
+      : config.folder_wp;
+
+    if (raw === undefined || raw === null || raw === false || raw === 'false') {
+      return '';
+    }
+    const trimmed = String(raw).trim().replace(/^[\/\\]+|[\/\\]+$/g, '');
+    if (trimmed.includes('..') || !/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+      return '';
+    }
+    return trimmed;
+  } catch { /* fallback */ }
+  return '';
+}
+
 const SOURCE_FOLDER_NAME = resolveSourceFolder();
+const FOLDER_WP = resolveFolderWp();
+if (FOLDER_WP) console.log(`[Config] WP Folder: ${FOLDER_WP}`);
 const OUT_PUBLIC = resolve(ROOT, SOURCE_FOLDER_NAME);
-const OUT_THEME = resolve(OUT_PUBLIC, 'wp-content', 'themes', THEME_NAME);
+const OUT_WP = FOLDER_WP ? resolve(OUT_PUBLIC, FOLDER_WP) : OUT_PUBLIC;
+const OUT_THEME = resolve(OUT_WP, 'wp-content', 'themes', THEME_NAME);
 const OUT_ASSETS = resolve(OUT_THEME, 'assets');
 const PLUGINS_SRC = resolve(ROOT, 'plugins');
 const DEV_PLUGINS_SRC = resolve(ROOT, 'dev_plugins');
-const PLUGINS_DEST = resolve(OUT_PUBLIC, 'wp-content', 'plugins');
+const PLUGINS_DEST = resolve(OUT_WP, 'wp-content', 'plugins');
 
 // Source sub-directories (all inside src/)
 const SCSS_DIR = resolve(SRC_THEME, 'assets', 'scss');
@@ -735,6 +761,11 @@ async function fullBuild() {
 
   ensureDir(OUT_THEME);
 
+  // Ensure root bridge index.php and .htaccess exist if folder_wp is used
+  if (FOLDER_WP) {
+    ensureRootBridgeFiles(OUT_PUBLIC, FOLDER_WP, { quiet: true });
+  }
+
   // Invalidate file cache for fresh full build
   fileCache.invalidate();
   importsCache.clear();
@@ -818,13 +849,21 @@ async function startWatch() {
     port++;
   }
 
+  const baseTarget = PROXY_TARGET.replace(/\/+$/, '');
+  const siteUrl = `${baseTarget}/`;
+  const adminUrl = FOLDER_WP ? `${baseTarget}/${FOLDER_WP}/wp-admin/` : `${baseTarget}/wp-admin/`;
+
   console.log('\n╔══════════════════════════════════════════════╗');
-  console.log(`║ BrowserSync → ${PROXY_TARGET}`.padEnd(47) + '║');
-  console.log(`║ Local: http://localhost:${port}`.padEnd(47) + '║');
+  console.log(`║ BrowserSync → ${siteUrl}`.padEnd(47) + '║');
+  console.log(`║ Local       → http://localhost:${port}/`.padEnd(47) + '║');
+  if (FOLDER_WP) {
+    console.log(`║ WP Admin    → ${adminUrl}`.padEnd(47) + '║');
+  }
   console.log('╚══════════════════════════════════════════════╝\n');
 
   browserSync.init({
     proxy: PROXY_TARGET,
+    startPath: '/',
     port,
     open: true,
     notify: false,

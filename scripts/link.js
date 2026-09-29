@@ -14,6 +14,7 @@ import { existsSync, lstatSync, readFileSync, writeFileSync, unlinkSync, rmSync,
 import { execSync } from 'child_process';
 import { platform } from 'os';
 import dotenv from 'dotenv';
+import { ensureRootBridgeFiles } from './wp-bridge.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -27,8 +28,32 @@ function resolveSourceFolder() {
   } catch { /* fallback */ }
   return 'public';
 }
+
+function resolveFolderWp() {
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    const env = process.env.DEPLOY_ENV;
+    const raw = (env && config[env] && config[env].folder_wp !== undefined)
+      ? config[env].folder_wp
+      : config.folder_wp;
+
+    if (raw === undefined || raw === null || raw === false || raw === 'false') {
+      return '';
+    }
+    const trimmed = String(raw).trim().replace(/^[\/\\]+|[\/\\]+$/g, '');
+    if (trimmed.includes('..') || !/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+      return '';
+    }
+    return trimmed;
+  } catch { /* fallback */ }
+  return '';
+}
+
 const SOURCE_FOLDER_NAME = resolveSourceFolder();
+const FOLDER_WP = resolveFolderWp();
 const PUBLIC_DIR = resolve(ROOT, SOURCE_FOLDER_NAME);
+const WP_DIR = FOLDER_WP ? resolve(PUBLIC_DIR, FOLDER_WP) : PUBLIC_DIR;
 
 // Read project_dir from deploy-config.json to set local web root
 function resolveProjectDir() {
@@ -77,8 +102,11 @@ function detectServerWww() {
 function detectProjectDomain() {
   // PROXY_URL từ .env (tự thêm http:// nếu thiếu)
   if (process.env.PROXY_URL) {
-    const url = process.env.PROXY_URL;
-    return url.startsWith('http') ? url : `http://${url}`;
+    let url = process.env.PROXY_URL.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `http://${url}`;
+    }
+    return url.replace(/\/+$/, '');
   }
 
   // Fallback: project_dir.test (Laragon-style)
@@ -117,7 +145,11 @@ function elevateUnix() {
     execSync(`sudo ln -sfn "${PUBLIC_DIR}" "${LINK_PATH}"`, { stdio: 'inherit' });
 
     console.log(`\n✓ Symlink tạo thành công!`);
-    console.log(`  Domain Server: ${PROJECT_DOMAIN}\n`);
+    console.log(`  Site Domain  : ${PROJECT_DOMAIN}/`);
+    if (FOLDER_WP) {
+      console.log(`  WP Admin     : ${PROJECT_DOMAIN}/${FOLDER_WP}/wp-admin/`);
+    }
+    console.log('');
   } catch {
     console.error('\n❌ Không thể nâng quyền. Hãy chạy thủ công:\n');
     console.error(`  sudo ln -sfn "${PUBLIC_DIR}" "${LINK_PATH}"\n`);
@@ -137,14 +169,27 @@ console.log('╚═════════════════════�
 console.log(`  OS           : ${platform()}`);
 console.log(`  WEB_ROOT     : ${SERVER_WWW}`);
 console.log(`  Project Name : ${PROJECT_DIR}`);
+if (FOLDER_WP) {
+  console.log(`  WP Folder    : ${FOLDER_WP} (${PROJECT_DIR}/${FOLDER_WP})`);
+}
 console.log(`  Source       : ${PUBLIC_DIR}`);
 console.log(`  Link         : ${LINK_PATH}`);
-console.log(`  Domain       : ${PROJECT_DOMAIN}\n`);
+console.log(`  Site Domain  : ${PROJECT_DOMAIN}/`);
+if (FOLDER_WP) {
+  console.log(`  WP Admin     : ${PROJECT_DOMAIN}/${FOLDER_WP}/wp-admin/`);
+}
+console.log('');
 
-// Check if public/ exists
-if (!existsSync(PUBLIC_DIR)) {
-  console.log(`⚠ Thư mục ${SOURCE_FOLDER_NAME}/ chưa tồn tại. Hãy chạy "npm run wp:download" trước.\n`);
+// Check if WordPress exists
+if (!existsSync(WP_DIR)) {
+  const displayWpFolder = FOLDER_WP ? `${SOURCE_FOLDER_NAME}/${FOLDER_WP}` : `${SOURCE_FOLDER_NAME}`;
+  console.log(`⚠ Thư mục ${displayWpFolder}/ chưa tồn tại. Hãy chạy "npm run wp:download" trước.\n`);
   process.exit(1);
+}
+
+// Ensure bridge files if folder_wp is configured
+if (FOLDER_WP) {
+  ensureRootBridgeFiles(PUBLIC_DIR, FOLDER_WP, { quiet: true });
 }
 
 // Check server directory

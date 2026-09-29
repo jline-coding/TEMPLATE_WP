@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { existsSync, mkdirSync, createWriteStream, rmSync, renameSync, unlinkSync, readFileSync } from 'fs';
 import { get } from 'https';
 import AdmZip from 'adm-zip';
+import { ensureRootBridgeFiles } from './wp-bridge.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -17,8 +18,32 @@ function resolveSourceFolder() {
   } catch { /* fallback */ }
   return 'public';
 }
+
+function resolveFolderWp() {
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    const env = process.env.DEPLOY_ENV;
+    const raw = (env && config[env] && config[env].folder_wp !== undefined)
+      ? config[env].folder_wp
+      : config.folder_wp;
+
+    if (raw === undefined || raw === null || raw === false || raw === 'false') {
+      return '';
+    }
+    const trimmed = String(raw).trim().replace(/^[\/\\]+|[\/\\]+$/g, '');
+    if (trimmed.includes('..') || !/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+      return '';
+    }
+    return trimmed;
+  } catch { /* fallback */ }
+  return '';
+}
+
 const SOURCE_FOLDER_NAME = resolveSourceFolder();
+const FOLDER_WP = resolveFolderWp();
 const PUBLIC_DIR = resolve(ROOT, SOURCE_FOLDER_NAME);
+const WP_DIR = FOLDER_WP ? resolve(PUBLIC_DIR, FOLDER_WP) : PUBLIC_DIR;
 const versionArg = process.argv.find(arg => arg.startsWith('--version='));
 const version = versionArg ? versionArg.split('=')[1] : null;
 
@@ -94,14 +119,62 @@ async function main() {
     console.log('╚══════════════════════════════════════╝\n');
 
     try {
-        if (!existsSync(PUBLIC_DIR)) {
-            ensureDir(PUBLIC_DIR);
+        if (!existsSync(WP_DIR)) {
+            ensureDir(WP_DIR);
         }
 
-        // Check if WP already exists
-        if (existsSync(join(PUBLIC_DIR, 'wp-config-sample.php'))) {
-            console.log('➜ WordPress appears to be already installed in public/ directory.');
-            console.log('➜ Skipping download. If you want to reinstall, delete the public/ folder first.\n');
+        const displayPath = FOLDER_WP ? `${SOURCE_FOLDER_NAME}/${FOLDER_WP}` : `${SOURCE_FOLDER_NAME}/`;
+
+        // Check if WP already exists in target directory
+        if (existsSync(join(WP_DIR, 'wp-config-sample.php'))) {
+            console.log(`➜ WordPress appears to be already installed in ${displayPath} directory.`);
+            if (FOLDER_WP) {
+                ensureRootBridgeFiles(PUBLIC_DIR, FOLDER_WP);
+            }
+            console.log(`➜ Skipping download. If you want to reinstall, delete the ${displayPath} folder first.\n`);
+            return;
+        }
+
+        // Auto-migration: if WP existed in root public/ but folder_wp is now configured
+        if (FOLDER_WP && existsSync(join(PUBLIC_DIR, 'wp-config-sample.php'))) {
+            console.log(`➜ Detected existing WordPress installation in ${SOURCE_FOLDER_NAME}/ root.`);
+            console.log(`➜ Migrating WordPress files to ${displayPath}...`);
+            ensureDir(WP_DIR);
+            const fs = await import('fs');
+            const entries = fs.readdirSync(PUBLIC_DIR);
+            const wpItems = new Set([
+                'wp-admin', 'wp-includes', 'wp-content',
+                'index.php', 'wp-activate.php', 'wp-blog-header.php',
+                'wp-comments-post.php', 'wp-config-sample.php', 'wp-config.php',
+                'wp-cron.php', 'wp-links-opml.php', 'wp-load.php',
+                'wp-login.php', 'wp-mail.php', 'wp-settings.php',
+                'wp-signup.php', 'wp-trackback.php', 'xmlrpc.php',
+                'license.txt', 'readme.html', '.htaccess'
+            ]);
+            let migratedCount = 0;
+            for (const entry of entries) {
+                if (entry === FOLDER_WP) continue;
+                if (wpItems.has(entry) || entry.startsWith('wp-')) {
+                    const srcPath = join(PUBLIC_DIR, entry);
+                    const destPath = join(WP_DIR, entry);
+                    try {
+                        fs.renameSync(srcPath, destPath);
+                    } catch {
+                        if (fs.statSync(srcPath).isDirectory()) {
+                            fs.cpSync(srcPath, destPath, { recursive: true });
+                            fs.rmSync(srcPath, { recursive: true, force: true });
+                        } else {
+                            fs.copyFileSync(srcPath, destPath);
+                            fs.unlinkSync(srcPath);
+                        }
+                    }
+                    migratedCount++;
+                }
+            }
+            console.log(`   ✓ Successfully migrated ${migratedCount} items to ${displayPath}\n`);
+            if (FOLDER_WP) {
+                ensureRootBridgeFiles(PUBLIC_DIR, FOLDER_WP);
+            }
             return;
         }
 
@@ -121,8 +194,8 @@ async function main() {
         ensureDir(tempExtractDir);
         zip.extractAllTo(tempExtractDir, true);
 
-        console.log(`\n[3/3] Moving files to public folder...`);
-        // The zip contains a single 'wordpress' folder. We want its contents in public/
+        console.log(`\n[3/3] Moving files to ${displayPath}...`);
+        // The zip contains a single 'wordpress' folder. We want its contents in WP_DIR
         const innerWpDir = join(tempExtractDir, 'wordpress');
         
         if (existsSync(innerWpDir)) {
@@ -130,7 +203,7 @@ async function main() {
              const entries = fs.readdirSync(innerWpDir);
              for(let entry of entries) {
                  const srcPath = join(innerWpDir, entry);
-                 const destPath = join(PUBLIC_DIR, entry);
+                 const destPath = join(WP_DIR, entry);
                  try {
                      // Try renaming first (fastest, same partition)
                      fs.renameSync(srcPath, destPath);
@@ -150,7 +223,7 @@ async function main() {
         rmSync(WP_ZIP_PATH, { force: true });
 
         // Remove default WordPress themes
-        const themesDir = join(PUBLIC_DIR, 'wp-content', 'themes');
+        const themesDir = join(WP_DIR, 'wp-content', 'themes');
         if (existsSync(themesDir)) {
             const entries = await import('fs').then(fs => fs.readdirSync(themesDir, { withFileTypes: true }));
             let deletedCount = 0;
@@ -165,7 +238,10 @@ async function main() {
             }
         }
 
-        console.log(`\n   ✓ WordPress successfully extracted to ${PUBLIC_DIR}\n`);
+        console.log(`\n   ✓ WordPress successfully extracted to ${WP_DIR}\n`);
+        if (FOLDER_WP) {
+            ensureRootBridgeFiles(PUBLIC_DIR, FOLDER_WP);
+        }
     } catch (err) {
         console.error('\n❌ Error downloading or extracting WordPress:', err.message);
         process.exit(1);

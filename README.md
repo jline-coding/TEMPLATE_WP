@@ -35,6 +35,7 @@ npm run dev
 {
   "theme_name": "original-theme",
   "project_dir": "template_jline_wp",
+  "folder_wp": "wp-bridge2026",
   "source_folder": "public",
   "build_command": "npm run wp:download && npm run build",
   "production": {
@@ -61,6 +62,7 @@ npm run dev
 |---|---|
 | `theme_name` | 出力される WordPress テーマのディレクトリ名を指定します（例: `original-theme`）。 |
 | `project_dir` | サーバー上に Web サイトのコードを格納するために自動生成されるターゲットのディレクトリ名です（例: `task01`, `template_jline_wp`...）。 |
+| `folder_wp` | (任意) WordPress のインストール先サブディレクトリ名（例: `wp-bridge2026`, `wp`）。空文字、`false`、または未設定の場合はルート直下に配置されます（`project_dir/folder_wp`）。 |
 | `source_folder` | サーバーにデプロイするビルド済みソースコードのディレクトリ名を指定します。 |
 | `build_command` | GitHub Actions がデプロイを開始する前に、WordPress コアのダウンロードとビルドを自動的に実行するためのコマンドです。引数を追加して特定の WP バージョンを指定することも可能です（例: `npm run wp:download -- --version=6.5.2`）。 |
 | `"production"` | クライアントの本番環境 (Production) 向けのパラメータ設定です。 |
@@ -116,6 +118,7 @@ npm run dev
 {
   "theme_name": "original-theme",
   "project_dir": "template_jline_wp",
+  "folder_wp": "wp-bridge2026",
   "source_folder": "public",
   "build_command": "npm run wp:download && npm run build",
   "production": {
@@ -142,6 +145,7 @@ npm run dev
 |---|---|
 | `theme_name` | Tên thư mục theme WordPress sẽ được tạo ra và sử dụng cho dự án (ví dụ: `original-theme`). |
 | `project_dir` | Tên thư mục đích (thư mục gốc dự án) sẽ được hệ thống khởi tạo tự động để lưu trữ toàn bộ mã nguồn website trên máy chủ đích (ví dụ: `task01`, `template_jline_wp`...). |
+| `folder_wp` | (Tùy chọn) Tên thư mục con lưu trữ WordPress (ví dụ: `wp-bridge2026`, `wp`). Nếu để rỗng `""`, `false` hoặc không khai báo thì hệ thống lưu trữ trực tiếp tại thư mục gốc như cũ. Đường dẫn đích sẽ là `project_dir/folder_wp`. |
 | `source_folder` | Chỉ định tên thư mục mã nguồn đã được biên dịch (build) để xuất bản lên máy chủ. |
 | `build_command` | Chuỗi lệnh tự động tải cấu trúc WordPress và biên dịch tài nguyên trước khi GitHub Action tiến hành triển khai. Có thể cài đặt phiên bản WP cụ thể bằng tham số (Ví dụ: bổ sung `npm run wp:download -- --version=6.5.2`). |
 | `"production"` | Cấu hình thông số triển khai cho môi trường chính thức (Production) của khách hàng. |

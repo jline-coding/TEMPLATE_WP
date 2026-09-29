@@ -21,6 +21,10 @@ fi
 
 PROJECT_DIR=$(jq -r ".${ENVIRONMENT}.project_dir // .project_dir // empty" deploy-config.json)
 SOURCE_FOLDER=$(jq -r 'if .source_folder and .source_folder != "" then .source_folder else "public" end' deploy-config.json)
+FOLDER_WP=$(jq -r '
+  (."'"${ENVIRONMENT}"'".folder_wp // .folder_wp // empty) |
+  if . == null or . == false or . == "" or . == "false" then "" else . end
+' deploy-config.json | sed -e 's/^[ \t\/]*//' -e 's/[ \t\/]*$//')
 BASIC_AUTH_USER=$(jq -r ".${ENVIRONMENT}.basic_auth.username // empty" deploy-config.json)
 BASIC_AUTH_PASS=$(jq -r ".${ENVIRONMENT}.basic_auth.password // empty" deploy-config.json)
 
@@ -34,16 +38,27 @@ if [[ "$PROJECT_DIR" =~ [^a-zA-Z0-9_-] ]]; then
     exit 1
 fi
 
+if [ -n "$FOLDER_WP" ] && [[ "$FOLDER_WP" =~ [^a-zA-Z0-9_-] ]]; then
+    echo "❌ LỖI: Tên folder_wp không hợp lệ!"
+    exit 1
+fi
+
+if [ -n "$FOLDER_WP" ]; then
+    SOURCE_WP_DIR="$SOURCE_FOLDER/$FOLDER_WP"
+else
+    SOURCE_WP_DIR="$SOURCE_FOLDER"
+fi
+
 THEME_NAME=$(jq -r 'if .theme_name and .theme_name != "" then .theme_name else "original-theme" end' deploy-config.json)
 echo "🎨 Tên Theme local: $THEME_NAME (triển khai vào mục: $PROJECT_DIR)"
 
 # Xác nhận theme đã được build đúng theo project_dir
-if [ -d "$SOURCE_FOLDER/wp-content/themes/$THEME_NAME" ]; then
+if [ -d "$SOURCE_WP_DIR/wp-content/themes/$THEME_NAME" ]; then
     echo "✅ Theme build khớp project_dir: $THEME_NAME"
 else
-    echo "❌ LỖI: Không tìm thấy theme [$THEME_NAME] trong $SOURCE_FOLDER/wp-content/themes/"
+    echo "❌ LỖI: Không tìm thấy theme [$THEME_NAME] trong $SOURCE_WP_DIR/wp-content/themes/"
     echo "   Danh sách themes hiện có:"
-    ls -la "$SOURCE_FOLDER/wp-content/themes/" 2>/dev/null || echo "   (thư mục không tồn tại)"
+    ls -la "$SOURCE_WP_DIR/wp-content/themes/" 2>/dev/null || echo "   (thư mục không tồn tại)"
     exit 1
 fi
 
@@ -94,6 +109,11 @@ fs.writeFileSync("/tmp/deploy_rsa", key, { mode: 0o600 });
 source /tmp/_ssh_config.sh
 rm -f /tmp/_ssh_config.sh
 TARGET_DIR="$TARGET_DIR_BASE/$PROJECT_DIR"
+if [ -n "$FOLDER_WP" ]; then
+    TARGET_WP_DIR="$TARGET_DIR/$FOLDER_WP"
+else
+    TARGET_WP_DIR="$TARGET_DIR"
+fi
 
 if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ ! -s /tmp/deploy_rsa ]; then
     echo "❌ LỖI: Thông tin SSH host/user/private_key trong Secret không đủ."
@@ -119,6 +139,9 @@ echo ""
 echo "📋 Cấu hình SSH Pipeline:"
 echo "   • Server: $SSH_HOST:$SSH_PORT"
 echo "   • Thư mục đích (Root): $TARGET_DIR"
+if [ -n "$FOLDER_WP" ]; then
+    echo "   • Thư mục WordPress: $TARGET_WP_DIR ($PROJECT_DIR/$FOLDER_WP)"
+fi
 echo "   • Thư mục Meta: $REMOTE_META_DIR"
 
 IS_FIRST_DEPLOY=false
@@ -155,7 +178,7 @@ if [ "$IS_FIRST_DEPLOY" = true ]; then
     echo "━━━ LẦN ĐẦU: ĐÓNG GÓI ZIP, BẮN SCP VÀ RÃ NÉN VỚI CPU UNIX HỎA TỐC ━━━"
     
     # Dọn theme rác từ cache (chỉ giữ THEME_NAME + twenty* mặc định)
-    THEMES_DIR="$SOURCE_FOLDER/wp-content/themes"
+    THEMES_DIR="$SOURCE_WP_DIR/wp-content/themes"
     if [ -d "$THEMES_DIR" ]; then
         for dir in "$THEMES_DIR"/*/; do
             [ ! -d "$dir" ] && continue
@@ -184,29 +207,61 @@ if [ "$IS_FIRST_DEPLOY" = true ]; then
     # Tạo .htaccess chuẩn WordPress (kèm Basic Auth nếu có)
     echo "📝 Tạo .htaccess chuẩn WordPress..."
 
-    WP_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteBase /\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . /index.php [L]\n</IfModule>\n# END WordPress"
+    # WordPress root rewrite rules
+    ADMIN_REDIRECTS=""
+    if [ -n "$FOLDER_WP" ]; then
+        ADMIN_REDIRECTS="\n# Admin & Login URLs must go to the WordPress subfolder\nRewriteRule ^wp-admin/?(.*)$ /$FOLDER_WP/wp-admin/\$1 [R=301,L]\nRewriteRule ^wp-login\\.php$ /$FOLDER_WP/wp-login.php [R=301,L]\n"
+    fi
+    WP_ROOT_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]${ADMIN_REDIRECTS}\nRewriteBase /\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . /index.php [L]\n</IfModule>\n# END WordPress"
 
+    HTACCESS_AUTH=""
     if [ -n "$BASIC_AUTH_USER" ] && [ -n "$BASIC_AUTH_PASS" ]; then
         echo "🔐 Kèm cấu hình Basic Auth..."
-        
-        # Sinh .htpasswd
         node -e "const fs=require('fs'); const crypt=require('apache-crypt'); fs.writeFileSync('/tmp/.htpasswd', '$BASIC_AUTH_USER:' + crypt('$BASIC_AUTH_PASS'));"
         $SCP_CMD /tmp/.htpasswd "$SSH_USER@$SSH_HOST:$TARGET_DIR/.htpasswd"
-        
-        HTACCESS_AUTH="# === Basic Auth ===\nAuthType Basic\nAuthName \"Restricted Area\"\nAuthUserFile $ROOT_PATH/$PROJECT_DIR/.htpasswd\nRequire valid-user\n# =================="
-        HTACCESS_FULL="$HTACCESS_AUTH\n\n$WP_RULES"
-    else
-        HTACCESS_FULL="$WP_RULES"
+        HTACCESS_AUTH="# === Basic Auth ===\nAuthType Basic\nAuthName \"Restricted Area\"\nAuthUserFile $ROOT_PATH/$PROJECT_DIR/.htpasswd\nRequire valid-user\n# ==================\n\n"
     fi
 
-    # Kiểm tra nếu server đã có .htaccess đầy đủ
-    $SSH_CMD "if [ -f \"$TARGET_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_DIR/.htaccess\"; then \
-        echo 'ℹ️ .htaccess đã có WP rules — giữ nguyên.'; \
-    else \
-        echo -e '$HTACCESS_FULL' > \"$TARGET_DIR/.htaccess\"; \
-        chmod 644 \"$TARGET_DIR/.htaccess\"; \
-        echo '✅ Đã tạo .htaccess (Auth + WP Permalinks).'; \
-    fi"
+    if [ -n "$FOLDER_WP" ]; then
+        WP_SUB_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\nRewriteBase /$FOLDER_WP/\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . /$FOLDER_WP/index.php [L]\n</IfModule>\n# END WordPress"
+
+        # a) Ghi .htaccess cho WP subfolder
+        $SSH_CMD "mkdir -p \"$TARGET_WP_DIR\""
+        $SSH_CMD "if [ -f \"$TARGET_WP_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_WP_DIR/.htaccess\"; then \
+            echo 'ℹ️ .htaccess WP subfolder đã có rules — giữ nguyên.'; \
+        else \
+            echo -e '$WP_SUB_RULES' > \"$TARGET_WP_DIR/.htaccess\"; \
+            chmod 644 \"$TARGET_WP_DIR/.htaccess\"; \
+            echo '✅ Đã tạo .htaccess cho WordPress tại $TARGET_WP_DIR/.htaccess.'; \
+        fi"
+
+        # b) Ghi root .htaccess (kèm Auth nếu có + WP root rewrite rules)
+        ROOT_HTACCESS="${HTACCESS_AUTH}${WP_ROOT_RULES}"
+        $SSH_CMD "if [ -f \"$TARGET_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_DIR/.htaccess\"; then \
+            echo 'ℹ️ .htaccess root đã có WP rules — giữ nguyên.'; \
+        else \
+            echo -e '$ROOT_HTACCESS' > \"$TARGET_DIR/.htaccess\"; \
+            chmod 644 \"$TARGET_DIR/.htaccess\"; \
+            echo '✅ Đã tạo root .htaccess (Auth + WP Permalinks) tại $TARGET_DIR/.htaccess.'; \
+        fi"
+
+        # c) Tạo root index.php (bridge require sang folder_wp)
+        BRIDGE_INDEX="<?php\ndefine( 'WP_USE_THEMES', true );\nrequire __DIR__ . '/$FOLDER_WP/wp-blog-header.php';\n"
+        $SSH_CMD "if [ ! -f \"$TARGET_DIR/index.php\" ]; then \
+            echo -e '$BRIDGE_INDEX' > \"$TARGET_DIR/index.php\"; \
+            chmod 644 \"$TARGET_DIR/index.php\"; \
+            echo '✅ Đã tạo root index.php bridge → $FOLDER_WP/wp-blog-header.php.'; \
+        fi"
+    else
+        HTACCESS_FULL="${HTACCESS_AUTH}${WP_ROOT_RULES}"
+        $SSH_CMD "if [ -f \"$TARGET_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_DIR/.htaccess\"; then \
+            echo 'ℹ️ .htaccess đã có WP rules — giữ nguyên.'; \
+        else \
+            echo -e '$HTACCESS_FULL' > \"$TARGET_DIR/.htaccess\"; \
+            chmod 644 \"$TARGET_DIR/.htaccess\"; \
+            echo '✅ Đã tạo .htaccess (Auth + WP Permalinks).'; \
+        fi"
+    fi
 
 # ==========================================
 # CHẾ ĐỘ 2: LẦN CẬP NHẬT KẾ TIẾP (GIẢI THUẬT RSYNC DIFFERENCE)
@@ -215,8 +270,8 @@ else
     echo ""
     echo "━━━ LẦN CẬP NHẬT (INCREMENTAL): TÌM FILE DỊ BẢN GỬI BẰNG RSYNC ━━━"
     
-    LOCAL_THEME="$SOURCE_FOLDER/wp-content/themes/$THEME_NAME/"
-    REMOTE_THEME="$TARGET_DIR/wp-content/themes/$THEME_NAME/"
+    LOCAL_THEME="$SOURCE_WP_DIR/wp-content/themes/$THEME_NAME/"
+    REMOTE_THEME="$TARGET_WP_DIR/wp-content/themes/$THEME_NAME/"
     
     if [ ! -d "$LOCAL_THEME" ]; then
          echo "❌ LỖI: Thư mục theme local ($LOCAL_THEME) không tồn tại. Build có thể đã thất bại."
@@ -224,19 +279,32 @@ else
     fi
     
     echo "⬆️ Rsync --Delete: [$THEME_NAME] → server..."
+    # Đảm bảo thư mục theme đích trên server luôn tồn tại trước khi rsync
+    $SSH_CMD "mkdir -p \"$REMOTE_THEME\""
     # Lệnh --delete chỉ áp dụng trong Theme. WP Core không bị ảnh hưởng.
     eval "$RSYNC_CMD \"$LOCAL_THEME\" \"$SSH_USER@$SSH_HOST:$REMOTE_THEME\""
     echo "✅ Rsync Theme hoàn tất!"
 
     # ── Rsync Plugins (không dùng --delete để giữ an toàn plugin trên server) ──
-    LOCAL_PLUGINS="$SOURCE_FOLDER/wp-content/plugins/"
-    REMOTE_PLUGINS="$TARGET_DIR/wp-content/plugins/"
+    LOCAL_PLUGINS="$SOURCE_WP_DIR/wp-content/plugins/"
+    REMOTE_PLUGINS="$TARGET_WP_DIR/wp-content/plugins/"
     RSYNC_PLUGINS_CMD="rsync -avz -e \"ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i $SSH_KEY_FILE\""
 
     if [ -d "$LOCAL_PLUGINS" ] && [ "$(ls -A "$LOCAL_PLUGINS" 2>/dev/null)" ]; then
+        $SSH_CMD "mkdir -p \"$REMOTE_PLUGINS\""
         echo "⬆️ Rsync Plugins → server... (không xóa plugin server)"
         eval "$RSYNC_PLUGINS_CMD \"$LOCAL_PLUGINS\" \"$SSH_USER@$SSH_HOST:$REMOTE_PLUGINS\""
         echo "✅ Rsync Plugins hoàn tất!"
+    fi
+
+    # ── Đảm bảo root bridge index.php nếu dùng folder_wp ──
+    if [ -n "$FOLDER_WP" ]; then
+        BRIDGE_INDEX="<?php\ndefine( 'WP_USE_THEMES', true );\nrequire __DIR__ . '/$FOLDER_WP/wp-blog-header.php';\n"
+        $SSH_CMD "if [ ! -f \"$TARGET_DIR/index.php\" ]; then \
+            echo -e '$BRIDGE_INDEX' > \"$TARGET_DIR/index.php\"; \
+            chmod 644 \"$TARGET_DIR/index.php\"; \
+            echo '✅ Đã đảm bảo root index.php bridge → $FOLDER_WP/wp-blog-header.php.'; \
+        fi"
     fi
 fi
 

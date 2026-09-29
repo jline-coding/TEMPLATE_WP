@@ -30,9 +30,33 @@ function resolveSourceFolder() {
   return 'public';
 }
 
+function resolveFolderWp() {
+  try {
+    const configPath = resolve(ROOT, 'deploy-config.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    const env = process.env.DEPLOY_ENV;
+    const raw = (env && config[env] && config[env].folder_wp !== undefined)
+      ? config[env].folder_wp
+      : config.folder_wp;
+
+    if (raw === undefined || raw === null || raw === false || raw === 'false') {
+      return '';
+    }
+    const trimmed = String(raw).trim().replace(/^[\/\\]+|[\/\\]+$/g, '');
+    if (trimmed.includes('..') || !/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+      return '';
+    }
+    return trimmed;
+  } catch { /* fallback */ }
+  return '';
+}
+
 const PROJECT_NAME = resolveProjectName();
 const SOURCE_FOLDER_NAME = resolveSourceFolder();
-const THEME_DIR = resolve(ROOT, SOURCE_FOLDER_NAME, 'wp-content', 'themes', PROJECT_NAME);
+const FOLDER_WP = resolveFolderWp();
+const THEME_DIR = FOLDER_WP
+  ? resolve(ROOT, SOURCE_FOLDER_NAME, FOLDER_WP, 'wp-content', 'themes', PROJECT_NAME)
+  : resolve(ROOT, SOURCE_FOLDER_NAME, 'wp-content', 'themes', PROJECT_NAME);
 
 console.log('╔══════════════════════════════════════╗');
 console.log('║         Clean Theme Output           ║');

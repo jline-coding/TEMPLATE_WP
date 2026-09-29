@@ -334,12 +334,19 @@ async function runDeploy() {
     }
 
     const envConfig = fullConfig[envName];
+    const rawFolderWp = (envConfig.folder_wp !== undefined) ? envConfig.folder_wp : fullConfig.folder_wp;
+    const folderWp = (rawFolderWp && rawFolderWp !== false && rawFolderWp !== 'false' && String(rawFolderWp).trim() !== '')
+        ? String(rawFolderWp).trim().replace(/^\/+|\/+$/g, '')
+        : '';
+
     const config = {
         source_folder: (fullConfig.source_folder && fullConfig.source_folder.trim() !== '') ? fullConfig.source_folder.trim() : 'public',
         project_dir: envConfig.project_dir || fullConfig.project_dir,
+        folder_wp: folderWp,
         server: envConfig.server,
         deploy_method: envConfig.deploy_method || 'ftp',
         basic_auth: envConfig.basic_auth || null,
+        allow_purge: envConfig.allow_purge !== undefined ? envConfig.allow_purge : fullConfig.allow_purge,
     };
 
     const configErrors = validateConfig(config);
@@ -353,6 +360,12 @@ async function runDeploy() {
     const isValidDir = /^[a-zA-Z0-9_-]+$/.test(config.project_dir);
     if (!isValidDir) {
         console.error(`❌ LỖI NGHIÊM TRỌNG: Tên dự án "${config.project_dir}" KHÔNG HỢP LỆ!`);
+        console.error(`   Chỉ cho phép: Chữ cái, số, gạch ngang (-), gạch dưới (_).`);
+        process.exit(1);
+    }
+
+    if (config.folder_wp && !/^[a-zA-Z0-9_-]+$/.test(config.folder_wp)) {
+        console.error(`❌ LỖI NGHIÊM TRỌNG: Tên folder_wp "${config.folder_wp}" KHÔNG HỢP LỆ!`);
         console.error(`   Chỉ cho phép: Chữ cái, số, gạch ngang (-), gạch dưới (_).`);
         process.exit(1);
     }
@@ -382,7 +395,9 @@ async function runDeploy() {
 
     const serverInfo = JSON.parse(process.env.SERVER_SECRET_JSON);
     const targetDir = `${serverInfo.ftp_dir}/${config.project_dir}`;
-    const themeRemoteDir = `${targetDir}/wp-content/themes/${themeName}`;
+    const targetWpDir = config.folder_wp ? `${targetDir}/${config.folder_wp}` : targetDir;
+    const sourceWpDir = config.folder_wp ? path.join(config.source_folder, config.folder_wp) : config.source_folder;
+    const themeRemoteDir = `${targetWpDir}/wp-content/themes/${themeName}`;
 
     // Yêu cầu 2: Fallback logic MetaDir
     let remoteMetaDir = `${targetDir}/.deploy`;
@@ -394,6 +409,9 @@ async function runDeploy() {
     console.log(`📋 Cấu hình [${envName.toUpperCase()}]:`);
     console.log(`   • Server: ${serverInfo.host}`);
     console.log(`   • Thư mục FTP: ${targetDir}`);
+    if (config.folder_wp) {
+        console.log(`   • Thư mục WP: ${targetWpDir} (${config.project_dir}/${config.folder_wp})`);
+    }
     console.log(`   • Thư mục Meta: ${remoteMetaDir}`);
     console.log(`   • Theme remote: ${themeRemoteDir}`);
     console.log(`   • Basic Auth: ${config.basic_auth ? '✅ Có' : '❌ Không'}`);
@@ -489,10 +507,10 @@ async function runDeploy() {
         if (config.maintenance_mode !== false) {
             try {
                 console.log('🚧 Bật chế độ bảo trì (.maintenance)...');
-                await client.ensureDir(targetDir);
+                await client.ensureDir(targetWpDir);
                 await client.cd(ftpRoot);
                 fs.writeFileSync('/tmp/.maintenance', '<?php $upgrading = time(); ?>');
-                await client.uploadFrom('/tmp/.maintenance', `${targetDir}/.maintenance`);
+                await client.uploadFrom('/tmp/.maintenance', `${targetWpDir}/.maintenance`);
             } catch (err) {
                 console.log('ℹ️ Bỏ qua chế độ bảo trì (thư mục có thể chưa cấu hình đủ).');
             }
@@ -526,7 +544,7 @@ async function runDeploy() {
             console.log('🚀 Upload ZIP + Giải nén trên server...');
 
             // 3a. Dọn theme rác từ cache (chỉ giữ themeName + twenty* mặc định)
-            const themesBaseDir = path.join(config.source_folder, 'wp-content', 'themes');
+            const themesBaseDir = path.join(sourceWpDir, 'wp-content', 'themes');
             if (fs.existsSync(themesBaseDir)) {
                 const themeDirs = fs.readdirSync(themesBaseDir, { withFileTypes: true });
                 for (const entry of themeDirs) {
@@ -593,14 +611,22 @@ async function runDeploy() {
                 await uploadDirectory(client, config.source_folder, targetDir, ftpRoot);
             }
 
-            // 4. Tạo .htaccess chuẩn WordPress (kèm Basic Auth nếu có)
-            console.log('📝 Tạo .htaccess chuẩn WordPress...');
+            // 4. Tạo .htaccess chuẩn WordPress (kèm Basic Auth nếu có) và bridge index.php
+            console.log('📝 Cấu hình .htaccess và index.php cho site...');
 
-            // WordPress permalink rules mặc định
-            const wpRules = [
+            // WordPress permalink rules cho root
+            const wpRootRules = [
                 '# BEGIN WordPress',
                 '<IfModule mod_rewrite.c>',
                 'RewriteEngine On',
+                'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
+                ...(config.folder_wp ? [
+                    '',
+                    '# Admin & Login URLs must go to the WordPress subfolder',
+                    `RewriteRule ^wp-admin/?(.*)$ /${config.folder_wp}/wp-admin/$1 [R=301,L]`,
+                    `RewriteRule ^wp-login\\.php$ /${config.folder_wp}/wp-login.php [R=301,L]`,
+                    '',
+                ] : []),
                 'RewriteBase /',
                 'RewriteRule ^index\\.php$ - [L]',
                 'RewriteCond %{REQUEST_FILENAME} !-f',
@@ -610,11 +636,9 @@ async function runDeploy() {
                 '# END WordPress',
             ].join('\n');
 
-            let htaccessContent = '';
-
+            let basicAuthBlock = '';
             if (hasBasicAuth) {
-                console.log('🔐 Kèm cấu hình Basic Auth...');
-                const basicAuthLines = [
+                basicAuthBlock = [
                     '# === Basic Auth ===',
                     'AuthType Basic',
                     'AuthName "Restricted Area"',
@@ -622,33 +646,105 @@ async function runDeploy() {
                     'Require valid-user',
                     '# ==================',
                 ].join('\n');
-                htaccessContent = basicAuthLines + '\n\n' + wpRules + '\n';
-            } else {
-                htaccessContent = wpRules + '\n';
             }
 
-            // Kiểm tra nếu server đã có .htaccess (từ lần cài WP trước)
-            try {
-                await client.downloadTo('/tmp/.htaccess_existing', `${targetDir}/.htaccess`);
-                const existingContent = fs.readFileSync('/tmp/.htaccess_existing', 'utf8');
-                // Nếu file đã đầy đủ (có cả auth + WP rules), giữ nguyên
-                const needsAuth = hasBasicAuth && !existingContent.includes('AuthType Basic');
-                const needsWP = !existingContent.includes('# BEGIN WordPress');
-                if (!needsAuth && !needsWP) {
-                    console.log('   ℹ️ .htaccess đã đầy đủ — giữ nguyên.');
-                } else {
-                    // Ghi đè bằng bản hoàn chỉnh
+            if (config.folder_wp) {
+                // WordPress permalink rules cho subfolder WP
+                const wpSubRules = [
+                    '# BEGIN WordPress',
+                    '<IfModule mod_rewrite.c>',
+                    'RewriteEngine On',
+                    'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
+                    `RewriteBase /${config.folder_wp}/`,
+                    'RewriteRule ^index\\.php$ - [L]',
+                    'RewriteCond %{REQUEST_FILENAME} !-f',
+                    'RewriteCond %{REQUEST_FILENAME} !-d',
+                    `RewriteRule . /${config.folder_wp}/index.php [L]`,
+                    '</IfModule>',
+                    '# END WordPress',
+                ].join('\n');
+
+                // a) targetWpDir/.htaccess cho WordPress subfolder
+                try {
+                    await client.ensureDir(targetWpDir);
+                    fs.writeFileSync('/tmp/.htaccess_wp', wpSubRules + '\n');
+                    await client.uploadFrom('/tmp/.htaccess_wp', `${targetWpDir}/.htaccess`);
+                    try { await client.send(`SITE CHMOD 644 ${targetWpDir}/.htaccess`); } catch {}
+                    console.log(`   ✅ Đã cập nhật WordPress .htaccess tại ${targetWpDir}/.htaccess`);
+                } catch (errWp) {
+                    console.error(`   ⚠️ Không thể tạo .htaccess cho WP: ${errWp.message}`);
+                }
+
+                // b) targetDir/.htaccess (root): Auth + WP Root rewrite rules
+                const rootHtaccessContent = basicAuthBlock
+                    ? basicAuthBlock + '\n\n' + wpRootRules + '\n'
+                    : wpRootRules + '\n';
+                try {
+                    fs.writeFileSync('/tmp/.htaccess_root', rootHtaccessContent);
+                    await client.uploadFrom('/tmp/.htaccess_root', `${targetDir}/.htaccess`);
+                    try { await client.send(`SITE CHMOD 644 ${targetDir}/.htaccess`); } catch {}
+                    console.log(`   ✅ Đã cập nhật root .htaccess (RewriteBase /) tại ${targetDir}/.htaccess`);
+                } catch (errRoot) {
+                    console.error(`   ⚠️ Không thể tạo root .htaccess: ${errRoot.message}`);
+                }
+
+                // c) targetDir/index.php (root): Bridge require sang folder_wp
+                const bridgeIndexContent = [
+                    '<?php',
+                    '/**',
+                    ' * Front to the WordPress application. This file doesn\'t do anything, but loads',
+                    ' * wp-blog-header.php which does and tells WordPress to load the theme.',
+                    ' *',
+                    ' * @package WordPress',
+                    ' */',
+                    '',
+                    '/**',
+                    ' * Tells WordPress to load the WordPress theme and output it.',
+                    ' *',
+                    ' * @var bool',
+                    ' */',
+                    'define( \'WP_USE_THEMES\', true );',
+                    '',
+                    '/** Loads the WordPress Environment and Template */',
+                    `require __DIR__ . '/${config.folder_wp}/wp-blog-header.php';`,
+                    '',
+                ].join('\n');
+                try {
+                    fs.writeFileSync('/tmp/index_bridge.php', bridgeIndexContent);
+                    await client.uploadFrom('/tmp/index_bridge.php', `${targetDir}/index.php`);
+                    try { await client.send(`SITE CHMOD 644 ${targetDir}/index.php`); } catch {}
+                    console.log(`   ✅ Đã tạo root index.php bridge → ${config.folder_wp}/wp-blog-header.php`);
+                } catch (errBridge) {
+                    console.error(`   ⚠️ Không thể tạo bridge index.php: ${errBridge.message}`);
+                }
+            } else {
+                let htaccessContent = basicAuthBlock
+                    ? basicAuthBlock + '\n\n' + wpRootRules + '\n'
+                    : wpRootRules + '\n';
+
+                // Kiểm tra nếu server đã có .htaccess (từ lần cài WP trước)
+                try {
+                    await client.downloadTo('/tmp/.htaccess_existing', `${targetDir}/.htaccess`);
+                    const existingContent = fs.readFileSync('/tmp/.htaccess_existing', 'utf8');
+                    // Nếu file đã đầy đủ (có cả auth + WP rules), giữ nguyên
+                    const needsAuth = hasBasicAuth && !existingContent.includes('AuthType Basic');
+                    const needsWP = !existingContent.includes('# BEGIN WordPress');
+                    if (!needsAuth && !needsWP) {
+                        console.log('   ℹ️ .htaccess đã đầy đủ — giữ nguyên.');
+                    } else {
+                        // Ghi đè bằng bản hoàn chỉnh
+                        fs.writeFileSync('/tmp/.htaccess', htaccessContent);
+                        await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
+                        try { await client.send(`SITE CHMOD 644 ${targetDir}/.htaccess`); } catch {}
+                        console.log('   ✅ Đã cập nhật .htaccess (Auth + WP Permalinks).');
+                    }
+                } catch {
+                    // Server chưa có .htaccess → tạo mới hoàn chỉnh
                     fs.writeFileSync('/tmp/.htaccess', htaccessContent);
                     await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
                     try { await client.send(`SITE CHMOD 644 ${targetDir}/.htaccess`); } catch {}
-                    console.log('   ✅ Đã cập nhật .htaccess (Auth + WP Permalinks).');
+                    console.log('   ✅ Đã tạo .htaccess mới (Auth + WP Permalinks).');
                 }
-            } catch {
-                // Server chưa có .htaccess → tạo mới hoàn chỉnh
-                fs.writeFileSync('/tmp/.htaccess', htaccessContent);
-                await client.uploadFrom('/tmp/.htaccess', `${targetDir}/.htaccess`);
-                try { await client.send(`SITE CHMOD 644 ${targetDir}/.htaccess`); } catch {}
-                console.log('   ✅ Đã tạo .htaccess mới (Auth + WP Permalinks).');
             }
 
             console.log('');
@@ -668,7 +764,7 @@ async function runDeploy() {
             console.log('');
             console.log('━━━ CẬP NHẬT: Chỉ đẩy file thay đổi trong theme ━━━');
 
-            const themeLocalDir = path.join(config.source_folder, 'wp-content', 'themes', themeName);
+            const themeLocalDir = path.join(sourceWpDir, 'wp-content', 'themes', themeName);
             await client.cd(ftpRoot);
 
             let diffOutput = '';
@@ -775,8 +871,8 @@ async function runDeploy() {
 
             // ── Upload Plugins (chỉ plugin được quản lý trong plugins/ source) ──
             const pluginsSrcDir = path.resolve('plugins');
-            const pluginsLocalDir = path.join(config.source_folder, 'wp-content', 'plugins');
-            const pluginsRemoteDir = `${targetDir}/wp-content/plugins`;
+            const pluginsLocalDir = path.join(sourceWpDir, 'wp-content', 'plugins');
+            const pluginsRemoteDir = `${targetWpDir}/wp-content/plugins`;
 
             if (fs.existsSync(pluginsSrcDir) && fs.existsSync(pluginsLocalDir)) {
                 // Lấy danh sách plugin ta quản lý (top-level entries trong plugins/)
@@ -820,7 +916,7 @@ async function runDeploy() {
             try {
                 console.log('🚧 Tắt chế độ bảo trì...');
                 await client.cd(ftpRoot);
-                await client.remove(`${targetDir}/.maintenance`);
+                await client.remove(`${targetWpDir}/.maintenance`);
             } catch { /* ignore */ }
         }
 
@@ -882,7 +978,8 @@ async function runDeploy() {
         // ════════════════════════════════════════
         console.log('');
         console.log('🏥 Health Check...');
-        const healthUrl = `${siteUrl}/${config.project_dir}/`;
+        const wpSubPath = config.folder_wp ? `${config.folder_wp}/` : '';
+        const healthUrl = `${siteUrl}/${config.project_dir}/${wpSubPath}`;
         try {
             const health = await httpGet(healthUrl);
             if (health.status >= 500) {
