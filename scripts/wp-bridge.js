@@ -92,5 +92,24 @@ RewriteRule . index.php [L]
       }
     }
   }
+
+  // 3. Tự động dọn sạch mã Dynamic URLs cũ nếu còn sót lại từ cache (wp-config-sample.php hoặc wp-config.php)
+  const subWpDir = join(publicDir, cleanFolderWp);
+  if (existsSync(subWpDir)) {
+    for (const file of ['wp-config-sample.php', 'wp-config.php']) {
+      const filePath = join(subWpDir, file);
+      if (existsSync(filePath)) {
+        let content = readFileSync(filePath, 'utf8');
+        if (content.includes('Dynamic URLs for WordPress')) {
+          content = content.replace(/\/\/ Dynamic URLs for WordPress[\s\S]*?define\('WP_HOME'[\s\S]*?\);\n/g, '');
+          content = content.replace(/\/\/ Dynamic URLs for WordPress[\s\S]*?define\('WP_SITEURL'[\s\S]*?\);\n/g, '');
+          writeFileSync(filePath, content, 'utf8');
+          if (!quiet) {
+            console.log(`   ✓ Đã dọn dẹp mã Dynamic URLs cũ trong ${cleanFolderWp}/${file}`);
+          }
+        }
+      }
+    }
+  }
 }
 
