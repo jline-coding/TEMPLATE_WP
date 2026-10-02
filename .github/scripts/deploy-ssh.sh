@@ -203,81 +203,6 @@ if [ "$IS_FIRST_DEPLOY" = true ]; then
     echo "🔨 4. Điều binh Command Native xả nén ngay trên Chip Máy chủ..."
     $SSH_CMD "cd \"$TARGET_DIR\" && unzip -o _deploy.zip > /dev/null && rm _deploy.zip"
     echo "✅ Toàn trình First Upload thành công chớp nhoáng!"
-    
-    # Tạo .htaccess chuẩn WordPress (kèm Basic Auth nếu có)
-    echo "📝 Tạo .htaccess chuẩn WordPress..."
-
-    # WordPress root rewrite rules
-    ADMIN_REDIRECTS=""
-    if [ -n "$FOLDER_WP" ]; then
-        ADMIN_REDIRECTS="\n# Preserve admin-ajax.php POST requests via internal rewrite\nRewriteRule ^wp-admin/admin-ajax\\.php$ $FOLDER_WP/wp-admin/admin-ajax.php [L]\n\n# Admin & Login URLs must go to the WordPress subfolder\nRewriteRule ^wp-admin/?(.*)$ $FOLDER_WP/wp-admin/\$1 [R=301,L]\nRewriteRule ^wp-login\\.php$ $FOLDER_WP/wp-login.php [R=301,L]\n"
-    fi
-    WP_ROOT_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]${ADMIN_REDIRECTS}\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . index.php [L]\n</IfModule>\n# END WordPress"
-
-    HTACCESS_AUTH=""
-    if [ -n "$BASIC_AUTH_USER" ] && [ -n "$BASIC_AUTH_PASS" ]; then
-        echo "🔐 Kèm cấu hình Basic Auth..."
-        node -e "const fs=require('fs'); const crypt=require('apache-crypt'); fs.writeFileSync('/tmp/.htpasswd', '$BASIC_AUTH_USER:' + crypt('$BASIC_AUTH_PASS'));"
-        $SCP_CMD /tmp/.htpasswd "$SSH_USER@$SSH_HOST:$TARGET_DIR/.htpasswd"
-
-        # Tự động lấy đường dẫn tuyệt đối chuẩn xác 100% của TARGET_DIR trên server
-        REMOTE_ABS_TARGET=$($SSH_CMD "cd \"$TARGET_DIR\" 2>/dev/null && pwd")
-        if [ -n "$REMOTE_ABS_TARGET" ]; then
-            AUTH_FILE_PATH="$REMOTE_ABS_TARGET/.htpasswd"
-        elif [ -n "$ROOT_PATH" ]; then
-            BASE_CLEAN="${TARGET_DIR_BASE#/}"
-            DOCROOT_SUB=$(echo "$BASE_CLEAN" | sed -E 's/^(public_html|httpdocs|htdocs|public|www|html|web)\/?//I')
-            if [ -n "$DOCROOT_SUB" ] && [[ "$ROOT_PATH" != *"$DOCROOT_SUB"* ]]; then
-                AUTH_FILE_PATH="$ROOT_PATH/$DOCROOT_SUB/$PROJECT_DIR/.htpasswd"
-            else
-                AUTH_FILE_PATH="$ROOT_PATH/$PROJECT_DIR/.htpasswd"
-            fi
-        else
-            AUTH_FILE_PATH="$TARGET_DIR/.htpasswd"
-        fi
-
-        HTACCESS_AUTH="# === Basic Auth ===\nAuthType Basic\nAuthName \"Restricted Area\"\nAuthUserFile $AUTH_FILE_PATH\nRequire valid-user\n# ==================\n\n"
-    fi
-
-    if [ -n "$FOLDER_WP" ]; then
-        WP_SUB_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . index.php [L]\n</IfModule>\n# END WordPress"
-
-        # a) Ghi .htaccess cho WP subfolder
-        $SSH_CMD "mkdir -p \"$TARGET_WP_DIR\""
-        $SSH_CMD "if [ -f \"$TARGET_WP_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_WP_DIR/.htaccess\"; then \
-            echo 'ℹ️ .htaccess WP subfolder đã có rules — giữ nguyên.'; \
-        else \
-            echo -e '$WP_SUB_RULES' > \"$TARGET_WP_DIR/.htaccess\"; \
-            chmod 644 \"$TARGET_WP_DIR/.htaccess\"; \
-            echo '✅ Đã tạo .htaccess cho WordPress tại $TARGET_WP_DIR/.htaccess.'; \
-        fi"
-
-        # b) Ghi root .htaccess (kèm Auth nếu có + WP root rewrite rules)
-        ROOT_HTACCESS="${HTACCESS_AUTH}${WP_ROOT_RULES}"
-        $SSH_CMD "if [ -f \"$TARGET_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_DIR/.htaccess\"; then \
-            echo 'ℹ️ .htaccess root đã có WP rules — giữ nguyên.'; \
-        else \
-            echo -e '$ROOT_HTACCESS' > \"$TARGET_DIR/.htaccess\"; \
-            chmod 644 \"$TARGET_DIR/.htaccess\"; \
-            echo '✅ Đã tạo root .htaccess (Auth + WP Permalinks) tại $TARGET_DIR/.htaccess.'; \
-        fi"
-
-        # c) Đồng bộ root index.php (bridge require sang folder_wp kèm installer redirect)
-        if [ -f "$SOURCE_FOLDER/index.php" ]; then
-            $SCP_CMD "$SOURCE_FOLDER/index.php" "$SSH_USER@$SSH_HOST:$TARGET_DIR/index.php"
-            $SSH_CMD "chmod 644 \"$TARGET_DIR/index.php\""
-            echo "✅ Đã đồng bộ root index.php bridge → $FOLDER_WP/wp-blog-header.php."
-        fi
-    else
-        HTACCESS_FULL="${HTACCESS_AUTH}${WP_ROOT_RULES}"
-        $SSH_CMD "if [ -f \"$TARGET_DIR/.htaccess\" ] && grep -q '# BEGIN WordPress' \"$TARGET_DIR/.htaccess\"; then \
-            echo 'ℹ️ .htaccess đã có WP rules — giữ nguyên.'; \
-        else \
-            echo -e '$HTACCESS_FULL' > \"$TARGET_DIR/.htaccess\"; \
-            chmod 644 \"$TARGET_DIR/.htaccess\"; \
-            echo '✅ Đã tạo .htaccess (Auth + WP Permalinks).'; \
-        fi"
-    fi
 
 # ==========================================
 # CHẾ ĐỘ 2: LẦN CẬP NHẬT KẾ TIẾP (GIẢI THUẬT RSYNC DIFFERENCE)
@@ -312,16 +237,57 @@ else
         eval "$RSYNC_PLUGINS_CMD \"$LOCAL_PLUGINS\" \"$SSH_USER@$SSH_HOST:$REMOTE_PLUGINS\""
         echo "✅ Rsync Plugins hoàn tất!"
     fi
-
-    # ── Đảm bảo root bridge index.php nếu dùng folder_wp ──
-    if [ -n "$FOLDER_WP" ] && [ -f "$SOURCE_FOLDER/index.php" ]; then
-        $SSH_CMD "if [ ! -f \"$TARGET_DIR/index.php\" ]; then exit 10; fi" || {
-            $SCP_CMD "$SOURCE_FOLDER/index.php" "$SSH_USER@$SSH_HOST:$TARGET_DIR/index.php"
-            $SSH_CMD "chmod 644 \"$TARGET_DIR/index.php\""
-            echo "✅ Đã đồng bộ root index.php bridge → $FOLDER_WP/wp-blog-header.php."
-        }
-    fi
 fi
+
+# ==========================================
+# ĐỒNG BỘ ROOT BRIDGE FILES (index.php & .htaccess KÈM BASIC AUTH)
+# ==========================================
+echo ""
+echo "📝 Đồng bộ root bridge files (index.php & .htaccess)..."
+
+# 1. Đồng bộ root index.php (chuẩn WordPress bridge)
+if [ -f "$SOURCE_FOLDER/index.php" ]; then
+    $SCP_CMD "$SOURCE_FOLDER/index.php" "$SSH_USER@$SSH_HOST:$TARGET_DIR/index.php"
+    $SSH_CMD "chmod 644 \"$TARGET_DIR/index.php\""
+    echo "✅ Đã đồng bộ root index.php chuẩn WordPress tại $TARGET_DIR/index.php"
+fi
+
+# 2. Xây dựng và đồng bộ .htaccess root chuẩn WordPress (kèm Basic Auth nếu có)
+WP_ROOT_RULES="# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\nRewriteRule ^index\\.php$ - [L]\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . index.php [L]\n</IfModule>\n# END WordPress\n"
+
+HTACCESS_AUTH=""
+if [ -n "$BASIC_AUTH_USER" ] && [ -n "$BASIC_AUTH_PASS" ]; then
+    echo "🔐 Cấu hình Basic Auth ($BASIC_AUTH_USER)..."
+    node -e "const fs=require('fs'); const crypt=require('apache-crypt'); fs.writeFileSync('/tmp/.htpasswd', '$BASIC_AUTH_USER:' + crypt('$BASIC_AUTH_PASS'));"
+    $SCP_CMD /tmp/.htpasswd "$SSH_USER@$SSH_HOST:$TARGET_DIR/.htpasswd"
+    $SSH_CMD "chmod 644 \"$TARGET_DIR/.htpasswd\""
+
+    # Tự động lấy đường dẫn tuyệt đối chuẩn xác 100% của TARGET_DIR trên server
+    REMOTE_ABS_TARGET=$($SSH_CMD "cd \"$TARGET_DIR\" 2>/dev/null && pwd")
+    if [ -n "$REMOTE_ABS_TARGET" ]; then
+        AUTH_FILE_PATH="$REMOTE_ABS_TARGET/.htpasswd"
+    elif [ -n "$ROOT_PATH" ]; then
+        BASE_CLEAN="${TARGET_DIR_BASE#/}"
+        DOCROOT_SUB=$(echo "$BASE_CLEAN" | sed -E 's/^(public_html|httpdocs|htdocs|public|www|html|web)\/?//I')
+        if [ -n "$DOCROOT_SUB" ] && [[ "$ROOT_PATH" != *"$DOCROOT_SUB"* ]]; then
+            AUTH_FILE_PATH="$ROOT_PATH/$DOCROOT_SUB/$PROJECT_DIR/.htpasswd"
+        else
+            AUTH_FILE_PATH="$ROOT_PATH/$PROJECT_DIR/.htpasswd"
+        fi
+    else
+        AUTH_FILE_PATH="$TARGET_DIR/.htpasswd"
+    fi
+
+    HTACCESS_AUTH="# === Basic Auth ===\nAuthType Basic\nAuthName \"Restricted Area\"\nAuthUserFile $AUTH_FILE_PATH\nRequire valid-user\n# ==================\n\n"
+fi
+
+SERVER_HTACCESS="${HTACCESS_AUTH}${WP_ROOT_RULES}"
+echo -e "$SERVER_HTACCESS" > /tmp/_server_htaccess
+$SCP_CMD /tmp/_server_htaccess "$SSH_USER@$SSH_HOST:$TARGET_DIR/.htaccess"
+$SSH_CMD "chmod 644 \"$TARGET_DIR/.htaccess\""
+rm -f /tmp/_server_htaccess
+echo "✅ Đã đồng bộ root .htaccess (kèm Basic Auth nếu có) tại $TARGET_DIR/.htaccess"
+
 
 # ==========================================
 # CẤU HÌNH PHÂN QUYỀN CHO MAILFORM PRO (CGI) NẾU CÓ
