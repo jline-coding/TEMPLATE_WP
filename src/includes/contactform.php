@@ -9,7 +9,6 @@ function wpcf7_autop_return_false() {
 // Validate furigana (katakana + hiragana)
 function custom_wpcf7_validate_furigana($result, $tag)
 {
-    $tag   = new WPCF7_Shortcode($tag);
     $name  = $tag->name;
     $value = isset($_POST[$name]) ? trim(wp_unslash(strtr((string) $_POST[$name], "\n", " "))) : "";
     if ($name === "your-name-kana") {
