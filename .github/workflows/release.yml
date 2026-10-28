@@ -22,21 +22,26 @@ jobs:
       contents: write
     steps:
       - name: 📥 Kéo Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           lfs: true
 
       - name: ⚙️ Cài đặt Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24.22.1'
           cache: 'npm'
 
       - name: 📦 Cài đặt dependencies
-        run: npm install --no-package-lock
+        run: npm ci
+
+      - name: 🧪 Kiểm tra template
+        run: |
+          php --version
+          npm test
 
       - name: 💾 Cache WordPress download
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: public
           key: wp-public-v2-${{ hashFiles('scripts/download-wp.js', 'deploy-config.json') }}
@@ -155,7 +160,7 @@ jobs:
           echo "📦 File: $ZIP_NAME ($ZIP_SIZE)"
 
       - name: 🚀 Tạo GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG_NAME }}
           name: "🚀 Release ${{ env.TAG_NAME }}"

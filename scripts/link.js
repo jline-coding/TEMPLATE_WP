@@ -10,8 +10,8 @@
 
 import { resolve, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, lstatSync, readFileSync, writeFileSync, unlinkSync, rmSync, symlinkSync } from 'fs';
-import { execSync } from 'child_process';
+import { existsSync, lstatSync, readFileSync, realpathSync, writeFileSync, unlinkSync, symlinkSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { platform } from 'os';
 import dotenv from 'dotenv';
 import { ensureRootBridgeFiles } from './wp-bridge.js';
@@ -68,6 +68,10 @@ function resolveProjectDir() {
   return basename(ROOT);
 }
 const PROJECT_DIR = resolveProjectDir();
+if (typeof PROJECT_DIR !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(PROJECT_DIR)) {
+  console.error('❌ project_dir không hợp lệ. Chỉ dùng chữ, số, dấu gạch ngang và gạch dưới.');
+  process.exit(1);
+}
 const IS_WIN = platform() === 'win32';
 
 // Load .env file if it exists
@@ -117,6 +121,10 @@ function detectProjectDomain() {
 const SERVER_WWW = detectServerWww();
 const PROJECT_DOMAIN = detectProjectDomain();
 const LINK_PATH = resolve(SERVER_WWW, PROJECT_DIR);
+if (dirname(LINK_PATH) !== resolve(SERVER_WWW)) {
+  console.error('❌ project_dir không hợp lệ. Chỉ dùng chữ, số, dấu gạch ngang và gạch dưới.');
+  process.exit(1);
+}
 
 // ─────────────────────────────────────────────
 // Check write permissions for server directory (macOS/Linux)
@@ -139,10 +147,16 @@ function elevateUnix() {
   console.log('⚠ Không có quyền ghi. Đang tự nâng quyền qua sudo...\n');
 
   try {
-    // Xóa bản cũ nếu có
-    execSync(`sudo rm -rf "${LINK_PATH}"`, { stdio: 'inherit' });
-    // Tạo symlink với sudo
-    execSync(`sudo ln -sfn "${PUBLIC_DIR}" "${LINK_PATH}"`, { stdio: 'inherit' });
+    // Recheck under sudo and unlink only a symbolic link. Never remove real data.
+    const script = `set -eu
+if [ -L "$2" ]; then
+  unlink "$2"
+elif [ -e "$2" ]; then
+  echo "Refusing to replace an existing file or directory: $2" >&2
+  exit 1
+fi
+ln -s "$1" "$2"`;
+    execFileSync('sudo', ['sh', '-c', script, 'template-link', PUBLIC_DIR, LINK_PATH], { stdio: 'inherit' });
 
     console.log(`\n✓ Symlink tạo thành công!`);
     console.log(`  Site Domain  : ${PROJECT_DOMAIN}/`);
@@ -152,7 +166,7 @@ function elevateUnix() {
     console.log('');
   } catch {
     console.error('\n❌ Không thể nâng quyền. Hãy chạy thủ công:\n');
-    console.error(`  sudo ln -sfn "${PUBLIC_DIR}" "${LINK_PATH}"\n`);
+    console.error(`  sudo ln -s "${PUBLIC_DIR}" "${LINK_PATH}"\n`);
     console.error('Hoặc chỉ định thư mục bạn có quyền ghi:');
     console.error(`  npm run link -- --www=/path/you/own\n`);
     process.exit(1);
@@ -202,45 +216,44 @@ if (!existsSync(SERVER_WWW)) {
   process.exit(1);
 }
 
-// Remove old symlink/junction if any
+// Existing files and directories belong to the user. Only links may be replaced.
+let existingLink = false;
 try {
   const stats = lstatSync(LINK_PATH);
-  console.log(`⚠ Đang xóa bản cũ: ${LINK_PATH}...`);
-  if (stats.isSymbolicLink() || !stats.isDirectory()) {
-    unlinkSync(LINK_PATH);
-  } else {
-    rmSync(LINK_PATH, { recursive: true, force: true });
+  if (!stats.isSymbolicLink()) {
+    console.error(`❌ Đường dẫn đã là file hoặc thư mục thật: ${LINK_PATH}`);
+    console.error('   Dữ liệu được giữ nguyên. Hãy chọn project_dir khác hoặc tự di chuyển dữ liệu.');
+    process.exit(1);
   }
-  console.log(`✓ Đã xóa thành công.\n`);
-} catch {
-  // Không tồn tại thì bỏ qua
+  existingLink = true;
+  try {
+    if (realpathSync(LINK_PATH) === realpathSync(PUBLIC_DIR)) {
+      console.log(`✓ Liên kết đã đúng: ${LINK_PATH} → ${PUBLIC_DIR}`);
+      process.exit(0);
+    }
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+  }
+} catch (err) {
+  if (err.code !== 'ENOENT') {
+    console.error('❌ Không thể kiểm tra liên kết:', err.message);
+    process.exit(1);
+  }
 }
 
 // ─────────────────────────────────────────────
 // Create link
 // ─────────────────────────────────────────────
-if (IS_WIN) {
-  // Windows: Dùng Junction (mklink /J) — KHÔNG cần quyền Admin
+if (!IS_WIN && !hasWriteAccess()) {
+  elevateUnix();
+} else {
   try {
-    execSync(`mklink /J "${LINK_PATH}" "${PUBLIC_DIR}"`, { stdio: 'pipe' });
-    console.log(`✓ Junction tạo thành công! (không cần Admin)`);
+    if (existingLink) unlinkSync(LINK_PATH);
+    symlinkSync(PUBLIC_DIR, LINK_PATH, IS_WIN ? 'junction' : 'dir');
+    console.log(`✓ ${IS_WIN ? 'Junction' : 'Symlink'} tạo thành công!`);
     console.log(`  Domain Server: ${PROJECT_DOMAIN}\n`);
   } catch (err) {
-    console.error('❌ Lỗi tạo Junction:', err.message);
+    console.error('❌ Lỗi tạo liên kết:', err.message);
     process.exit(1);
-  }
-} else {
-  // macOS/Linux: Symlink
-  if (hasWriteAccess()) {
-    try {
-      symlinkSync(PUBLIC_DIR, LINK_PATH, 'dir');
-      console.log(`✓ Symlink tạo thành công!`);
-      console.log(`  Domain Server: ${PROJECT_DOMAIN}\n`);
-    } catch (err) {
-      console.error('❌ Lỗi tạo symlink:', err.message);
-      process.exit(1);
-    }
-  } else {
-    elevateUnix();
   }
 }

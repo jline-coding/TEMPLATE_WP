@@ -15,6 +15,33 @@ if (!function_exists('cf7_format_class')) {
     }
 }
 
+/** Locate a source template only inside this template project's source folder. */
+function cf7_find_source_template_file($theme_dir, $form_file) {
+    $theme_path = realpath($theme_dir);
+    if ($theme_path === false || !is_string($form_file)) return '';
+
+    for ($root = $theme_path; ; $root = dirname($root)) {
+        $config_file = $root . '/deploy-config.json';
+        if (is_file($config_file) && is_file($root . '/package.json') && is_dir($root . '/src')) {
+            $config = json_decode(file_get_contents($config_file), true);
+            if (!is_array($config)) return '';
+            $output_folder = isset($config['source_folder']) && is_string($config['source_folder']) && trim($config['source_folder']) !== ''
+                ? trim($config['source_folder']) : 'public';
+            $output_path = realpath($root . '/' . $output_folder);
+            $source_path = realpath($root . '/src');
+            $candidate = realpath($root . '/src/' . ltrim($form_file, '/\\'));
+            if ($output_path !== false && $source_path !== false && $candidate !== false &&
+                strpos($theme_path, $output_path . DIRECTORY_SEPARATOR) === 0 &&
+                strpos($candidate, $source_path . DIRECTORY_SEPARATOR) === 0 && is_file($candidate)) {
+                return $candidate;
+            }
+            return '';
+        }
+        if (dirname($root) === $root) break;
+    }
+    return '';
+}
+
 // Add toggle option to Screen Options
 add_filter('screen_settings', 'add_cf7_importer_screen_options', 10, 2);
 function add_cf7_importer_screen_options($status, $args) {
@@ -254,8 +281,16 @@ function ajax_handle_cf7_template_import() {
 
     $file_path = '';
     foreach ($possible_paths as $path) {
-        if (file_exists($path)) {
-            $file_path = realpath($path) ?: $path;
+        $theme_path = realpath(dirname($path));
+        $resolved_path = realpath($path);
+        $stylesheet_root = realpath(get_stylesheet_directory());
+        $template_root = realpath(get_template_directory());
+        // The admin selector lists only PHP files directly inside the theme.
+        if ($resolved_path !== false && $theme_path !== false &&
+            ($theme_path === $stylesheet_root || $theme_path === $template_root) &&
+            dirname($resolved_path) === $theme_path && is_file($resolved_path) &&
+            strtolower(pathinfo($resolved_path, PATHINFO_EXTENSION)) === 'php') {
+            $file_path = $resolved_path;
             break;
         }
     }
@@ -756,10 +791,7 @@ function ajax_handle_cf7_template_import() {
         
         if (file_put_contents($file_path, $new_content)) {
             // SYNC BACK TO src/ DIRECTORY IF RUNNING LOCAL
-            $theme_dir = get_template_directory();
-            // Go back 4 levels: original-theme -> themes -> wp-content -> public -> TEMPLATE_WP
-            $project_root = dirname(dirname(dirname(dirname($theme_dir))));
-            $src_file_path = $project_root . '/src/' . ltrim($form_file, '/');
+            $src_file_path = cf7_find_source_template_file(get_template_directory(), $form_file);
             
             if (file_exists($src_file_path) && is_writable($src_file_path)) {
                 $src_content = file_get_contents($src_file_path);

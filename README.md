@@ -9,7 +9,7 @@
 
 ## 1. 初期セットアップコマンド (deploy-config.json と Actions secrets の設定完了後にプロジェクトで1回のみ実行)
 ```bash
-npm install
+npm ci
 npm run wp:download
 # 特定のバージョンを指定したい場合 (例): npm run wp:download -- --version=6.5.2
 
@@ -24,8 +24,11 @@ npm start
 npm run dev
 ```
 
+回帰テスト: `npm test`。PHP テストは PATH の `php` または `PHP_BINARY` を使用します。
+`npm run link` は既存の通常ファイル・ディレクトリを削除しません。競合する場合は `project_dir` を変更してください。
+
 ## 3. システム要件
-- Node.js 18+ (`node -v`)
+- Node.js 24.22.1+ (`node -v`)
 - npm 9+ (`npm -v`)
 - Git 2.30+ (`git --version`)
 - ローカルサーバー (Laragon, XAMPP など)
@@ -92,7 +95,7 @@ npm run dev
 
 ## 1. Lệnh khởi tạo (Chỉ chạy 1 lần khi cài đặt dự án sau khi setup deploy-config.json và Actions secrets)
 ```bash
-npm install
+npm ci
 npm run wp:download
 # Chú ý: Có thể tải phiên bản WordPress cụ thể bằng cách thêm tham số (Ví dụ: npm run wp:download -- --version=6.5.2)
 
@@ -107,8 +110,11 @@ hoặc
 npm run dev
 ```
 
+Chạy kiểm thử: `npm test`. Các bài kiểm tra PHP dùng `php` trong PATH hoặc biến `PHP_BINARY`; nếu chưa có PHP, các bài đó sẽ được bỏ qua.
+`npm run link` giữ nguyên file/thư mục thật đã tồn tại. Nếu trùng đường dẫn, hãy đổi `project_dir`.
+
 ## 3. Yêu cầu hệ thống
-- Node.js 18+ (`node -v`)
+- Node.js 24.22.1+ (`node -v`)
 - npm 9+ (`npm -v`)
 - Git 2.30+ (`git --version`)
 - Local Server (Laragon, XAMPP, v.v...)

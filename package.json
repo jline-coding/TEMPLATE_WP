@@ -12,7 +12,8 @@
     "link": "node scripts/link.js",
     "clean": "node scripts/clean.js",
     "plugins:pull": "node scripts/plugins-pull.js",
-    "snippets": "node scripts/sync-snippets.js"
+    "snippets": "node scripts/sync-snippets.js",
+    "test": "node --test tests/*.test.mjs"
   },
   "keywords": [
     "wordpress",
@@ -24,18 +25,20 @@
   "author": "",
   "license": "ISC",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.22.1"
   },
   "devDependencies": {
-    "adm-zip": "^0.5.10",
+    "adm-zip": "^0.6.1",
+    "apache-crypt": "^1.2.6",
     "autoprefixer": "^10.4.19",
+    "basic-ftp": "^6.2.3",
     "browser-sync": "^3.0.2",
     "chokidar": "^3.6.0",
     "cssnano": "^7.0.1",
     "dotenv": "^17.3.1",
-    "postcss": "^8.4.38",
+    "postcss": "^8.5.32",
     "postcss-sort-media-queries": "^5.2.0",
     "sass-embedded": "^1.77.2",
-    "sharp": "^0.33.4"
+    "sharp": "^0.35.5"
   }
 }

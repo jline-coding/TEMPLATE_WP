@@ -18,7 +18,7 @@
  */
 
 import { resolve, dirname, basename, extname, relative, join } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import {
   readFileSync, writeFileSync, mkdirSync, existsSync,
   readdirSync, statSync, unlinkSync, rmSync, copyFileSync,
@@ -552,7 +552,7 @@ async function compileScssFile(filePath) {
     if (!source.trim() || /^{\\rtf/i.test(source)) return;
 
     const result = compileString(source, {
-      url: new URL(`file:///${norm(filePath)}`),
+      url: pathToFileURL(filePath),
       loadPaths: [SCSS_DIR],
       style: 'expanded',
       sourceMap: isWatch,
@@ -581,6 +581,8 @@ async function compileScssFile(filePath) {
     console.log(`[scss] ${norm(rel)} → ${basename(cssPath)}`);
   } catch (err) {
     console.error(`[scss] Error compiling ${filePath}:`, err.message);
+    // Development keeps watching so the next edit can recover. CI must stop.
+    if (!isWatch) throw err;
   }
 }
 
@@ -879,7 +881,9 @@ async function startWatch() {
       if (timers.has(key)) clearTimeout(timers.get(key));
       timers.set(key, setTimeout(() => {
         timers.delete(key);
-        fn(filepath, ...rest);
+        Promise.resolve().then(() => fn(filepath, ...rest)).catch((err) => {
+          console.error(`[watch] Error processing ${filepath}:`, err.message);
+        });
       }, wait));
     };
   }
@@ -1047,8 +1051,8 @@ async function startWatch() {
 // ─────────────────────────────────────────────
 // Entry Point
 // ─────────────────────────────────────────────
-if (isWatch) {
-  startWatch();
-} else {
-  fullBuild();
-}
+const run = isWatch ? startWatch : fullBuild;
+run().catch((err) => {
+  console.error('[build] Failed:', err.message);
+  process.exitCode = 1;
+});
