@@ -33,6 +33,11 @@ import dotenv from 'dotenv';
 import { cpus } from 'os';
 import { syncSnippets } from './sync-snippets.js';
 import { ensureRootBridgeFiles } from './wp-bridge.js';
+import { buildWorkbench, buildWorkbenchScss, cleanWorkbench } from './builders/workbench.js';
+import { createApiMiddleware } from './tools/api-middleware.js';
+import { ensureGitGuards } from './tools/git-guards.js';
+import { installExtension } from './tools/install-extension.js';
+import { WORKBENCH_DIR } from './tools/config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -754,13 +759,14 @@ async function buildImages(changedFile) {
 // ─────────────────────────────────────────────
 // Full Build
 // ─────────────────────────────────────────────
-async function fullBuild() {
+async function fullBuild(options = {}) {
   console.log('\n╔══════════════════════════════════════╗');
   console.log(`║    Building WP Theme: ${THEME_NAME}`.padEnd(39) + '║');
   console.log('╚══════════════════════════════════════╝\n');
 
   const start = Date.now();
 
+  ensureGitGuards();
   ensureDir(OUT_THEME);
 
   // Ensure root bridge index.php and .htaccess exist if folder_wp is used
@@ -797,8 +803,11 @@ async function fullBuild() {
     console.log('[clean] removed scss source from output');
   }
 
-  // 6b. Remove dev-only components & page-components from production build
-  if (!isWatch) {
+  // 6b. Remove dev-only components & page-components from production build, or build Workbench in watch mode
+  if (isWatch) {
+    await buildWorkbench(options);
+  } else {
+    cleanWorkbench();
     const devOnlyDestEntries = DEV_ONLY_ENTRIES.map(entry => resolve(OUT_THEME, entry));
     let removedAny = false;
     for (const p of devOnlyDestEntries) {
@@ -822,12 +831,74 @@ async function fullBuild() {
   console.log(`\n✓ Build complete in ${elapsed}ms\n`);
 }
 
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf'
+};
+
+function createWorkbenchStaticMiddleware() {
+  const wbOutDir = resolve(OUT_PUBLIC, '__workbench');
+  return function workbenchStaticMiddleware(req, res, next) {
+    const rawUrl = (req.url || '').split('?')[0];
+
+    if (rawUrl === '/__workbench') {
+      res.statusCode = 302;
+      res.setHeader('Location', '/__workbench/');
+      res.end();
+      return;
+    }
+
+    if (rawUrl.startsWith('/__workbench/')) {
+      const relPath = rawUrl.slice('/__workbench/'.length) || 'index.html';
+      const safeRel = relPath.replace(/\.\.+/g, '');
+      const targetFile = resolve(wbOutDir, safeRel);
+      if (existsSync(targetFile) && statSync(targetFile).isFile()) {
+        const ext = extname(targetFile).toLowerCase();
+        res.statusCode = 200;
+        res.setHeader('Content-Type', MIME_TYPES[ext] || 'application/octet-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.end(readFileSync(targetFile));
+        return;
+      }
+    }
+
+    if (rawUrl.startsWith('/assets/')) {
+      const relAsset = rawUrl.slice('/assets/'.length).replace(/\.\.+/g, '');
+      const outCandidate = resolve(OUT_ASSETS, relAsset);
+      const srcCandidate = resolve(SRC_THEME, 'assets', relAsset);
+      const fileToServe = (existsSync(outCandidate) && statSync(outCandidate).isFile())
+        ? outCandidate
+        : ((existsSync(srcCandidate) && statSync(srcCandidate).isFile()) ? srcCandidate : null);
+
+      if (fileToServe) {
+        const ext = extname(fileToServe).toLowerCase();
+        res.statusCode = 200;
+        res.setHeader('Content-Type', MIME_TYPES[ext] || 'application/octet-stream');
+        res.end(readFileSync(fileToServe));
+        return;
+      }
+    }
+
+    return next();
+  };
+}
+
 // ─────────────────────────────────────────────
-// Watch Mode — Single watcher on src/**
+// Watch Mode — Single watcher on src/** + workbench/**
 // ─────────────────────────────────────────────
 async function startWatch() {
-  await fullBuild();
-
   const { watch: chokidarWatch } = await import('chokidar');
   const browserSync = (await import('browser-sync')).default.create();
   const net = await import('net');
@@ -851,13 +922,18 @@ async function startWatch() {
     port++;
   }
 
+  await fullBuild({ port });
+  installExtension({ quiet: true });
+
   const baseTarget = PROXY_TARGET.replace(/\/+$/, '');
   const siteUrl = `${baseTarget}/`;
   const adminUrl = FOLDER_WP ? `${baseTarget}/${FOLDER_WP}/wp-admin/` : `${baseTarget}/wp-admin/`;
+  const workbenchUrl = `http://localhost:${port}/__workbench/`;
 
   console.log('\n╔══════════════════════════════════════════════╗');
   console.log(`║ BrowserSync → ${siteUrl}`.padEnd(47) + '║');
   console.log(`║ Local       → http://localhost:${port}/`.padEnd(47) + '║');
+  console.log(`║ Workbench   → ${workbenchUrl}`.padEnd(47) + '║');
   if (FOLDER_WP) {
     console.log(`║ WP Admin    → ${adminUrl}`.padEnd(47) + '║');
   }
@@ -870,6 +946,21 @@ async function startWatch() {
     open: true,
     notify: false,
     ui: false,
+    middleware: [
+      createApiMiddleware({
+        onProjectChanged: async (action) => {
+          fileCache.invalidate();
+          importsCache.clear();
+          buildCopyFiles();
+          await buildScss();
+          await buildWorkbench({ port });
+          if (action === 'import' || action === 'remove') {
+            browserSync.reload();
+          }
+        }
+      }),
+      createWorkbenchStaticMiddleware()
+    ]
   });
 
   // Per-file debounce: each filepath gets its own timer,
@@ -900,17 +991,14 @@ async function startWatch() {
   async function handleChange(filepath, eventType) {
     const absPath = getAbs(filepath);
 
-    // Component source changed or added → re-sync VS Code snippets
-    if (norm(filepath).includes('/includes/components/')) {
-      try {
-        syncSnippets({ compact: true });
-      } catch { /* ignore */ }
-    }
-
     // SCSS source changed → recompile
     if (isScssSource(absPath)) {
       console.log(`[watch:scss] ${eventType}: ${norm(filepath)}`);
       await buildScss(absPath);
+      await buildWorkbenchScss();
+      if (norm(filepath).includes('/scss/component/') || norm(filepath).includes('/scss/layout/')) {
+        await buildWorkbench({ port });
+      }
       browserSync.reload('*.css');
       return;
     }
@@ -932,13 +1020,6 @@ async function startWatch() {
   function handleUnlink(filepath) {
     const absPath = getAbs(filepath);
     const rel = relative(SRC_THEME, absPath);
-
-    // Component source deleted → re-sync VS Code snippets
-    if (norm(filepath).includes('/includes/components/')) {
-      try {
-        syncSnippets({ compact: true });
-      } catch { /* ignore */ }
-    }
 
     if (isScssSource(absPath)) {
       // Clear import cache for deleted file
@@ -1045,6 +1126,34 @@ async function startWatch() {
 
     const devEntries = readdirSync(DEV_PLUGINS_SRC);
     console.log(`[watch] Watching dev_plugins/ (${devEntries.length} plugin: ${devEntries.join(', ')})`);
+  }
+
+  // ── Workbench (workbench/): watch live ──
+  if (existsSync(WORKBENCH_DIR)) {
+    const wbWatcher = chokidarWatch(WORKBENCH_DIR, {
+      ignoreInitial: true,
+      ignored: ['**/.backup/**', '**/.git/**'],
+      awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 30 }
+    });
+
+    const handleWorkbenchChange = debouncePerFile(async (filepath) => {
+      const ext = extname(filepath).toLowerCase();
+      console.log(`🔄 [workbench] ${norm(relative(ROOT, filepath))}`);
+
+      if (ext === '.scss') {
+        await buildWorkbenchScss();
+        browserSync.reload('*.css');
+      } else {
+        syncSnippets();
+        await buildWorkbench({ port });
+        browserSync.reload();
+      }
+    }, 60);
+
+    wbWatcher.on('change', handleWorkbenchChange);
+    wbWatcher.on('add', handleWorkbenchChange);
+    wbWatcher.on('unlink', handleWorkbenchChange);
+    console.log('[watch] Watching workbench/ for live Showroom updates');
   }
 }
 

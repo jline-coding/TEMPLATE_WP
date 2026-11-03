@@ -1,0 +1,11 @@
+{
+  "component": "btn",
+  "reason": "before_selection_export",
+  "timestamp": "2026-11-03T10-08-58-363Z",
+  "files": [
+    {
+      "original": "workbench\\scss\\component\\_index.scss",
+      "stored": "_index.scss"
+    }
+  ]
+}

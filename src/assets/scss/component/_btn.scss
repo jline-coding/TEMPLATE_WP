@@ -37,6 +37,7 @@ component > btn
             }
         }
     }
+
     &--arrow{
         display: flex;
         justify-content: space-between;
@@ -64,70 +65,7 @@ component > btn
             }
         }
     }
-    &--arrow-center{
-        display: flex;
-        justify-content: center;
-        gap: 5px;
-        @include mq(md) {
-            gap: 10px;
-        }
-        &::after{
-            content: "";
-            width: 8px;
-            height: 8px;
-            display: block;
-            flex-shrink: 0;
-            border-top: 2px solid var(--white);
-            border-right: 2px solid var(--white);
-            transform: rotate(45deg);
-            transition: 0.5s;
-            @include mq(md) {
-                width: 12px;
-                height: 12px;
-            }
-        }
-    }
-    &--arrow-between{
-        display: flex;
-        justify-content: space-between;
-        gap: 5px;
-        @include mq(md) {
-            gap: 10px;
-        }
-        &::after{
-            content: "";
-            width: 8px;
-            height: 8px;
-            display: block;
-            flex-shrink: 0;
-            border-top: 2px solid var(--white);
-            border-right: 2px solid var(--white);
-            transform: rotate(45deg);
-            transition: 0.5s;
-            @include mq(md) {
-                width: 12px;
-                height: 12px;
-            }
-        }
-    }
-    &--reverse{
-        background-color: var(--white);
-        color: var(--primary);
-        &::after{
-            border-color: var(--primary);
-        }
-        &:hover{
-            @include mq(md) {
-                opacity: 1;
-                color: var(--white);
-                background-color: var(--primary);
-                &::after{
-                    border-color: var(--white);
-                }
-            }
-        }
-    }
-    
+
 }
 
 .c-totop {

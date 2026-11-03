@@ -1,0 +1,19 @@
+{
+  "component": "btn",
+  "reason": "before_variant_delete",
+  "timestamp": "2026-11-03T10-08-52-176Z",
+  "files": [
+    {
+      "original": "workbench\\components\\_btn.ejs",
+      "stored": "_btn.ejs"
+    },
+    {
+      "original": "workbench\\scss\\component\\_btn.scss",
+      "stored": "_btn.scss"
+    },
+    {
+      "original": "workbench\\scss\\component\\_index.scss",
+      "stored": "_index.scss"
+    }
+  ]
+}
